@@ -7,7 +7,7 @@ import * as c from '@workspace/api-zod';
 
 const API_BASE: string =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-  'http://localhost:9090/api';
+  '/api'; // same-origin (Vite dev proxy /api/ → :9091, prod serves API + SPA together)
 
 const TOKEN_KEY = 'fd_token';
 

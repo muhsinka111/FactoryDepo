@@ -12,7 +12,7 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "dev:web": "pnpm --filter @workspace/web run dev",
-    "dev:api": "pnpm --filter @workspace/api-server run dev",
+    "dev:api": "PORT=9091 pnpm --filter @workspace/api-server run dev",
     "seed": "DATABASE_URL=\"postgres://postgres:postgres@localhost:5432/factorydepo\" pnpm --filter @workspace/db exec tsx scripts/seed.ts"
   },
   "devDependencies": {
