@@ -479,12 +479,13 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
     <div class="market-3">
       <div class="mcard reveal" id="rfq">
         <div class="mcard-head"><h3>Live RFQ Market</h3><span class="rfq-mini st open" style="margin:0">● Live</span></div>
-        <div class="mcard-body">
+        <div class="mcard-body" id="rfqList">
           <div class="rfq-mini"><span style="flex:1"><b>100 Tons Copper Cathode</b><span>LME A · Türkiye · 12 quotes</span></span><span class="st open">Open</span></div>
           <div class="rfq-mini"><span style="flex:1"><b>OEM Plastic Injection Parts</b><span>50,000 pcs · Germany · 7 quotes</span></span><span class="st open">Open</span></div>
           <div class="rfq-mini"><span style="flex:1"><b>Battery-Grade Lithium</b><span>5 MT · USA · 9 quotes</span></span><span class="st quoted">Quoted</span></div>
           <div class="rfq-mini"><span style="flex:1"><b>Steel Coil HRC</b><span>300 MT · Türkiye · 5 quotes</span></span><span class="st open">Open</span></div>
         </div>
+        <div style="padding:13px 18px;border-top:1px solid var(--border);text-align:center"><a href="#" style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">Post Your RFQ →</a></div>
       </div>
       <div class="mcard reveal" style="transition-delay:.06s">
         <div class="mcard-head"><h3>Live Commodity Market</h3><span class="mono" style="font-size:11px;color:var(--faint)">Indicative</span></div>
@@ -648,6 +649,37 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   }
   setTimeout(function(){ document.querySelectorAll('.reveal:not(.in)').forEach(function(e){ e.classList.add('in'); }); }, 1600);
   setTimeout(function(){ document.querySelectorAll('[data-count]:not([data-done])').forEach(count); }, 2200);
+})();
+
+/* ---- real RFQs from the live API (fallback: static list above) ---- */
+(function(){
+  'use strict';
+  var list = document.getElementById('rfqList');
+  if (!list) return;
+  var urls = [
+    'https://api-production-3fee.up.railway.app/api/rfqs?limit=4',
+    '/api/rfqs?limit=4',
+    'http://localhost:9091/api/rfqs?limit=4'
+  ];
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function render(items){
+    var html = '';
+    items.forEach(function(r){
+      var st = r.status === 'quoted' ? 'quoted' : 'open';
+      var qty = (r.quantity != null && r.unit) ? esc(r.quantity) + ' ' + esc(r.unit) + ' — ' : '';
+      var meta = [(r.category||''), (r.targetCountry || 'Global'), (r.quoteCount||0) + ' quotes'].filter(Boolean).join(' · ');
+      html += '<div class="rfq-mini"><span style="flex:1"><b>' + qty + esc(r.title) + '</b><span>' + esc(meta) + '</span></span><span class="st ' + st + '">' + (r.status === 'quoted' ? 'Quoted' : 'Open') + '</span></div>';
+    });
+    list.innerHTML = html;
+  }
+  function tryFetch(i){
+    if (i >= urls.length) return;
+    fetch(urls[i], {mode:'cors'})
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(d){ if (d && d.items && d.items.length) render(d.items.slice(0, 4)); })
+      .catch(function(){ tryFetch(i + 1); });
+  }
+  tryFetch(0);
 })();
 </script>
 </body>

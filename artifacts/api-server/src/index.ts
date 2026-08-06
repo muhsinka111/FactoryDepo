@@ -77,6 +77,15 @@ async function runMigrations(): Promise<void> {
 /* ---------- app ---------- */
 
 const app = express();
+
+// Public-read CORS: the static marketing landing fetches catalog/RFQ data cross-origin.
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.disable('x-powered-by');
 
 app.use(cors({ origin: true, credentials: true }));
