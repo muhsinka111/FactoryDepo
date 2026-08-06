@@ -15,6 +15,7 @@ import { sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { db } from './db.js';
 import { HttpError } from './http.js';
+import { bootstrapSeedIfEmpty } from './bootstrap-seed.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, meRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
@@ -160,6 +161,11 @@ async function main(): Promise<void> {
       '[migrate] migration run failed (continuing boot):',
       err instanceof Error ? err.message : String(err),
     );
+  }
+  try {
+    await bootstrapSeedIfEmpty();
+  } catch (err) {
+    console.warn('[seed] bootstrap failed (continuing boot):', err instanceof Error ? err.message : String(err));
   }
   app.listen(PORT, () => {
     console.log(`[api] FactoryDepo API listening on http://localhost:${PORT}`);
