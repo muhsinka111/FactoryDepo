@@ -1,5 +1,5 @@
 import { Switch, Route, Redirect } from 'wouter';
-import { Nav, Footer } from './components';
+import { Nav, Footer, AuthGateModal } from './components';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -14,6 +14,7 @@ export default function App() {
   return (
     <>
       <Nav />
+      <AuthGateModal />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/products" component={Products} />

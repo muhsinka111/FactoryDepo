@@ -43,7 +43,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginTop: 26 }}>
+      <div className="d-grid3" style={{ marginTop: 26 }}>
         <div className="card" style={{ padding: 22 }}>
           <div className="eyebrow" style={{ marginBottom: 10 }}>Your Role</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

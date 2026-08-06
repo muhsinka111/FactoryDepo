@@ -1,5 +1,5 @@
 import { useSupplier, useProducts } from '@workspace/api-client-react';
-import { Page, Spinner, TrustRing, Stars, Verified, ProductCard } from '../components';
+import { Page, Spinner, TrustRing, Stars, Verified, ProductCard, requireAuthGate } from '../components';
 import { Link } from 'wouter';
 
 export default function SupplierDetail({ params }: { params: { id: string } }) {
@@ -46,6 +46,13 @@ export default function SupplierDetail({ params }: { params: { id: string } }) {
           <div className="cell"><b>{s.inspectionsCount}</b><span>INSPECTIONS</span></div>
           <div className="cell"><b>%{s.fulfillmentRate.toFixed(1)}</b><span>FULFILLMENT</span></div>
           <div className="cell"><b>{s.productCount}</b><span>PRODUCTS</span></div>
+        </div>
+        <div style={{ marginTop: 22 }}>
+          <button className="btn btn-primary btn-lg" onClick={() => requireAuthGate()}>
+            Contact Supplier
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
+          </button>
+          <p className="mono" style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 10 }}>Members only · Verification docs &amp; inspection reports available on contact</p>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useMe, useLogout, getToken } from '@workspace/api-client-react';
 import type { Product, Supplier, Rfq } from '@workspace/api-zod';
 
@@ -281,7 +281,7 @@ export function ProductCard({ p }: { p: Product }) {
     <Link href={`/products/${p.id}`} className="card pcard">
       <div className="pcard-art">
         {p.verified && <Verified />}
-        <div style={{ marginTop: p.verified ? 22 : 0 }}><ProductArt kind={productKind(p.name)} /></div>
+        {p.imageKey ? <img src={p.imageKey} alt={p.name} loading="lazy" /> : <div style={{ marginTop: p.verified ? 22 : 0 }}><ProductArt kind={productKind(p.name)} /></div>}
       </div>
       <div className="pcard-body">
         <h3>{p.name}</h3>
@@ -346,6 +346,69 @@ export function RfqCard({ r }: { r: Rfq }) {
 
 export function Page({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return <main className="page"><div className={wide ? 'wrap' : 'wrap'}>{children}</div></main>;
+}
+
+/* ---------- auth gate modal ----------
+ * Fired with window.dispatchEvent(new CustomEvent('fd:require-auth')) when a
+ * logged-out user tries to contact a supplier, post an RFQ, or reply to one.
+ * Products/suppliers stay fully viewable without an account. */
+export function requireAuthGate() {
+  window.dispatchEvent(new CustomEvent('fd:require-auth'));
+}
+
+export function AuthGateModal() {
+  const [open, setOpen] = useState(false);
+  const { data: user } = useMe();
+
+  useEffect(() => {
+    const handler = () => {
+      if (!getToken()) setOpen(true);
+    };
+    window.addEventListener('fd:require-auth', handler);
+    return () => window.removeEventListener('fd:require-auth', handler);
+  }, []);
+
+  useEffect(() => {
+    if (user) setOpen(false);
+  }, [user]);
+
+  if (!open) return null;
+  return (
+    <div className="modal-overlay" onClick={() => setOpen(false)}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <span className="eyebrow" style={{ color: '#5CA1FF' }}>Member Access</span>
+          <h3>Create a free account to continue</h3>
+          <p>Contacting suppliers, posting RFQs and replying with quotations are member actions. Browsing the marketplace stays free and open.</p>
+        </div>
+        <div className="modal-body">
+          <Link href="/sign-up" className="btn btn-primary btn-lg">Create Free Account</Link>
+          <Link href="/sign-in" className="btn btn-outline btn-lg">I already have an account</Link>
+          <p className="modal-link">or <a href="#plans" onClick={(e) => e.preventDefault()}>compare membership plans</a></p>
+          <div className="plans-row">
+            <div className="plan-mini">
+              <b>Free</b>
+              <div className="p">$0</div>
+              <span>Browse &amp; view</span>
+            </div>
+            <div className="plan-mini hot">
+              <b>Professional</b>
+              <div className="p">$49<span style={{ fontSize: 10 }}>/mo</span></div>
+              <span>Contact &amp; quote</span>
+            </div>
+            <div className="plan-mini">
+              <b>Enterprise</b>
+              <div className="p">Custom</div>
+              <span>Dedicated team</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SectionHead({ eyebrow, title, sub }: { eyebrow?: string; title: ReactNode; sub?: ReactNode }) {

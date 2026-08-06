@@ -41,7 +41,7 @@ export default function Products() {
         sub="Filter by category, origin country and price. Every listing is factory-direct and verified."
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="p-layout">
         {/* filters */}
         <aside className="filter-panel">
           <h4>Search</h4>

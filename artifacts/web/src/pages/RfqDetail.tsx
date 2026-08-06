@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRfqDetail, useCreateQuote, useMe } from '@workspace/api-client-react';
-import { Page, Spinner, StatusChip, TrustRing, Stars } from '../components';
+import { Page, Spinner, StatusChip, TrustRing, Stars, requireAuthGate } from '../components';
 import { Link } from 'wouter';
 import type { ApiError } from '@workspace/api-client-react';
 
@@ -58,7 +58,7 @@ export default function RfqDetail({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24, marginTop: 24, alignItems: 'start' }}>
+      <div className="rfq-detail-grid" style={{ marginTop: 24 }}>
         <div>
           <h2 style={{ fontSize: 19, marginBottom: 14 }}>Quotations ({data.quotes.length})</h2>
           {data.quotes.length === 0 && (
@@ -115,7 +115,9 @@ export default function RfqDetail({ params }: { params: { id: string } }) {
               </button>
             </>
           ) : (
-            <Link href="/sign-up" className="btn btn-primary btn-lg" style={{ width: '100%' }}>Join as a Supplier</Link>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => requireAuthGate()}>
+              Join as a Supplier to Quote
+            </button>
           )}
         </div>
       </div>

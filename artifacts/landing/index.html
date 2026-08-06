@@ -195,6 +195,55 @@ body.menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45de
 @media (prefers-reduced-motion:reduce){.chip{animation:none}}
 
 /* ============ STATS ============ */
+.hero-light-lp{
+  position:relative;overflow:hidden;color:var(--ink);
+  background:
+    radial-gradient(820px 420px at 88% -8%,rgba(46,124,246,.14),transparent 60%),
+    radial-gradient(620px 380px at 4% 115%,rgba(60,200,232,.1),transparent 55%),
+    linear-gradient(150deg,#FFFFFF 0%,#EAF0F8 100%);
+  border-bottom:1px solid var(--border);
+}
+.hero-light-lp::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(10,20,36,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(10,20,36,.045) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 55% 25%,#000 20%,transparent 75%);
+  mask-image:radial-gradient(ellipse 85% 75% at 55% 25%,#000 20%,transparent 75%);
+}
+.hero-light-lp .hero-arcs{opacity:.5}
+.hero-light-lp .arc{stroke:url(#arcGradLp)}
+.hero-light-lp .hero-inner{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:calc(var(--nav-h) + 56px) 0 84px}
+.hero-light-lp h1{font-size:clamp(38px,5vw,58px);letter-spacing:-.03em;margin:18px 0 20px;color:var(--ink);text-shadow:none;max-width:620px}
+.hero-light-lp h1 .mark{
+  background:linear-gradient(100deg,#1E5FD9,#2E7CF6 55%,#3CC8E8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-light-lp .hero-sub{color:var(--muted);max-width:540px}
+.hero-light-lp .hero-note{color:var(--muted)}
+.hero-light-lp .hero-note svg{color:var(--green)}
+.hero-light-lp .chip{background:rgba(255,255,255,.9);border-color:var(--border-strong);box-shadow:var(--shadow);color:var(--ink-2)}
+.hero-light-lp .chip span{color:var(--faint)}
+.hero-light-lp .btn-outline{border-color:var(--border-strong);color:var(--ink-2)}
+.hero-light-lp .btn-outline:hover{background:var(--surface-2)}
+.feed-lp{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;box-shadow:var(--shadow);overflow:hidden;
+}
+.feed-lp-head{
+  display:flex;align-items:center;gap:9px;padding:15px 18px;border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+}
+.feed-lp-head .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 1.8s infinite}
+.feed-lp-item{display:flex;gap:12px;padding:14px 18px;border-bottom:1px dashed var(--border);align-items:flex-start}
+.feed-lp-item:last-of-type{border-bottom:none}
+.feed-lp-item .ic{width:32px;height:32px;border-radius:9px;background:rgba(46,124,246,.09);display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.feed-lp-item .ic svg{width:15px;height:15px}
+.feed-lp-item b{display:block;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink-2)}
+.feed-lp-item span{font-size:11.5px;color:var(--faint);font-family:var(--font-mono)}
+.feed-lp-foot{padding:13px 18px;text-align:center;border-top:1px solid var(--border)}
+.prod-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@media (max-width:860px){.hero-light-lp .hero-inner{grid-template-columns:1fr;gap:34px;padding:calc(var(--nav-h) + 36px) 0 60px}}
+
 .stats{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .stats-inner{display:grid;grid-template-columns:repeat(5,1fr)}
 .stat{padding:30px 22px;text-align:center;border-left:1px solid var(--border)}
@@ -487,12 +536,10 @@ body.menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45de
 </div>
 
 <!-- ============ HERO ============ -->
-<section class="hero" id="top">
-  <img class="hero-photo" src="../../assets/hero-factory.jpg" alt="">
-  <div class="hero-shade"></div>
+<section class="hero hero-light-lp" id="top">
   <svg class="hero-arcs" viewBox="0 0 1200 620" preserveAspectRatio="xMidYMid slice">
     <defs>
-      <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="arcGradLp" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#2E7CF6" stop-opacity="0"/><stop offset=".5" stop-color="#5CA1FF" stop-opacity=".95"/><stop offset="1" stop-color="#3CC8E8" stop-opacity="0"/>
       </linearGradient>
     </defs>
@@ -513,29 +560,11 @@ body.menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45de
     <circle class="node sm" cx="560" cy="320" r="4"/>
   </svg>
 
-  <div class="chip chip-1">
-    <span class="ic" style="background:rgba(46,124,246,.16);color:#5CA1FF">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-    </span>
-    <span><b>Inspection Passed</b><span>Anshan Steel · TR · 12 min ago</span></span>
-  </div>
-  <div class="chip chip-2">
-    <span class="ic" style="background:rgba(60,200,232,.14);color:#3CC8E8">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
-    </span>
-    <span><b>Trust Score 92</b><span>Jiangsu Xihua Metal · CN</span></span>
-  </div>
-  <div class="chip chip-3">
-    <span class="ic" style="background:rgba(52,211,153,.13);color:#34D399">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg>
-    </span>
-    <span><b>RFQ Matched</b><span>100 MT Copper Cathode · 3 quotes</span></span>
-  </div>
-
   <div class="wrap hero-inner">
+    <div>
     <span class="eyebrow hero-eyebrow reveal">The Operating System for Global Industrial Trade</span>
     <h1 class="reveal" style="transition-delay:.06s">
-      The Future of Global<br><span class="outline">Industrial</span> Trade.
+      Source the world's <span class="mark">industrial supply</span> — verified.
     </h1>
     <p class="hero-sub reveal" style="transition-delay:.12s">Connect with verified manufacturers, mines and industrial suppliers worldwide. Inspections, testing, logistics and business services — all in one trusted platform.</p>
     <div class="hero-ctas reveal" style="transition-delay:.18s">
@@ -552,6 +581,1218 @@ body.menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45de
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
       Every supplier verified in-country. Free to join. No listing fees.
     </p>
+    </div>
+
+    <div class="feed-lp reveal" style="transition-delay:.15s">
+      <div class="feed-lp-head"><span class="dot"></span>Live Trade Activity</div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span><b>New RFQ: 100 Tons Copper Cathode</b><span>FOB Türkiye · 2m ago · 3 quotes</span></span>
+      </div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></span>
+        <span><b>Inspection Completed: Foshan Steel Co</b><span>Guangdong, China · 5m ago · Score 91</span></span>
+      </div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>
+        <span><b>New Supplier Joined: Shandong Mining Group</b><span>Shandong, China · 8m ago · Trust 91</span></span>
+      </div>
+      <div class="feed-lp-foot"><a class="mono" href="#rfq" style="font-size:11.5px;color:var(--accent-ink);font-weight:600">View live RFQ market →</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="stats">
+  <div class="wrap stats-inner">
+    <div class="stat reveal">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></span>
+      <div class="num"><span data-count="500" data-suffix=",000+">0</span></div>
+      <div class="lbl">Industrial Products</div>
+    </div>
+    <div class="stat reveal" style="transition-delay:.05s">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>
+      <div class="num"><span data-count="150" data-suffix=",000+">0</span></div>
+      <div class="lbl">Verified Suppliers</div>
+    </div>
+    <div class="stat reveal" style="transition-delay:.1s">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg></span>
+      <div class="num"><span data-count="80">0</span><em>+</em></div>
+      <div class="lbl">Countries</div>
+    </div>
+    <div class="stat reveal" style="transition-delay:.15s">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+      <div class="num"><span data-count="2">0</span><em>M+</em></div>
+      <div class="lbl">RFQs Completed</div>
+    </div>
+    <div class="stat reveal" style="transition-delay:.2s">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span>
+      <div class="num"><span data-count="95">0</span><em>%</em></div>
+      <div class="lbl">On-time Delivery Rate</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUSTED BY ============ -->
+<section class="trusted">
+  <p class="trusted-label reveal">Trusted by industry leaders worldwide</p>
+  <div class="marquee reveal">
+    <div class="marquee-track">
+      <span class="logo-item">RIO TINTO</span>
+      <span class="logo-item">BHP</span>
+      <span class="logo-item">ARCELORMITTAL</span>
+      <span class="logo-item">BASF</span>
+      <span class="logo-item">SIEMENS</span>
+      <span class="logo-item">thyssenkrupp</span>
+      <span class="logo-item">SAMSUNG</span>
+      <span class="logo-item">CATERPILLAR</span>
+      <span class="logo-item">HBIS GROUP</span>
+      <span class="logo-item">RIO TINTO</span>
+      <span class="logo-item">BHP</span>
+      <span class="logo-item">ARCELORMITTAL</span>
+      <span class="logo-item">BASF</span>
+      <span class="logo-item">SIEMENS</span>
+      <span class="logo-item">thyssenkrupp</span>
+      <span class="logo-item">SAMSUNG</span>
+      <span class="logo-item">CATERPILLAR</span>
+      <span class="logo-item">HBIS GROUP</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEEDS + HOW IT WORKS ============ -->
+<section class="section" id="how">
+  <div class="wrap split">
+    <div class="reveal">
+      <span class="eyebrow">Everything You Need</span>
+      <h3 style="margin-top:14px">One platform for the entire trade journey.</h3>
+      <div style="margin-top:10px">
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> Trusted &amp; Verified Suppliers</div>
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> Real Inspections &amp; Testing</div>
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> Production Monitoring</div>
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> Logistics &amp; Customs Support</div>
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> Local Representation</div>
+        <div class="need-item"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span> End-to-End Trade Services</div>
+      </div>
+      <a class="btn btn-light btn-lg" href="#services" style="margin-top:24px">Explore All Services
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <div class="reveal" style="transition-delay:.08s">
+      <span class="eyebrow">How FactoryDepo Works</span>
+      <h3 style="margin-top:14px">From search to shipment in 8 steps.</h3>
+      <div class="how-flow" style="margin-top:22px">
+        <div class="hstep"><span class="n">01</span><span class="t">Search Products</span></div>
+        <div class="hstep"><span class="n">02</span><span class="t">Find Verified Suppliers</span></div>
+        <div class="hstep"><span class="n">03</span><span class="t">Request RFQ</span></div>
+        <div class="hstep"><span class="n">04</span><span class="t">Compare Quotations</span></div>
+        <div class="hstep"><span class="n">05</span><span class="t">Book Inspection</span></div>
+        <div class="hstep"><span class="n">06</span><span class="t">Approve Production</span></div>
+        <div class="hstep"><span class="n">07</span><span class="t">Track Shipment</span></div>
+        <div class="hstep"><span class="n">08</span><span class="t">Receive Goods</span></div>
+      </div>
+
+      <span class="eyebrow">Top Industries</span>
+      <div class="ind-grid" style="margin-top:16px">
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span><h4>Metals &amp; Minerals</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg></span><h4>Chemicals</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6h7.2M6 8.4v7.2M18 8.4v7.2M8.4 18h7.2"/></svg></span><h4>Machinery</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span><h4>Industrial Equipment</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="1.5"/><path d="M8 7V4h8v3M12 11v2M17 12h.01M7 12h.01"/></svg></span><h4>Electronics</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V6l6-3v18"/></svg></span><h4>Construction</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg></span><h4>Renewable Energy</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21h16M6 21V7l6-4 6 4v14M10 21v-4h4v4M10 10h.01M14 10h.01M10 14h.01M14 14h.01"/></svg></span><h4>Steel</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 3v6l-8 11L4 11V5l8-3z"/><path d="M12 2v18M4 5l16 6M20 5L4 11"/></svg></span><h4>Automotive</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6h14M5 10h14M5 14h9M5 18h11"/></svg></span><h4>Plastic &amp; Rubber</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="10" rx="1.5"/><path d="M9 8V6h6v2M3 12h18M7 15h.01M17 15h.01"/></svg></span><h4>Packaging</h4></a>
+        <a class="ind" href="#products"><span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c1 4 4 6 4 10a4 4 0 01-8 0c0-4 3-6 4-10z"/><path d="M12 13l-3 8h6l-3-8"/></svg></span><h4>Agriculture</h4></a>
+      </div>
+      <div class="ind-row"><a class="btn btn-light" href="#products">View All Industries
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURED PRODUCTS ============ -->
+<section class="section" id="products" style="padding-top:30px">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Featured Industrial Products</span>
+      <h2>Factory-direct <span class="accent">pricing.</span> Real MOQs. Verified origins.</h2>
+      <p>Browse popular listings from verified suppliers — request a quotation in one click.</p>
+    </div>
+    <div class="prod-grid">
+      <div class="prod-card reveal">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <svg viewBox="0 0 84 84" fill="none"><rect x="14" y="16" width="56" height="10" rx="2" fill="#C87B4A"/><rect x="14" y="30" width="56" height="10" rx="2" fill="#E8A15C"/><rect x="14" y="44" width="56" height="10" rx="2" fill="#D58B52"/><rect x="14" y="58" width="56" height="10" rx="2" fill="#C87B4A"/></svg>
+        </div>
+        <div class="prod-body">
+          <h3>Copper Cathode</h3>
+          <div class="prod-spec"><span>99.99% Purity</span><span>MOQ 25 MT</span><span>🇹🇷 Türkiye</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$8,742</b><span>/ MT · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.05s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/steel-coil.jpg" alt="Steel Coil" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Steel Coil — Cold Rolled</h3>
+          <div class="prod-spec"><span>DC01</span><span>MOQ 20 MT</span><span>🇹🇷 Türkiye</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$617</b><span>/ MT · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.1s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/lithium-carbonate.jpg" alt="Lithium Carbonate" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Lithium Carbonate</h3>
+          <div class="prod-spec"><span>Battery Grade</span><span>MOQ 1 MT</span><span>🇨🇳 China</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$18,850</b><span>/ MT · CIF</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.15s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/industrial-pump.jpg" alt="Industrial Pump" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Industrial Pump</h3>
+          <div class="prod-spec"><span>High Efficiency</span><span>MOQ 5 Sets</span><span>🇹🇷 Türkiye</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$2,450</b><span>/ Set · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/solar-panel.jpg" alt="Solar Panel" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Solar Panel — 550W</h3>
+          <div class="prod-spec"><span>Mono PERC</span><span>MOQ 1,000 pcs</span><span>🇨🇳 China</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$0.21</b><span>/ Watt · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.05s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/aluminum-ingot.jpg" alt="Aluminum Ingot" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Aluminum Ingot</h3>
+          <div class="prod-spec"><span>99.7% Purity</span><span>MOQ 25 MT</span><span>🇨🇳 China</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$2,980</b><span>/ MT · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.1s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/cnc-machine.jpg" alt="CNC Machining Center" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>CNC Machining Center</h3>
+          <div class="prod-spec"><span>5-Axis</span><span>MOQ 1 Set</span><span>🇨🇳 China</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$28,000</b><span>/ Set · FOB</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="prod-card reveal" style="transition-delay:.15s">
+        <div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/antimony-ore.jpg" alt="Antimony Ore" loading="lazy">
+        </div>
+        <div class="prod-body">
+          <h3>Antimony Ore</h3>
+          <div class="prod-spec"><span>50–60% Sb</span><span>MOQ 50 MT</span><span>🇨🇳 China</span></div>
+          <div class="prod-foot">
+            <div class="prod-price"><b>$14,500</b><span>/ MT · CIF</span></div>
+            <a class="btn btn-primary" href="#">Request RFQ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARKET DATA 3-COL ============ -->
+<section class="section" id="commodities" style="padding-top:30px">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Market Data</span>
+      <h2>Live <span class="accent">market intelligence.</span></h2>
+      <p>RFQs in motion, commodity prices and our global network — in real time.</p>
+    </div>
+    <div class="market-3">
+      <!-- RFQ market -->
+      <div class="mcard reveal" id="rfq">
+        <div class="mcard-head">
+          <h3>Live RFQ Market</h3>
+          <span class="status open"><span class="live-dot"></span>Live</span>
+        </div>
+        <div class="mcard-body">
+          <div class="rfq-mini">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+            <span style="flex:1"><b>100 Tons Copper Cathode</b><span>LME Grade A · Türkiye · 12 quotes</span></span>
+            <span class="status open">Open</span>
+          </div>
+          <div class="rfq-mini">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6h7.2M6 8.4v7.2M18 8.4v7.2M8.4 18h7.2"/></svg></span>
+            <span style="flex:1"><b>OEM Plastic Injection Parts</b><span>50,000 pcs · Germany · 7 quotes</span></span>
+            <span class="status open">Open</span>
+          </div>
+          <div class="rfq-mini">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6l-8 11L4 11V5l8-3z"/></svg></span>
+            <span style="flex:1"><b>Battery-Grade Lithium</b><span>5 MT · USA · 9 quotes</span></span>
+            <span class="status quoted">Quoted</span>
+          </div>
+          <div class="rfq-mini">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></span>
+            <span style="flex:1"><b>Industrial Pump Units</b><span>500 sets · Poland · 5 quotes</span></span>
+            <span class="status open">Open</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- commodity market -->
+      <div class="mcard reveal" style="transition-delay:.06s">
+        <div class="mcard-head">
+          <h3>Live Commodity Market</h3>
+          <span class="status quoted"><span class="live-dot" style="background:var(--accent-ink)"></span>Indicative</span>
+        </div>
+        <div class="mcard-body" style="padding-top:12px">
+          <table class="com-table">
+            <tr><td><span class="com-name"><b>Copper Cathode</b><span>99.99% · LME Grade A</span></span></td><td class="com-price">$8,742</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.18%</span></td></tr>
+            <tr><td><span class="com-name"><b>Antimony Ore</b><span>50–60% Sb</span></span></td><td class="com-price">$14,500</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.56%</span></td></tr>
+            <tr><td><span class="com-name"><b>Lithium Carbonate</b><span>Battery Grade</span></span></td><td class="com-price">$18,950</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.85%</span></td></tr>
+            <tr><td><span class="com-name"><b>Nickel</b><span>Grade I · 99.8%</span></span></td><td class="com-price">$16,420</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+0.95%</span></td></tr>
+            <tr><td><span class="com-name"><b>Rare Earth Oxide</b><span>NdPr Oxide 99%</span></span></td><td class="com-price">$46,200</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+1.75%</span></td></tr>
+            <tr><td><span class="com-name"><b>Iron Ore</b><span>62% Fe · Fines</span></span></td><td class="com-price">$117.40</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.25%</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- global network -->
+      <div class="network reveal" style="transition-delay:.12s">
+        <svg class="mapsvg" viewBox="0 0 240 240" fill="none">
+          <circle cx="120" cy="120" r="115" stroke="rgba(148,173,209,.22)" stroke-width="1"/>
+          <circle cx="120" cy="120" r="78" stroke="rgba(148,173,209,.16)" stroke-width="1"/>
+          <path d="M30 120h180M120 30v180" stroke="rgba(148,173,209,.13)" stroke-width="1"/>
+          <path d="M60 170 Q120 90 185 130" stroke="#5CA1FF" stroke-width="1.4" stroke-dasharray="4 5" opacity=".85"/>
+          <path d="M55 85 Q140 60 170 160" stroke="#3CC8E8" stroke-width="1.2" stroke-dasharray="4 5" opacity=".6"/>
+          <circle cx="60" cy="170" r="4" fill="#5CA1FF"/><circle cx="185" cy="130" r="3.5" fill="#3CC8E8"/>
+          <circle cx="170" cy="160" r="3.5" fill="#5CA1FF"/><circle cx="120" cy="100" r="3" fill="#3CC8E8"/>
+          <circle cx="140" cy="60" r="3.5" fill="#5CA1FF"/>
+        </svg>
+        <span class="eyebrow" style="color:#5CA1FF">Global Trade Network</span>
+        <h3>On the ground in every sourcing corridor.</h3>
+        <p class="sub">In-country inspectors, partner laboratories and warehouses where your supply chains actually run.</p>
+        <div class="net-stats">
+          <div class="net-stat"><div class="n"><span data-count="80">0</span><em>+</em></div><div class="l">Countries</div></div>
+          <div class="net-stat"><div class="n"><span data-count="200">0</span><em>+</em></div><div class="l">Inspection Partners</div></div>
+          <div class="net-stat"><div class="n"><span data-count="50">0</span><em>+</em></div><div class="l">Laboratories</div></div>
+          <div class="net-stat"><div class="n"><span data-count="100">0</span><em>+</em></div><div class="l">Warehouses</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="section" id="services" style="padding-top:30px">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">End-to-End Trade Services</span>
+      <h2>Every service international trade <span class="accent">demands.</span></h2>
+      <p>One order, one invoice, one responsible partner.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></span><b>Factory Inspection</b></div>
+      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span><b>Quality Control</b></div>
+      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></span><b>Laboratory Testing</b></div>
+      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a3 3 0 013 3v3M5 9h14v8a3 3 0 01-3 3H8a3 3 0 01-3-3V9z"/></svg></span><b>Sample Purchasing</b></div>
+      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-6 4 3 5-8"/></svg></span><b>Production Monitoring</b></div>
+      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="8" rx="2"/><path d="M8 10V7h8v3M6 18v2M18 18v2"/></svg></span><b>Container Loading</b></div>
+      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V6l6-3v18"/></svg></span><b>Warehousing</b></div>
+      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h18M3 17l3-7h12l3 7M5 17v3M19 17v3"/></svg></span><b>International Shipping</b></div>
+      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg></span><b>Customs Brokerage</b></div>
+      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><b>Business Consulting</b></div>
+      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M10 10h.01M14 10h.01M10 14h.01M14 14h.01"/></svg></span><b>Company Registration</b></div>
+      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V5l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span><b>Trade Insurance</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUPPLIERS ============ -->
+<section class="section" id="suppliers" style="padding-top:30px">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Top Verified Suppliers</span>
+      <h2>Manufacturers you can <span class="accent">trust.</span></h2>
+      <p>Every profile carries an on-site verified Trust Score.</p>
+    </div>
+    <div class="sup-grid">
+      <div class="sup-card reveal">
+        <div class="sup-top">
+          <span class="sup-ava">JX</span>
+          <span class="score">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle class="tb" cx="26" cy="26" r="23"/><circle class="tv" cx="26" cy="26" r="23" stroke-dasharray="144.5" stroke-dashoffset="10"/></svg>
+            <span class="val">93</span>
+          </span>
+        </div>
+        <h3>Jiangsu Xihua Metal Group</h3>
+        <div class="sup-meta"><span>🇨🇳 China · Jiangsu</span> <span class="stars">★★★★★</span> 4.9 <span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span></div>
+        <div class="sup-tags"><span>Copper Cathode</span><span>Smelting</span><span>Anode Slime</span></div>
+        <a class="btn btn-light" href="#">View Profile</a>
+      </div>
+      <div class="sup-card reveal" style="transition-delay:.06s">
+        <div class="sup-top">
+          <span class="sup-ava">FS</span>
+          <span class="score">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle class="tb" cx="26" cy="26" r="23"/><circle class="tv" cx="26" cy="26" r="23" stroke-dasharray="144.5" stroke-dashoffset="15"/></svg>
+            <span class="val">89</span>
+          </span>
+        </div>
+        <h3>Foshan Steel Co.</h3>
+        <div class="sup-meta"><span>🇨🇳 China · Guangdong</span> <span class="stars">★★★★★</span> 4.8 <span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span></div>
+        <div class="sup-tags"><span>Steel Coil</span><span>HRC</span><span>Galvanized</span></div>
+        <a class="btn btn-light" href="#">View Profile</a>
+      </div>
+      <div class="sup-card reveal" style="transition-delay:.12s">
+        <div class="sup-top">
+          <span class="sup-ava">SM</span>
+          <span class="score">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle class="tb" cx="26" cy="26" r="23"/><circle class="tv" cx="26" cy="26" r="23" stroke-dasharray="144.5" stroke-dashoffset="13"/></svg>
+            <span class="val">91</span>
+          </span>
+        </div>
+        <h3>Shandong Mining Group</h3>
+        <div class="sup-meta"><span>🇨🇳 China · Shandong</span> <span class="stars">★★★★★</span> 4.9 <span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span></div>
+        <div class="sup-tags"><span>Antimony Ore</span><span>Mining</span><span>Concentrates</span></div>
+        <a class="btn btn-light" href="#">View Profile</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="section" id="testimonials" style="padding-top:30px">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Trusted by Businesses</span>
+      <h2>What our members <span class="accent">say.</span></h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi reveal">
+        <span class="qmark">"</span>
+        <span class="stars">★★★★★</span>
+        <p>FactoryDepo's inspection reports gave us confidence to buy from a new Chinese supplier for the first time. The factory photos matched reality exactly — no surprises at the port.</p>
+        <div class="who">
+          <span class="av">AK</span>
+          <span><b>Ahmed K.</b><span>Procurement Manager · Saudi Arabia</span></span>
+        </div>
+      </div>
+      <div class="testi reveal" style="transition-delay:.08s">
+        <span class="qmark">"</span>
+        <span class="stars">★★★★★</span>
+        <p>We replaced three legacy suppliers with verified Turkish factories in two months. Delivery reliability is now 98% and our inspection costs dropped by half.</p>
+        <div class="who">
+          <span class="av">LW</span>
+          <span><b>Li Wei</b><span>Sourcing Director · Germany</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="section" id="company" style="padding-top:20px">
+  <div class="wrap cta-row">
+    <div class="cta-main reveal">
+      <img class="bg" src="../../assets/cta-port.jpg" alt="">
+      <span class="eyebrow" style="color:#5CA1FF">Ready to Grow Your Business?</span>
+      <h2>Your next global supplier is already here.</h2>
+      <p>Find trusted manufacturers. Book inspections. Verify suppliers. Ship globally — all from one platform.</p>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href="#">Start Free Now</a>
+        <a class="btn btn-outline btn-lg" href="#">Book a Demo</a>
+      </div>
+    </div>
+    <div class="cta-partner reveal" style="transition-delay:.08s">
+      <h3>Partner With Us</h3>
+      <p>Join the world's most trusted industrial trade ecosystem — as a supplier or a service partner.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Become a Supplier</a>
+        <a class="btn btn-light" href="#">Join as a Service Partner</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top" style="color:var(--ink)">
+          <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg></span>
+          <span><span class="brand-name" style="color:var(--ink)">FACTORYDEPO</span></span>
+        </a>
+        <p>The operating system for global industrial trade. Verified supply, inspections, laboratories, logistics and intelligence — in one trusted ecosystem.</p>
+        <div class="socials">
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V23h-4V8zm7.5 0h3.8v2.05h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V23h-4v-7.7c0-1.84-.03-4.2-2.56-4.2-2.56 0-2.95 2-2.95 4.07V23H8V8z"/></svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.49h-2.8V24C19.62 23.09 24 18.1 24 12.07z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Marketplace</h4>
+        <ul>
+          <li><a href="#products">Products</a></li>
+          <li><a href="#suppliers">Suppliers</a></li>
+          <li><a href="#rfq">RFQ Market</a></li>
+          <li><a href="#commodities">Commodity Market</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Inspection</a></li>
+          <li><a href="#services">Laboratory Testing</a></li>
+          <li><a href="#services">Logistics</a></li>
+          <li><a href="#services">Warehousing</a></li>
+          <li><a href="#services">Business Consulting</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#company">News</a></li>
+          <li><a href="#commodities">Market Reports</a></li>
+          <li><a href="#how">Guides</a></li>
+          <li><a href="#suppliers">Supplier Rankings</a></li>
+          <li><a href="#company">Country Reports</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#company">About Us</a></li>
+          <li><a href="#company">Careers</a></li>
+          <li><a href="#company">Press</a></li>
+          <li><a href="#company">Contact Us</a></li>
+          <li><a href="#company">Privacy Policy</a></li>
+          <li><a href="#company">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2024 FactoryDepo.com All rights reserved.</span>
+      <div class="foot-offices">
+        <span>Turkey</span><span>China</span><span>Germany</span><span>Russia</span><span>USA</span><span>Vietnam</span><span>India</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* nav scroll state */
+  var nav = document.getElementById('nav');
+  function onScroll() {
+    nav.classList.toggle('scrolled', window.scrollY > 24);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* mobile menu */
+  var burger = document.getElementById('burger');
+  var mmenu = document.getElementById('mobileMenu');
+  burger.addEventListener('click', function () {
+    var open = mmenu.classList.toggle('open');
+    document.body.classList.toggle('menu-open', open);
+  });
+  mmenu.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      mmenu.classList.remove('open');
+      document.body.classList.remove('menu-open');
+    });
+  });
+
+  /* reveal */
+  var revealEls = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(function (el) { io.observe(el); });
+  }
+
+  /* counters */
+  function animateCount(el) {
+    var target = parseFloat(el.dataset.count);
+    var suffix = el.dataset.suffix || '';
+    var dur = 1500, start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString('en-US') + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var counters = document.querySelectorAll('[data-count]');
+  if (reduce || !('IntersectionObserver' in window)) {
+    counters.forEach(animateCount);
+  } else {
+    var cIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { animateCount(e.target); cIO.unobserve(e.target); }
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(function (el) { cIO.observe(el); });
+  }
+})();
+</script>
+</body>
+</html><div class="prod-art">
+          <span class="prod-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Verified</span>
+          <img src="../../assets/products/copper-cathode.jpg" alt="Copper Cathode" loading="lazy">
+        </div>TYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactoryDepo — Global Industrial Marketplace</title>
+<meta name="description" content="Connect with verified manufacturers, mines and industrial suppliers worldwide. Inspections, testing, logistics and business services — all in one trusted platform.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E7CF6'/%3E%3Cpath d='M8 10h6.5c2.6 0 4.2 1.3 4.2 3.3 0 1.5-.9 2.6-2.3 3 1.8.4 3 1.6 3 3.4 0 2.2-1.8 3.6-4.6 3.6H8V10zm5 5.4h1.3c1 0 1.6-.5 1.6-1.4s-.6-1.4-1.6-1.4H13v2.8zm0 6.9h1.5c1.1 0 1.8-.5 1.8-1.5s-.7-1.5-1.8-1.5H13v3zM22.5 10H24v12h-1.5V10z' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#F4F7FB;
+  --surface:#FFFFFF;
+  --surface-2:#EAF0F8;
+  --border:rgba(10,20,36,.12);
+  --border-strong:rgba(10,20,36,.22);
+  --ink:#0A1424;
+  --ink-2:#24344C;
+  --muted:#5A6B85;
+  --faint:#8A99B0;
+  --accent:#2E7CF6;
+  --accent-2:#5CA1FF;
+  --accent-ink:#1E5FD9;
+  --cyan:#3CC8E8;
+  --copper:#E8A15C;
+  --green:#059669;
+  --green-bg:#DCFCE7;
+  --red:#DC2626;
+  --red-bg:#FEE2E2;
+  --shadow:0 18px 44px -22px rgba(10,20,36,.3);
+  --shadow-sm:0 4px 14px -6px rgba(10,20,36,.14);
+  --radius:12px;
+  --radius-lg:18px;
+  --nav-h:72px;
+  --font-display:'Archivo',sans-serif;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 10px)}
+body{
+  font-family:var(--font-body);background:var(--bg);color:var(--ink);
+  line-height:1.6;font-size:15.5px;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:rgba(46,124,246,.22)}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;border:3px solid var(--bg)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.015em}
+.eyebrow{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent-ink);font-weight:600;display:inline-flex;align-items:center;gap:9px;
+}
+.eyebrow::before{content:"";width:24px;height:1.5px;background:var(--accent-2)}
+.section{padding:78px 0}
+.section-head{max-width:620px;margin-bottom:40px}
+.section-head.center{margin-left:auto;margin-right:auto;text-align:center}
+.section-head.center .eyebrow::before{display:none}
+.section-head h2{font-size:clamp(28px,3.8vw,42px);margin:14px 0 12px}
+.section-head p{color:var(--muted);font-size:16px}
+.accent{color:var(--accent-ink)}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-weight:600;font-size:14.5px;border-radius:10px;padding:12px 22px;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease;
+  white-space:nowrap;border:1px solid transparent;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn svg{flex:none}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px -10px rgba(46,124,246,.55)}
+.btn-primary:hover{background:#3D88FA}
+.btn-outline{border-color:rgba(238,244,252,.4);color:#EEF4FC}
+.btn-outline:hover{background:rgba(238,244,252,.1)}
+.btn-light{border-color:var(--border-strong);color:var(--ink-2);background:var(--surface)}
+.btn-light:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn-lg{padding:15px 28px;font-size:15.5px;border-radius:12px}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+
+/* ============ NAV ============ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);
+  transition:background .3s ease,border-color .3s ease,box-shadow .3s ease;
+  border-bottom:1px solid transparent;
+}
+.nav.scrolled{
+  background:rgba(255,255,255,.92);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-bottom-color:var(--border);box-shadow:0 8px 26px -18px rgba(10,20,36,.3);
+}
+.nav.scrolled .nav-links a{color:var(--muted)}
+.nav.scrolled .nav-links a:hover{color:var(--ink)}
+.nav.scrolled .brand-name{color:var(--ink)}
+.nav.scrolled .brand-tag{color:var(--faint)}
+.nav.scrolled .lang{color:var(--muted)}
+.nav.scrolled .nav-login{color:var(--ink-2)}
+.nav-inner{max-width:1180px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:28px}
+.brand{display:flex;align-items:center;gap:11px;flex:none}
+.brand-mark{
+  width:40px;height:40px;border-radius:10px;flex:none;
+  background:linear-gradient(135deg,#2E7CF6,#1E5FD9);
+  display:grid;place-items:center;color:#fff;box-shadow:0 6px 18px -6px rgba(46,124,246,.55);
+}
+.brand-mark svg{width:22px;height:22px}
+.brand-name{font-family:var(--font-display);font-weight:800;font-size:17.5px;color:#fff;line-height:1.05;transition:color .3s ease}
+.brand-tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.13em;color:rgba(196,210,230,.9);text-transform:uppercase;transition:color .3s ease}
+.nav-links{display:flex;gap:24px;list-style:none;margin-left:6px}
+.nav-links a{font-size:14px;font-weight:500;color:rgba(238,244,252,.92);padding:6px 0;position:relative;transition:color .2s ease}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--accent);transition:width .2s ease;border-radius:2px}
+.nav-links a:hover::after{width:100%}
+.nav-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.lang{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:rgba(238,244,252,.9);padding:8px 10px;border-radius:8px;transition:background .2s ease}
+.lang svg{width:13px;height:13px;opacity:.7}
+.lang:hover{background:rgba(238,244,252,.1)}
+.nav-login{font-size:14.5px;font-weight:600;color:rgba(238,244,252,.95);padding:8px 14px;border-radius:8px;transition:background .2s ease}
+.nav-login:hover{background:rgba(238,244,252,.1)}
+.burger{display:none;flex-direction:column;gap:5px;padding:10px}
+.burger span{width:22px;height:2px;background:#fff;border-radius:2px;transition:all .25s ease}
+.nav.scrolled .burger span{background:var(--ink)}
+body.menu-open .burger span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+body.menu-open .burger span:nth-child(2){opacity:0}
+body.menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-menu{
+  display:none;position:fixed;top:var(--nav-h);left:0;right:0;z-index:99;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:14px 24px 20px;flex-direction:column;box-shadow:var(--shadow);
+}
+.mobile-menu.open{display:flex}
+.mobile-menu a{padding:11px 4px;font-size:15.5px;font-weight:500;border-bottom:1px solid var(--border);color:var(--ink-2)}
+.mobile-menu a:last-of-type{border-bottom:none}
+.mobile-menu .btn{margin-top:14px;width:100%}
+
+/* ============ HERO ============ */
+.hero{
+  position:relative;overflow:hidden;color:#EEF4FC;
+  background:#07101F;
+}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.hero-photo{filter:saturate(.85) contrast(1.05)}
+.hero-shade{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(180deg,rgba(6,12,24,.55) 0%,rgba(7,16,31,.55) 45%,rgba(6,12,24,.88) 100%),
+    radial-gradient(900px 480px at 80% 8%,rgba(46,124,246,.28),transparent 60%),
+    linear-gradient(90deg,rgba(7,16,31,.35) 0%,rgba(7,16,31,.05) 55%,rgba(7,16,31,.45) 100%);
+}
+.hero-arcs{position:absolute;inset:0;pointer-events:none;opacity:.9}
+.arc{fill:none;stroke:url(#arcGrad);stroke-width:1.5;stroke-dasharray:6 9;animation:dashflow 26s linear infinite;opacity:.9}
+@keyframes dashflow{to{stroke-dashoffset:-600}}
+.node{fill:#5CA1FF;filter:drop-shadow(0 0 6px rgba(92,161,255,.95))}
+.node.sm{fill:#3CC8E8;filter:drop-shadow(0 0 5px rgba(60,200,232,.95))}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero-inner{position:relative;padding:calc(var(--nav-h) + 64px) 0 86px}
+.hero-eyebrow{color:#5CA1FF}
+.hero h1{
+  font-size:clamp(38px,5vw,60px);letter-spacing:-.03em;margin:20px 0 20px;max-width:640px;
+  text-shadow:0 4px 30px rgba(0,0,0,.35);
+}
+.hero h1 .outline{color:transparent;-webkit-text-stroke:1.5px rgba(238,244,252,.5)}
+.hero-sub{font-size:17.5px;color:rgba(196,210,230,.92);max-width:540px;line-height:1.65;margin-bottom:32px}
+.hero-ctas{display:flex;gap:13px;flex-wrap:wrap}
+.hero-note{margin-top:24px;font-size:13.5px;color:rgba(143,163,191,.9);display:flex;align-items:center;gap:8px}
+.hero-note svg{width:15px;height:15px;color:var(--green)}
+
+/* chips */
+.chip{
+  position:absolute;z-index:3;display:flex;align-items:center;gap:10px;
+  background:rgba(9,18,34,.82);border:1px solid rgba(148,173,209,.28);
+  border-radius:12px;padding:10px 14px;
+  box-shadow:0 16px 40px -12px rgba(0,0,0,.6);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  font-size:13px;color:#D8E4F5;animation:float 6s ease-in-out infinite;
+}
+.chip .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.chip .ic svg{width:15px;height:15px}
+.chip b{font-family:var(--font-display);font-weight:700;font-size:13.5px;display:block;line-height:1.15}
+.chip span{font-size:10.5px;color:rgba(143,163,191,.9);font-family:var(--font-mono);letter-spacing:.04em}
+.chip-1{top:24%;right:6%}
+.chip-2{top:56%;right:16%}
+.chip-3{bottom:12%;right:5%}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.chip{animation:none}}
+
+/* ============ STATS ============ */
+.hero-light-lp{
+  position:relative;overflow:hidden;color:var(--ink);
+  background:
+    radial-gradient(820px 420px at 88% -8%,rgba(46,124,246,.14),transparent 60%),
+    radial-gradient(620px 380px at 4% 115%,rgba(60,200,232,.1),transparent 55%),
+    linear-gradient(150deg,#FFFFFF 0%,#EAF0F8 100%);
+  border-bottom:1px solid var(--border);
+}
+.hero-light-lp::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(10,20,36,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(10,20,36,.045) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 55% 25%,#000 20%,transparent 75%);
+  mask-image:radial-gradient(ellipse 85% 75% at 55% 25%,#000 20%,transparent 75%);
+}
+.hero-light-lp .hero-arcs{opacity:.5}
+.hero-light-lp .arc{stroke:url(#arcGradLp)}
+.hero-light-lp .hero-inner{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:calc(var(--nav-h) + 56px) 0 84px}
+.hero-light-lp h1{font-size:clamp(38px,5vw,58px);letter-spacing:-.03em;margin:18px 0 20px;color:var(--ink);text-shadow:none;max-width:620px}
+.hero-light-lp h1 .mark{
+  background:linear-gradient(100deg,#1E5FD9,#2E7CF6 55%,#3CC8E8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-light-lp .hero-sub{color:var(--muted);max-width:540px}
+.hero-light-lp .hero-note{color:var(--muted)}
+.hero-light-lp .hero-note svg{color:var(--green)}
+.hero-light-lp .chip{background:rgba(255,255,255,.9);border-color:var(--border-strong);box-shadow:var(--shadow);color:var(--ink-2)}
+.hero-light-lp .chip span{color:var(--faint)}
+.hero-light-lp .btn-outline{border-color:var(--border-strong);color:var(--ink-2)}
+.hero-light-lp .btn-outline:hover{background:var(--surface-2)}
+.feed-lp{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;box-shadow:var(--shadow);overflow:hidden;
+}
+.feed-lp-head{
+  display:flex;align-items:center;gap:9px;padding:15px 18px;border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+}
+.feed-lp-head .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 1.8s infinite}
+.feed-lp-item{display:flex;gap:12px;padding:14px 18px;border-bottom:1px dashed var(--border);align-items:flex-start}
+.feed-lp-item:last-of-type{border-bottom:none}
+.feed-lp-item .ic{width:32px;height:32px;border-radius:9px;background:rgba(46,124,246,.09);display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.feed-lp-item .ic svg{width:15px;height:15px}
+.feed-lp-item b{display:block;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink-2)}
+.feed-lp-item span{font-size:11.5px;color:var(--faint);font-family:var(--font-mono)}
+.feed-lp-foot{padding:13px 18px;text-align:center;border-top:1px solid var(--border)}
+.prod-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@media (max-width:860px){.hero-light-lp .hero-inner{grid-template-columns:1fr;gap:34px;padding:calc(var(--nav-h) + 36px) 0 60px}}
+
+.stats{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stats-inner{display:grid;grid-template-columns:repeat(5,1fr)}
+.stat{padding:30px 22px;text-align:center;border-left:1px solid var(--border)}
+.stat:first-child{border-left:none}
+.stat .ic{width:38px;height:38px;margin:0 auto 10px;border-radius:10px;background:rgba(46,124,246,.09);display:grid;place-items:center;color:var(--accent-ink)}
+.stat .ic svg{width:18px;height:18px}
+.stat .num{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,2.8vw,34px);letter-spacing:-.02em}
+.stat .lbl{font-size:12.5px;color:var(--muted);margin-top:4px}
+
+/* ============ TRUSTED ============ */
+.trusted{padding:52px 0 30px}
+.trusted-label{text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin-bottom:26px}
+.marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.marquee-track{display:flex;width:max-content;animation:marquee 38s linear infinite}
+.marquee:hover .marquee-track{animation-play-state:paused}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.logo-item{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--faint);white-space:nowrap;padding:8px 40px;transition:color .25s ease}
+.logo-item:hover{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.marquee-track{animation:none;width:100%;flex-wrap:wrap;justify-content:center}}
+
+/* ============ SPLIT: NEEDS + HOW IT WORKS ============ */
+.split{display:grid;grid-template-columns:.9fr 1.1fr;gap:60px;align-items:start}
+.split h3{font-size:24px;margin-bottom:22px}
+.need-item{
+  display:flex;gap:13px;padding:13px 0;align-items:flex-start;
+  border-bottom:1px dashed var(--border);color:var(--ink-2);font-size:15px;
+}
+.need-item:last-of-type{border-bottom:none}
+.need-item .ck{flex:none;width:22px;height:22px;border-radius:6px;background:var(--green-bg);color:var(--green);display:grid;place-items:center;margin-top:2px}
+.need-item .ck svg{width:11px;height:11px}
+.how-flow{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:26px}
+.hstep{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 10px;text-align:center;transition:transform .2s ease,border-color .2s ease;box-shadow:var(--shadow-sm)}
+.hstep:hover{transform:translateY(-3px);border-color:rgba(46,124,246,.5)}
+.hstep .n{font-family:var(--font-mono);font-size:10.5px;color:var(--accent-ink);font-weight:600}
+.hstep .t{font-size:11.8px;font-weight:600;margin-top:5px;line-height:1.3;color:var(--ink-2)}
+.hstep::after{content:"→";position:absolute;top:50%;right:-13px;transform:translateY(-50%);color:var(--accent-2);font-size:13px;font-weight:700}
+.hstep:nth-child(8n)::after{display:none}
+.ind-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.ind{
+  border-radius:11px;border:1px solid var(--border);overflow:hidden;background:var(--surface);
+  padding:14px 10px 11px;text-align:center;transition:transform .2s ease,border-color .2s ease;box-shadow:var(--shadow-sm);
+}
+.ind:hover{transform:translateY(-3px);border-color:rgba(46,124,246,.5)}
+.ind .art{height:46px;border-radius:8px;margin-bottom:9px;display:grid;place-items:center;background:linear-gradient(150deg,rgba(46,124,246,.08),rgba(60,200,232,.05));color:var(--accent-ink)}
+.ind .art svg{width:24px;height:24px}
+.ind h4{font-size:12px;font-weight:600;line-height:1.25}
+.ind-row{display:flex;justify-content:center;margin-top:22px}
+
+/* ============ PRODUCTS (marketplace grid) ============ */
+.prod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.prod-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;box-shadow:var(--shadow-sm);
+}
+.prod-card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:rgba(46,124,246,.45)}
+.prod-art{
+  height:150px;position:relative;display:grid;place-items:center;
+  background:linear-gradient(155deg,var(--surface-2),var(--bg));
+  border-bottom:1px solid var(--border);
+}
+.prod-art svg{width:82px;height:82px}
+.prod-badge{
+  position:absolute;top:11px;left:11px;display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:700;color:var(--accent-ink);background:rgba(46,124,246,.1);
+  border:1px solid rgba(46,124,246,.32);border-radius:6px;padding:3px 8px;
+}
+.prod-badge svg{width:10px;height:10px}
+.prod-body{padding:16px;display:flex;flex-direction:column;flex:1}
+.prod-body h3{font-size:15px;line-height:1.3;margin-bottom:9px}
+.prod-spec{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px}
+.prod-spec span{font-size:10.8px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:3.5px 8px}
+.prod-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--border);padding-top:13px}
+.prod-price b{font-family:var(--font-display);font-size:17px;display:block;line-height:1.1}
+.prod-price span{font-size:11px;color:var(--faint);font-family:var(--font-mono)}
+.prod-card .btn{padding:9px 15px;font-size:13px;border-radius:9px}
+
+/* ============ MARKET DATA 3-COL ============ */
+.market-3{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:16px;align-items:stretch}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+.mcard-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mcard-head h3{font-size:16px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 1.8s infinite;display:inline-block;margin-right:7px}
+.mcard-body{padding:8px 20px 14px}
+.rfq-mini{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px dashed var(--border)}
+.rfq-mini:last-child{border-bottom:none}
+.rfq-mini .ic{width:34px;height:34px;border-radius:9px;background:rgba(46,124,246,.09);display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.rfq-mini .ic svg{width:15px;height:15px}
+.rfq-mini b{display:block;font-size:13.5px;font-weight:600;line-height:1.25}
+.rfq-mini span{font-size:10.8px;color:var(--faint);font-family:var(--font-mono)}
+.status{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:5px;padding:3px 8px;flex:none}
+.status.open{background:var(--green-bg);color:var(--green)}
+.status.quoted{background:rgba(46,124,246,.1);color:var(--accent-ink)}
+.com-table{width:100%;border-collapse:collapse}
+.com-table td{padding:12px 6px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle}
+.com-table tr:last-child td{border-bottom:none}
+.com-name b{display:block;font-size:13.5px;font-weight:600;line-height:1.2}
+.com-name span{font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
+.com-price{font-family:var(--font-mono);font-weight:600;font-size:13.5px;text-align:right;white-space:nowrap}
+.delta{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:11.5px;font-weight:600;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.delta svg{width:10px;height:10px}
+.delta.up{color:var(--green);background:var(--green-bg)}
+.delta.down{color:var(--red);background:var(--red-bg)}
+.network{
+  border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#0B1830,#070F1F 75%);
+  border:1px solid rgba(148,173,209,.2);color:#E6EFFA;
+  padding:26px 22px;display:flex;flex-direction:column;
+}
+.network h3{font-size:18px;margin:10px 0 6px}
+.network .sub{color:rgba(143,163,191,.88);font-size:13px}
+.network svg.mapsvg{position:absolute;right:-26px;top:-8px;opacity:.45;width:200px}
+.net-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:auto;padding-top:22px;position:relative}
+.net-stat{background:rgba(148,173,209,.08);border:1px solid rgba(148,173,209,.16);border-radius:11px;padding:13px}
+.net-stat .n{font-family:var(--font-display);font-weight:800;font-size:21px;color:#fff}
+.net-stat .n em{font-style:normal;color:#5CA1FF}
+.net-stat .l{font-size:11px;color:rgba(143,163,191,.92);margin-top:2px}
+
+/* ============ SERVICES ============ */
+.svc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:11px}
+.svc{
+  display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 13px;transition:transform .2s ease,border-color .2s ease;box-shadow:var(--shadow-sm);
+}
+.svc:hover{transform:translateY(-3px);border-color:rgba(46,124,246,.45)}
+.svc .ic{width:34px;height:34px;border-radius:9px;background:rgba(46,124,246,.09);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.svc .ic svg{width:15px;height:15px}
+.svc b{font-size:12.5px;font-weight:600;line-height:1.25}
+
+/* ============ SUPPLIERS ============ */
+.sup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.sup-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:22px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;box-shadow:var(--shadow-sm);
+}
+.sup-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(46,124,246,.45)}
+.sup-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.sup-ava{
+  width:50px;height:50px;border-radius:13px;flex:none;
+  background:linear-gradient(150deg,rgba(46,124,246,.2),rgba(46,124,246,.05));
+  border:1px solid rgba(46,124,246,.35);
+  display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--accent-ink);
+}
+.score{position:relative;width:52px;height:52px;flex:none}
+.score svg{transform:rotate(-90deg)}
+.score .tb{fill:none;stroke:var(--border-strong);stroke-width:4}
+.score .tv{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round}
+.score .val{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-mono);font-weight:600;font-size:12.5px}
+.sup-card h3{font-size:15.5px;line-height:1.25;margin-bottom:4px}
+.sup-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);flex-wrap:wrap;margin-bottom:12px}
+.stars{color:var(--amber,#D97706);font-size:12px;letter-spacing:1px}
+.verified-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--accent-ink);background:rgba(46,124,246,.09);border:1px solid rgba(46,124,246,.3);border-radius:6px;padding:2.5px 8px}
+.verified-badge svg{width:10px;height:10px}
+.sup-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.sup-tags span{font-size:10.8px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:3.5px 8px}
+.sup-card .btn{width:100%}
+
+/* ============ TESTIMONIALS ============ */
+.testi-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.testi{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:28px;box-shadow:var(--shadow-sm);position:relative;
+}
+.testi .qmark{position:absolute;top:20px;right:24px;font-family:var(--font-display);font-size:64px;line-height:1;color:rgba(46,124,246,.14);font-weight:800}
+.testi .stars{color:#D97706;font-size:14px;letter-spacing:2px;display:block;margin-bottom:14px}
+.testi p{font-size:15.5px;color:var(--ink-2);line-height:1.65;margin-bottom:18px}
+.testi .who{display:flex;align-items:center;gap:12px}
+.testi .who .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2E7CF6,#3CC8E8);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:15px}
+.testi .who b{display:block;font-size:14px}
+.testi .who span{font-size:12px;color:var(--faint)}
+
+/* ============ CTA ============ */
+.cta-row{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+.cta-main{
+  position:relative;overflow:hidden;border-radius:var(--radius-lg);color:#EEF4FC;
+  padding:52px 44px;min-height:260px;display:flex;flex-direction:column;justify-content:center;
+  background:#0B1830;
+}
+.cta-main .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.38}
+.cta-main::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(7,16,31,.88) 30%,rgba(7,16,31,.35) 80%)}
+.cta-main > *{position:relative}
+.cta-main h2{font-size:clamp(26px,3.4vw,38px);max-width:460px;margin-bottom:12px}
+.cta-main p{color:rgba(196,210,230,.9);max-width:440px;margin-bottom:26px}
+.cta-main .actions{display:flex;gap:12px;flex-wrap:wrap}
+.cta-partner{
+  border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface);
+  padding:34px 30px;display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow-sm);
+}
+.cta-partner h3{font-size:21px;margin-bottom:8px}
+.cta-partner p{color:var(--muted);font-size:13.5px;margin-bottom:20px}
+.cta-partner .actions{display:flex;flex-direction:column;gap:10px}
+
+/* ============ FOOTER ============ */
+.footer{background:var(--surface);border-top:1px solid var(--border);margin-top:70px}
+.foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:34px;padding:58px 0 44px}
+.foot-brand p{color:var(--muted);font-size:13.5px;margin:16px 0 20px;max-width:270px}
+.socials{display:flex;gap:9px}
+.socials a{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);transition:all .2s ease}
+.socials a:hover{color:#fff;background:var(--accent);border-color:var(--accent);transform:translateY(-2px)}
+.socials svg{width:15px;height:15px}
+.foot-col h4{font-size:11.5px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:15px}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.foot-col a{font-size:13.5px;color:var(--muted);transition:color .18s ease,padding-left .18s ease}
+.foot-col a:hover{color:var(--ink);padding-left:4px}
+.foot-bottom{border-top:1px solid var(--border);padding:20px 0;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--faint)}
+.foot-offices{display:flex;flex-wrap:wrap;gap:7px}
+.foot-offices span{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--font-mono)}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1080px){
+  .prod-grid{grid-template-columns:repeat(3,1fr)}
+  .svc-grid{grid-template-columns:repeat(4,1fr)}
+  .ind-grid{grid-template-columns:repeat(4,1fr)}
+  .how-flow{grid-template-columns:repeat(4,1fr);gap:10px}
+  .hstep:nth-child(8n)::after{display:block}
+  .hstep:nth-child(4n)::after{display:none}
+  .market-3{grid-template-columns:1fr 1fr}
+  .network{grid-column:1 / -1}
+  .foot-grid{grid-template-columns:1fr 1fr 1fr;gap:30px}
+}
+@media (max-width:860px){
+  .nav-links{display:none}
+  .burger{display:flex}
+  .split{grid-template-columns:1fr;gap:48px}
+  .prod-grid{grid-template-columns:repeat(2,1fr)}
+  .sup-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .cta-row{grid-template-columns:1fr}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:none}
+  .stat:nth-child(n+3){border-top:1px solid var(--border)}
+  .chip-1{right:2%}
+  .section{padding:58px 0}
+}
+@media (max-width:560px){
+  .prod-grid{grid-template-columns:1fr}
+  .svc-grid{grid-template-columns:repeat(2,1fr)}
+  .ind-grid{grid-template-columns:repeat(2,1fr)}
+  .market-3{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:26px}
+  .nav .btn{display:none}
+  .brand-tag{display:none}
+  .cta-main{padding:40px 26px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg>
+      </span>
+      <span>
+        <span class="brand-name">FACTORYDEPO</span><br>
+        <span class="brand-tag">Global Industrial Marketplace</span>
+      </span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#products">Products</a></li>
+      <li><a href="#suppliers">Suppliers</a></li>
+      <li><a href="#rfq">RFQ Market</a></li>
+      <li><a href="#commodities">Commodity Market</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#resources">Resources</a></li>
+      <li><a href="#company">Company</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="lang" aria-label="Language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg>
+        EN
+      </button>
+      <a class="nav-login" href="#">Login</a>
+      <a class="btn btn-primary" href="#">Join Free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#products">Products</a>
+  <a href="#suppliers">Suppliers</a>
+  <a href="#rfq">RFQ Market</a>
+  <a href="#commodities">Commodity Market</a>
+  <a href="#services">Services</a>
+  <a href="#resources">Resources</a>
+  <a href="#company">Company</a>
+  <a class="btn btn-primary" href="#">Join Free</a>
+</div>
+
+<!-- ============ HERO ============ -->
+<section class="hero hero-light-lp" id="top">
+  <svg class="hero-arcs" viewBox="0 0 1200 620" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="arcGradLp" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2E7CF6" stop-opacity="0"/><stop offset=".5" stop-color="#5CA1FF" stop-opacity=".95"/><stop offset="1" stop-color="#3CC8E8" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path class="arc" d="M180 480 Q360 180 700 200"/>
+    <path class="arc" d="M120 300 Q380 90 860 340" style="animation-delay:-8s"/>
+    <path class="arc" d="M260 540 Q560 320 960 430" style="animation-delay:-16s"/>
+    <path class="arc" d="M420 160 Q700 260 1000 130" style="animation-delay:-4s"/>
+    <path class="arc" d="M200 200 Q560 440 900 220" style="animation-delay:-20s"/>
+    <circle class="node" cx="180" cy="480" r="5"/>
+    <circle class="node sm" cx="260" cy="540" r="4"/>
+    <circle class="node" cx="700" cy="200" r="5"/>
+    <circle class="node sm" cx="860" cy="340" r="4"/>
+    <circle class="node" cx="960" cy="430" r="5"/>
+    <circle class="node sm" cx="420" cy="160" r="4"/>
+    <circle class="node" cx="1000" cy="130" r="4.5"/>
+    <circle class="node sm" cx="900" cy="220" r="4"/>
+    <circle class="node" cx="200" cy="200" r="4.5"/>
+    <circle class="node sm" cx="560" cy="320" r="4"/>
+  </svg>
+
+  <div class="wrap hero-inner">
+    <div>
+    <span class="eyebrow hero-eyebrow reveal">The Operating System for Global Industrial Trade</span>
+    <h1 class="reveal" style="transition-delay:.06s">
+      Source the world's <span class="mark">industrial supply</span> — verified.
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.12s">Connect with verified manufacturers, mines and industrial suppliers worldwide. Inspections, testing, logistics and business services — all in one trusted platform.</p>
+    <div class="hero-ctas reveal" style="transition-delay:.18s">
+      <a class="btn btn-primary btn-lg" href="#products">
+        Find Suppliers
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn btn-outline btn-lg" href="#how">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg>
+        Watch Demo
+      </a>
+    </div>
+    <p class="hero-note reveal" style="transition-delay:.24s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+      Every supplier verified in-country. Free to join. No listing fees.
+    </p>
+    </div>
+
+    <div class="feed-lp reveal" style="transition-delay:.15s">
+      <div class="feed-lp-head"><span class="dot"></span>Live Trade Activity</div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span><b>New RFQ: 100 Tons Copper Cathode</b><span>FOB Türkiye · 2m ago · 3 quotes</span></span>
+      </div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></span>
+        <span><b>Inspection Completed: Foshan Steel Co</b><span>Guangdong, China · 5m ago · Score 91</span></span>
+      </div>
+      <div class="feed-lp-item">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>
+        <span><b>New Supplier Joined: Shandong Mining Group</b><span>Shandong, China · 8m ago · Trust 91</span></span>
+      </div>
+      <div class="feed-lp-foot"><a class="mono" href="#rfq" style="font-size:11.5px;color:var(--accent-ink);font-weight:600">View live RFQ market →</a></div>
+    </div>
   </div>
 </section>
 

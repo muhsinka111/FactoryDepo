@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRfqs, useCreateRfq, useMe } from '@workspace/api-client-react';
-import { Page, SectionHead, RfqCard, Spinner, StatusChip } from '../components';
+import { Page, SectionHead, RfqCard, Spinner, StatusChip, requireAuthGate } from '../components';
 import { Link } from 'wouter';
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
 import type { ApiError } from '@workspace/api-client-react';
@@ -41,9 +41,13 @@ export default function RfqExchange() {
           title={<>Post a requirement. <span style={{ color: 'var(--accent-ink)' }}>Get verified quotes.</span></>}
           sub="Buyers post requirements, verified factories respond within hours. Compare price, lead time, quality and Trust Score — not just the lowest price."
         />
-        {isBuyer && (
+        {isBuyer ? (
           <button className="btn btn-primary btn-lg" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancel' : '+ Post Your RFQ'}
+          </button>
+        ) : (
+          <button className="btn btn-primary btn-lg" onClick={() => requireAuthGate()}>
+            + Post Your RFQ
           </button>
         )}
       </div>
@@ -95,7 +99,7 @@ export default function RfqExchange() {
       )}
 
       {res.isLoading ? <Spinner /> : res.data?.items.length ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+        <div className="q-grid">
           {res.data.items.map((r) => <RfqCard key={r.id} r={r} />)}
         </div>
       ) : (

@@ -25,20 +25,40 @@ export default function Home() {
 
   return (
     <Page wide>
-      {/* hero */}
-      <section className="hero-band" style={{ marginTop: 8 }}>
-        <span className="eyebrow" style={{ color: '#5CA1FF' }}>The Operating System for Global Industrial Trade</span>
-        <h1 style={{ marginTop: 14 }}>The Future of Global<br />Industrial Trade.</h1>
-        <p>Connect with verified manufacturers, mines and industrial suppliers worldwide. Inspections, testing, logistics and business services — all in one trusted platform.</p>
-        <div className="actions">
-          <Link href="/products" className="btn btn-primary btn-lg">Find Suppliers →</Link>
-          <Link href="/sign-up" className="btn btn-outline btn-lg" style={{ borderColor: 'rgba(238,244,252,.35)', color: '#EEF4FC' }}>Become a Supplier</Link>
-          <Link href="/rfq" className="btn btn-ghost btn-lg" style={{ color: 'rgba(196,210,230,.9)' }}>▶ Post an RFQ</Link>
+      {/* hero — light */}
+      <section className="hero-light" style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1.15fr .85fr', gap: 44, alignItems: 'center' }}>
+        <div>
+          <span className="eyebrow">The Operating System for Global Industrial Trade</span>
+          <h1 style={{ marginTop: 16 }}>Source the world's <span className="mark">industrial supply</span> — verified.</h1>
+          <p>Connect with verified manufacturers, mines and industrial suppliers worldwide. Inspections, testing, logistics and business services — all in one trusted platform.</p>
+          <div className="actions">
+            <Link href="/products" className="btn btn-primary btn-lg">Find Suppliers →</Link>
+            <Link href="/sign-up" className="btn btn-outline btn-lg" style={{ borderColor: 'var(--border-strong)', color: 'var(--ink-2)' }}>Become a Supplier</Link>
+            <Link href="/rfq" className="btn btn-ghost btn-lg">▶ Post an RFQ</Link>
+          </div>
+        </div>
+        <div className="hero-feed">
+          <div className="hero-feed-head"><span className="dot"></span>Live Trade Activity</div>
+          <div className="feed-item">
+            <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg></span>
+            <span><b>New RFQ: 100 Tons Copper Cathode</b><span>FOB Türkiye · 2m ago · 3 quotes</span></span>
+          </div>
+          <div className="feed-item">
+            <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35M8 11h6M11 8v6" /></svg></span>
+            <span><b>Inspection Completed: Foshan Steel Co</b><span>Guangdong, China · 5m ago · Score 91</span></span>
+          </div>
+          <div className="feed-item">
+            <span className="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg></span>
+            <span><b>New Supplier Joined: Shandong Mining Group</b><span>Shandong, China · 8m ago · Trust 91</span></span>
+          </div>
+          <div style={{ padding: '13px 18px', textAlign: 'center', borderTop: '1px solid var(--border)' }}>
+            <Link href="/rfq" className="mono" style={{ fontSize: 11.5, color: 'var(--accent-ink)', fontWeight: 600 }}>View live RFQ market →</Link>
+          </div>
         </div>
       </section>
 
       {/* stats */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14, marginTop: 26 }}>
+      <section className="h-stats" style={{ display: 'grid', gap: 14, marginTop: 26 }}>
         {[
           ['500,000+', 'Industrial Products'],
           ['150,000+', 'Verified Suppliers'],
@@ -56,7 +76,7 @@ export default function Home() {
       {/* categories */}
       <section style={{ marginTop: 64 }}>
         <SectionHead eyebrow="Industries" title={<>Industrial only. <span style={{ color: 'var(--accent-ink)' }}>Deep, not wide.</span></>} sub="Ten core sectors, each with its own supply chain intelligence." />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+        <div className="h-cats" style={{ display: 'grid', gap: 12 }}>
           {CATEGORIES.map((c) => (
             <Link key={c} href={`/products?category=${encodeURIComponent(c)}`} className="card" style={{ padding: '16px 12px', textAlign: 'center', transition: 'all .15s ease' }}>
               <div style={{
@@ -96,14 +116,14 @@ export default function Home() {
       </section>
 
       {/* RFQ + countries */}
-      <section style={{ marginTop: 64, display: 'grid', gridTemplateColumns: '1.2fr .8fr', gap: 24 }}>
+      <section className="h-rfqrow" style={{ marginTop: 64, display: 'grid', gap: 24 }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 22 }}>
             <SectionHead eyebrow="Live RFQ Market" title={<>Requests from <span style={{ color: 'var(--accent-ink)' }}>real buyers.</span></>} />
             <Link href="/rfq" className="btn btn-primary">Post Your RFQ →</Link>
           </div>
           {rfqs.isLoading ? <Spinner /> : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 14 }}>
               {rfqs.data?.items.slice(0, 4).map((r) => <RfqCard key={r.id} r={r} />)}
             </div>
           )}

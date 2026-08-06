@@ -1,5 +1,5 @@
 import { useProduct, useSupplier } from '@workspace/api-client-react';
-import { Page, Spinner, ProductArt, productKind, Verified, TrustRing, Stars } from '../components';
+import { Page, Spinner, ProductArt, productKind, Verified, TrustRing, Stars, requireAuthGate } from '../components';
 import { Link } from 'wouter';
 
 export default function ProductDetail({ params }: { params: { id: string } }) {
@@ -15,8 +15,12 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
       <Link href="/products" className="mono" style={{ fontSize: 12.5, color: 'var(--faint)' }}>← Back to Marketplace</Link>
       <div className="detail-grid" style={{ marginTop: 16 }}>
         <div className="card" style={{ overflow: 'hidden' }}>
-          <div style={{ height: 300, display: 'grid', placeItems: 'center', background: 'linear-gradient(150deg,var(--surface-2),var(--bg))' }}>
-            <div style={{ transform: 'scale(1.6)' }}><ProductArt kind={productKind(p.name)} /></div>
+          <div style={{ height: 320, display: 'grid', placeItems: 'center', background: 'linear-gradient(150deg,var(--surface-2),var(--bg))', position: 'relative', overflow: 'hidden' }}>
+            {p.imageKey ? (
+              <img src={p.imageKey} alt={p.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ transform: 'scale(1.6)' }}><ProductArt kind={productKind(p.name)} /></div>
+            )}
           </div>
           <div style={{ padding: 28 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -59,9 +63,9 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
           <div className="card" style={{ padding: 24, borderColor: 'rgba(46,124,246,.4)' }}>
             <h3 style={{ fontSize: 17, marginBottom: 6 }}>Request a Quotation</h3>
             <p className="muted" style={{ fontSize: 13.5, marginBottom: 16 }}>Verified factories respond within hours with price, lead time and MOQ.</p>
-            <Link href={`/sign-up?next=/products/${p.id}`} className="btn btn-primary btn-lg" style={{ width: '100%' }}>Request RFQ</Link>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => requireAuthGate()}>Request RFQ</button>
             <p className="mono" style={{ fontSize: 11.5, color: 'var(--faint)', textAlign: 'center', marginTop: 12 }}>
-              Free to join · No listing fees
+              Members only · Free to join
             </p>
           </div>
           <div className="card" style={{ padding: 20 }}>
