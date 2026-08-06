@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactoryDepo — Global Industrial Marketplace</title>
+<meta name="description" content="Source verified industrial products, metals, chemicals and machinery from factories worldwide.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E7CF6'/%3E%3Cpath d='M8 10h6.5c2.6 0 4.2 1.3 4.2 3.3 0 1.5-.9 2.6-2.3 3 1.8.4 3 1.6 3 3.4 0 2.2-1.8 3.6-4.6 3.6H8V10zm5 5.4h1.3c1 0 1.6-.5 1.6-1.4s-.6-1.4-1.6-1.4H13v2.8zm0 6.9h1.5c1.1 0 1.8-.5 1.8-1.5s-.7-1.5-1.8-1.5H13v3zM22.5 10H24v12h-1.5V10z' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F7FA; --surface:#fff; --surface-2:#EEF2F7; --border:#E2E8F0; --border-strong:#CBD5E1;
+  --ink:#0F172A; --ink-2:#334155; --muted:#64748B; --faint:#94A3B8;
+  --accent:#2563EB; --accent-2:#3B82F6; --accent-ink:#1D4ED8; --navy:#0B1830;
+  --green:#059669; --green-bg:#DCFCE7; --red:#DC2626; --red-bg:#FEE2E2; --amber:#D97706; --amber-bg:#FEF3C7;
+  --shadow:0 18px 44px -22px rgba(15,23,42,.28); --shadow-sm:0 3px 12px -4px rgba(15,23,42,.12);
+  --radius:12px; --radius-lg:16px;
+  --font-display:'Archivo',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.015em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14px;border-radius:9px;padding:10px 18px;transition:all .15s ease;white-space:nowrap;border:1px solid transparent}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -8px rgba(37,99,235,.55)}
+.btn-primary:hover{background:#2E6FE8}
+.btn-outline{border-color:var(--border-strong);color:var(--ink-2);background:var(--surface)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover{background:#12244a}
+.btn-sm{padding:7px 12px;font-size:12.5px;border-radius:7px}
+.btn-lg{padding:13px 24px;font-size:15px}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:600}
+
+/* ===== utility bar ===== */
+.ubar{background:var(--navy);color:rgba(226,232,240,.85);font-size:12.5px}
+.ubar-inner{max-width:1240px;margin:0 auto;padding:0 24px;height:34px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.ubar a{color:rgba(226,232,240,.85);transition:color .15s}
+.ubar a:hover{color:#fff}
+.ubar .right{display:flex;gap:18px}
+
+/* ===== nav ===== */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:grid;place-items:center;color:#fff;box-shadow:0 6px 16px -6px rgba(37,99,235,.5)}
+.brand-mark svg{width:20px;height:20px}
+.brand-name{font-family:var(--font-display);font-weight:800;font-size:17px;line-height:1}
+.brand-tag{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:block;margin-top:2px}
+.searchbar{flex:1;display:flex;align-items:center;border:2px solid var(--accent);border-radius:10px;overflow:hidden;background:var(--surface);max-width:560px}
+.searchbar select{border:none;background:var(--surface-2);padding:11px 12px;font-size:13px;color:var(--ink-2);outline:none;border-right:1px solid var(--border);max-width:130px}
+.searchbar input{flex:1;border:none;padding:11px 14px;font-size:14px;outline:none;min-width:0}
+.searchbar button{background:var(--accent);color:#fff;border:none;padding:11px 20px;display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.searchbar button svg{width:15px;height:15px}
+.nav-actions{display:flex;gap:10px;margin-left:auto;align-items:center}
+.nav-actions .split{display:flex;gap:8px}
+.nav-links-row{border-top:1px solid var(--border);background:var(--surface)}
+.nav-links{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;gap:4px;list-style:none;height:42px;align-items:center;overflow-x:auto}
+.nav-links a{font-size:13.5px;font-weight:500;color:var(--ink-2);padding:6px 12px;border-radius:7px;white-space:nowrap;transition:all .15s}
+.nav-links a:hover{background:rgba(37,99,235,.08);color:var(--accent-ink)}
+.nav-links .cat{font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+
+/* ===== hero ===== */
+.hero{background:linear-gradient(160deg,#fff 0%,#EFF4FB 100%);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(15,23,42,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.04) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 80% 70% at 30% 20%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 80% 70% at 30% 20%,#000 20%,transparent 75%)}
+.hero-inner{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:64px 0 72px}
+.hero h1{font-size:clamp(34px,4.6vw,52px);letter-spacing:-.03em;margin:16px 0 14px}
+.hero h1 .mark{color:var(--accent)}
+.hero p{color:var(--muted);font-size:16.5px;max-width:520px;margin-bottom:26px}
+.hero-search{display:flex;align-items:center;border:2px solid var(--accent);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:0 14px 34px -14px rgba(37,99,235,.35);max-width:600px}
+.hero-search input{flex:1;border:none;padding:15px 18px;font-size:15px;outline:none;min-width:0}
+.hero-search button{background:var(--accent);color:#fff;border:none;padding:15px 26px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.hero-search button svg{width:16px;height:16px}
+.popular{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--faint)}
+.popular a{color:var(--accent-ink);background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);padding:4px 11px;border-radius:999px;font-weight:500;transition:all .15s}
+.popular a:hover{background:rgba(37,99,235,.14)}
+.hero-card{position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+.hero-card img{width:100%;height:380px;object-fit:cover}
+.hero-card .tag{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.95);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow-sm)}
+.hero-card .cap{position:absolute;bottom:0;left:0;right:0;padding:34px 18px 16px;background:linear-gradient(transparent,rgba(6,12,24,.85));color:#fff}
+.hero-card .cap b{font-size:15px;display:block}
+.hero-card .cap span{font-size:12px;color:rgba(226,232,240,.85)}
+.float-chip{position:absolute;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:11px;padding:9px 13px;box-shadow:var(--shadow);font-size:12px;display:flex;align-items:center;gap:9px;animation:floaty 5.5s ease-in-out infinite}
+.float-chip .ic{width:26px;height:26px;border-radius:7px;background:rgba(37,99,235,.1);color:var(--accent-ink);display:grid;place-items:center}
+.float-chip .ic svg{width:13px;height:13px}
+.float-chip b{display:block;font-size:12.5px}
+.float-chip span{font-size:10px;color:var(--faint);font-family:var(--font-mono)}
+.fc-1{top:16%;left:-14px}
+.fc-2{bottom:24%;right:-10px;animation-delay:1.4s}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:reduce){.float-chip{animation:none}}
+
+/* ===== stats ===== */
+.stats{background:var(--surface);border-bottom:1px solid var(--border)}
+.stats-inner{display:grid;grid-template-columns:repeat(5,1fr)}
+.stat{padding:26px 20px;text-align:center;border-left:1px solid var(--border)}
+.stat:first-child{border-left:none}
+.stat .num{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,2.6vw,32px);letter-spacing:-.02em;color:var(--accent-ink)}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ===== sections ===== */
+.section{padding:64px 0}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+.section-head h2{font-size:clamp(24px,3vw,34px)}
+.section-head p{color:var(--muted);font-size:14.5px;margin-top:8px;max-width:520px}
+
+/* categories */
+.cat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.cat{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface);transition:all .2s ease;box-shadow:var(--shadow-sm)}
+.cat:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
+.cat img{width:100%;height:96px;object-fit:cover}
+.cat .nm{padding:10px 12px;font-size:13px;font-weight:600;text-align:center;line-height:1.25}
+
+/* products */
+.prod-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s ease}
+.pcard:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
+.pcard-art{position:relative;height:168px;background:var(--surface-2);overflow:hidden}
+.pcard-art img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.pcard:hover .pcard-art img{transform:scale(1.06)}
+.pcard-art .verified{position:absolute;top:10px;left:10px;background:rgba(37,99,235,.92);color:#fff;font-size:10.5px;font-weight:700;padding:3.5px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+.pcard-art .origin{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.95);font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;font-family:var(--font-mono)}
+.pcard-body{padding:14px;display:flex;flex-direction:column;flex:1}
+.pcard-body h3{font-size:14.5px;margin-bottom:7px;line-height:1.3}
+.pcard-specs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.pcard-specs span{font-size:10.5px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2.5px 7px}
+.pcard-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding-top:11px}
+.price b{font-family:var(--font-display);font-size:16px;color:var(--accent-ink);display:block;line-height:1.1}
+.price span{font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
+.minorder{font-size:10px;color:var(--muted);font-family:var(--font-mono);text-align:right}
+
+/* promo band */
+.promo{background:linear-gradient(120deg,#0B1830,#12244A 70%);color:#E6EFFA;border-radius:18px;padding:38px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
+.promo::before{content:"";position:absolute;inset:0;background:radial-gradient(520px 280px at 85% 0%,rgba(37,99,235,.35),transparent 60%)}
+.promo > *{position:relative}
+.promo h3{font-size:24px;margin-bottom:6px}
+.promo p{color:rgba(196,210,230,.88);font-size:14px}
+.promo .actions{display:flex;gap:11px;flex-wrap:wrap}
+
+/* market 3col */
+.market-3{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:stretch}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+.mcard-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mcard-head h3{font-size:15px}
+.mcard-body{padding:6px 18px 12px;flex:1}
+.rfq-mini{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border)}
+.rfq-mini:last-child{border-bottom:none}
+.rfq-mini b{display:block;font-size:13px;font-weight:600}
+.rfq-mini span{font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
+.rfq-mini .st{margin-left:auto;font-size:10px;font-weight:700;border-radius:5px;padding:2.5px 8px;text-transform:uppercase;letter-spacing:.06em}
+.rfq-mini .st.open{background:var(--green-bg);color:var(--green)}
+.rfq-mini .st.quoted{background:rgba(37,99,235,.1);color:var(--accent-ink)}
+.com-table{width:100%;border-collapse:collapse}
+.com-table td{padding:10px 4px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.com-table tr:last-child td{border-bottom:none}
+.com-name b{display:block;font-size:13px;font-weight:600}
+.com-name span{font-size:10px;color:var(--faint);font-family:var(--font-mono)}
+.com-price{font-family:var(--font-mono);font-weight:600;font-size:13px;text-align:right;white-space:nowrap}
+.delta{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-mono);font-size:11px;font-weight:600;border-radius:5px;padding:2.5px 7px;white-space:nowrap}
+.delta svg{width:9px;height:9px}
+.delta.up{color:var(--green);background:var(--green-bg)}
+.delta.down{color:var(--red);background:var(--red-bg)}
+.network{border-radius:14px;background:linear-gradient(160deg,#0B1830,#070F1F 75%);color:#E6EFFA;padding:24px 22px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.network h3{font-size:17px;margin:10px 0 6px}
+.network .sub{color:rgba(143,163,191,.9);font-size:12.5px}
+.net-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:18px}
+.net-stat{background:rgba(148,173,209,.08);border:1px solid rgba(148,173,209,.16);border-radius:10px;padding:12px}
+.net-stat .n{font-family:var(--font-display);font-weight:800;font-size:20px;color:#fff}
+.net-stat .n em{font-style:normal;color:#5CA1FF}
+.net-stat .l{font-size:10.5px;color:rgba(143,163,191,.92)}
+
+/* services */
+.svc-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.svc{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 12px;transition:all .15s ease;box-shadow:var(--shadow-sm)}
+.svc:hover{transform:translateY(-3px);border-color:rgba(37,99,235,.45)}
+.svc .ic{width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.09);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.svc .ic svg{width:14px;height:14px}
+.svc b{font-size:12px;font-weight:600;line-height:1.25}
+
+/* suppliers */
+.sup-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.sup-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;transition:all .2s ease;box-shadow:var(--shadow-sm)}
+.sup-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
+.sup-top{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.sup-ava{width:46px;height:46px;border-radius:12px;background:linear-gradient(150deg,rgba(37,99,235,.18),rgba(37,99,235,.05));border:1px solid rgba(37,99,235,.3);display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--accent-ink);flex:none}
+.sup-card h3{font-size:15px;line-height:1.25}
+.sup-meta{font-size:12px;color:var(--faint);margin-top:3px}
+.stars{color:#D97706;font-size:11.5px;letter-spacing:1px}
+.sup-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.sup-tags span{font-size:10.5px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:3px 8px}
+.sup-card .btn{margin-top:auto}
+
+/* testimonials */
+.testi-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.testi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm);position:relative}
+.testi .qmark{position:absolute;top:16px;right:20px;font-family:var(--font-display);font-size:54px;line-height:1;color:rgba(37,99,235,.12);font-weight:800}
+.testi .stars{display:block;margin-bottom:12px;font-size:13px;letter-spacing:2px}
+.testi p{font-size:14.5px;color:var(--ink-2);line-height:1.6;margin-bottom:16px}
+.testi .who{display:flex;align-items:center;gap:11px}
+.testi .who .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#3CC8E8);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:14px}
+.testi .who b{display:block;font-size:13.5px}
+.testi .who span{font-size:11.5px;color:var(--faint)}
+
+/* cta */
+.cta-row{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+.cta-main{position:relative;overflow:hidden;border-radius:16px;color:#EEF4FC;padding:44px 40px;background:linear-gradient(120deg,#0B1830,#12244A 75%);min-height:230px;display:flex;flex-direction:column;justify-content:center}
+.cta-main::after{content:"";position:absolute;inset:0;background:radial-gradient(480px 260px at 88% 10%,rgba(37,99,235,.4),transparent 60%)}
+.cta-main > *{position:relative}
+.cta-main h2{font-size:clamp(24px,3vw,32px);margin-bottom:10px}
+.cta-main p{color:rgba(196,210,230,.9);max-width:420px;margin-bottom:22px}
+.cta-main .actions{display:flex;gap:11px;flex-wrap:wrap}
+.cta-partner{border-radius:16px;border:1px solid var(--border);background:var(--surface);padding:30px 28px;display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow-sm)}
+.cta-partner h3{font-size:19px;margin-bottom:8px}
+.cta-partner p{color:var(--muted);font-size:13px;margin-bottom:18px}
+.cta-partner .actions{display:flex;flex-direction:column;gap:9px}
+
+/* footer */
+.footer{background:var(--navy);color:rgba(203,213,225,.85);margin-top:60px}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:32px;padding:52px 0 40px}
+.foot-grid > *{min-width:0}
+.foot-brand p{font-size:13px;color:rgba(148,163,184,.85);margin:14px 0 18px;max-width:260px;line-height:1.6}
+.socials{display:flex;gap:8px}
+.socials a{width:34px;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.3);display:grid;place-items:center;color:rgba(203,213,225,.85);transition:all .15s}
+.socials a:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.socials svg{width:14px;height:14px}
+.foot-col h4{font-size:11px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(148,163,184,.8);margin-bottom:14px}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.foot-col a{font-size:13px;color:rgba(203,213,225,.8);transition:color .15s}
+.foot-col a:hover{color:#fff}
+.foot-bottom{border-top:1px solid rgba(148,163,184,.2);padding:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:rgba(148,163,184,.75)}
+.newsletter{display:flex;margin-top:14px}
+.newsletter input{flex:1;min-width:0;border:1px solid rgba(148,163,184,.35);background:rgba(148,163,184,.1);color:#fff;border-radius:8px 0 0 8px;padding:10px 13px;font-size:13px;outline:none}
+.newsletter button{background:var(--accent);color:#fff;border:none;border-radius:0 8px 8px 0;padding:10px 16px;font-weight:600;font-size:13px}
+
+@media (max-width:1080px){
+  .cat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .prod-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .svc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .market-3{grid-template-columns:1fr 1fr}
+  .network{grid-column:1 / -1}
+  .foot-grid{grid-template-columns:1fr 1fr 1fr}
+  .searchbar{display:none}
+}
+@media (max-width:860px){
+  .hero-inner{grid-template-columns:1fr;gap:36px;padding:44px 0 56px}
+  .hero-card img{height:280px}
+  .prod-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sup-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .cta-row{grid-template-columns:1fr}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:none}
+  .stat:nth-child(n+3){border-top:1px solid var(--border)}
+  .nav-links-row{display:none}
+  .ubar .right{display:none}
+  .nav-actions .split{display:none}
+  .section{padding:48px 0}
+}
+@media (max-width:560px){
+  .prod-grid,.cat-grid,.svc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .market-3{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .promo{padding:28px 24px}
+  .float-chip{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- utility bar -->
+<div class="ubar">
+  <div class="ubar-inner">
+    <span>🇹🇷 Türkiye · 🇨🇳 China · 🌍 80+ countries — <a href="#"><b>Global Industrial Marketplace</b></a></span>
+    <div class="right">
+      <a href="#">Help Center</a>
+      <a href="#">Messages</a>
+      <a href="#">Trade Assurance</a>
+      <a href="#"><b>Sign Up / Login</b></a>
+    </div>
+  </div>
+</div>
+
+<!-- nav -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg></span>
+      <span><span class="brand-name">FACTORYDEPO</span><span class="brand-tag">Global Industrial Marketplace</span></span>
+    </a>
+    <div class="searchbar">
+      <select><option>All Categories</option><option>Metals</option><option>Steel</option><option>Chemicals</option><option>Machinery</option></select>
+      <input placeholder="copper cathode, steel coil, lithium…">
+      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Search</button>
+    </div>
+    <div class="nav-actions">
+      <div class="split">
+        <a class="btn btn-outline btn-sm" href="#">Become a Supplier</a>
+        <a class="btn btn-primary btn-sm" href="#">Post RFQ</a>
+      </div>
+    </div>
+  </div>
+  <div class="nav-links-row">
+    <ul class="nav-links">
+      <li><a class="cat" href="#">☰ All Categories</a></li>
+      <li><a href="#products">Products</a></li>
+      <li><a href="#suppliers">Suppliers</a></li>
+      <li><a href="#rfq">RFQ Market</a></li>
+      <li><a href="#commodities">Commodity Market</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#resources">Resources</a></li>
+      <li><a href="#company">Company</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- hero -->
+<section class="hero" id="top">
+  <div class="wrap hero-inner">
+    <div class="reveal">
+      <span class="eyebrow">The Operating System for Global Industrial Trade</span>
+      <h1>Source the world's <span class="mark">industrial supply</span> — verified.</h1>
+      <p>Connect with verified manufacturers, mines and industrial suppliers. Inspections, testing, logistics and business services — all in one trusted platform.</p>
+      <div class="hero-search">
+        <input placeholder="What are you sourcing today? e.g. Copper Cathode 99.99%">
+        <button>Search<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="popular">
+        <span>Popular:</span>
+        <a href="#products">Copper Cathode</a>
+        <a href="#products">Steel Coil</a>
+        <a href="#products">Lithium Carbonate</a>
+        <a href="#products">Solar Panel 550W</a>
+        <a href="#products">CNC Machine</a>
+      </div>
+    </div>
+    <div class="hero-card reveal" style="transition-delay:.1s">
+      <span class="tag">✓ Trust Score 93 · On-site Verified</span>
+      <img src="../../../assets/inspector.jpg" alt="Factory inspection">
+      <div class="cap"><b>Real inspections, real factories</b><span>Jiangsu Xihua Metal Group · Copper Cathode · 24 inspections passed</span></div>
+      <div class="float-chip fc-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Inspection Passed</b><span>Anshan Steel · 12 min ago</span></span></div>
+      <div class="float-chip fc-2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><span><b>Copper $8,742</b><span>+2.18% today</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- stats -->
+<section class="stats">
+  <div class="wrap stats-inner">
+    <div class="stat reveal"><div class="num"><span data-count="500" data-suffix=",000+">0</span></div><div class="lbl">Industrial Products</div></div>
+    <div class="stat reveal" style="transition-delay:.05s"><div class="num"><span data-count="150" data-suffix=",000+">0</span></div><div class="lbl">Verified Suppliers</div></div>
+    <div class="stat reveal" style="transition-delay:.1s"><div class="num"><span data-count="80">0</span>+</div><div class="lbl">Countries</div></div>
+    <div class="stat reveal" style="transition-delay:.15s"><div class="num"><span data-count="2">0</span>M+</div><div class="lbl">RFQs Completed</div></div>
+    <div class="stat reveal" style="transition-delay:.2s"><div class="num"><span data-count="95">0</span>%</div><div class="lbl">On-time Delivery</div></div>
+  </div>
+</section>
+
+<!-- categories -->
+<section class="section" id="categories">
+  <div class="wrap">
+    <div class="section-head">
+      <div><span class="eyebrow">Browse by Category</span><h2 style="margin-top:8px">Shop 12 industrial categories</h2></div>
+      <a class="btn btn-outline" href="#products">View All Categories →</a>
+    </div>
+    <div class="cat-grid">
+      <a class="cat reveal" href="#products"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Metals &amp; Minerals</span></a>
+      <a class="cat reveal" style="transition-delay:.04s" href="#products"><img src="../../../assets/products/steel-coil.jpg" alt=""><span class="nm">Steel</span></a>
+      <a class="cat reveal" style="transition-delay:.08s" href="#products"><img src="../../../assets/products/lithium-carbonate.jpg" alt=""><span class="nm">Chemicals</span></a>
+      <a class="cat reveal" style="transition-delay:.12s" href="#products"><img src="../../../assets/products/cnc-machine.jpg" alt=""><span class="nm">Machinery</span></a>
+      <a class="cat reveal" style="transition-delay:.16s" href="#products"><img src="../../../assets/products/industrial-pump.jpg" alt=""><span class="nm">Industrial Equipment</span></a>
+      <a class="cat reveal" style="transition-delay:.2s" href="#products"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Renewable Energy</span></a>
+      <a class="cat reveal" href="#products"><img src="../../../assets/products/aluminum-ingot.jpg" alt=""><span class="nm">Aluminum &amp; Metals</span></a>
+      <a class="cat reveal" style="transition-delay:.04s" href="#products"><img src="../../../assets/products/antimony-ore.jpg" alt=""><span class="nm">Mining &amp; Ore</span></a>
+      <a class="cat reveal" style="transition-delay:.08s" href="#products"><img src="../../../assets/products/plastic-granules.jpg" alt=""><span class="nm">Plastic &amp; Rubber</span></a>
+      <a class="cat reveal" style="transition-delay:.12s" href="#products"><img src="../../../assets/products/kraft-paper.jpg" alt=""><span class="nm">Packaging</span></a>
+      <a class="cat reveal" style="transition-delay:.16s" href="#products"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Automotive</span></a>
+      <a class="cat reveal" style="transition-delay:.2s" href="#products"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Electronics</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- featured products -->
+<section class="section" id="products" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div><span class="eyebrow">Featured Products</span><h2 style="margin-top:8px">Factory-direct, ready to ship</h2><p>Verified listings with real MOQs. Request a quotation in one click.</p></div>
+      <a class="btn btn-primary" href="#">View All 500,000+ →</a>
+    </div>
+    <div class="prod-grid">
+      <a class="pcard reveal" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/copper-cathode.jpg" alt="Copper Cathode"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
+        <div class="pcard-body"><h3>Copper Cathode 99.99%</h3>
+          <div class="pcard-specs"><span>LME A</span><span>25 MT</span></div>
+          <div class="pcard-foot"><span class="price"><b>$8,742</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.05s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/steel-coil.jpg" alt="Steel Coil"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
+        <div class="pcard-body"><h3>Steel Coil Cold Rolled</h3>
+          <div class="pcard-specs"><span>DC01</span><span>EN 10130</span></div>
+          <div class="pcard-foot"><span class="price"><b>$617</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 20 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.1s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/lithium-carbonate.jpg" alt="Lithium Carbonate"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
+        <div class="pcard-body"><h3>Lithium Carbonate</h3>
+          <div class="pcard-specs"><span>Battery Grade</span><span>99.5%</span></div>
+          <div class="pcard-foot"><span class="price"><b>$18,850</b><span>/ MT · CIF</span></span><span class="minorder">MOQ 1 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.15s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/industrial-pump.jpg" alt="Industrial Pump"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
+        <div class="pcard-body"><h3>Industrial Pump IE4</h3>
+          <div class="pcard-specs"><span>SS316</span><span>High Eff.</span></div>
+          <div class="pcard-foot"><span class="price"><b>$2,450</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 5 Sets<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/solar-panel.jpg" alt="Solar Panel"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
+        <div class="pcard-body"><h3>Solar Panel 550W</h3>
+          <div class="pcard-specs"><span>Mono PERC</span><span>Half-cut</span></div>
+          <div class="pcard-foot"><span class="price"><b>$0.21</b><span>/ W · FOB</span></span><span class="minorder">MOQ 1,000 W<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.05s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/aluminum-ingot.jpg" alt="Aluminum Ingot"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
+        <div class="pcard-body"><h3>Aluminum Ingot 99.7%</h3>
+          <div class="pcard-specs"><span>20kg</span><span>Primary</span></div>
+          <div class="pcard-foot"><span class="price"><b>$2,980</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.1s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/cnc-machine.jpg" alt="CNC Machine"><span class="verified">✓ Verified</span><span class="origin">DE</span></div>
+        <div class="pcard-body"><h3>CNC Machining Center</h3>
+          <div class="pcard-specs"><span>5-Axis</span><span>20k rpm</span></div>
+          <div class="pcard-foot"><span class="price"><b>$28,000</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 1 Set<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+      <a class="pcard reveal" style="transition-delay:.15s" href="#">
+        <div class="pcard-art"><img src="../../../assets/products/antimony-ore.jpg" alt="Antimony Ore"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
+        <div class="pcard-body"><h3>Antimony Ore 50–60%</h3>
+          <div class="pcard-specs"><span>Lump</span><span>Sb 50-60%</span></div>
+          <div class="pcard-foot"><span class="price"><b>$14,500</b><span>/ MT · CIF</span></span><span class="minorder">MOQ 50 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- promo -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="promo reveal">
+      <div>
+        <h3>Verified suppliers only. Real inspections, real factories.</h3>
+        <p>Every Level 2+ supplier is visited by FactoryDepo inspectors before the badge is issued.</p>
+      </div>
+      <div class="actions">
+        <a class="btn btn-primary btn-lg" href="#">Verify My Factory</a>
+        <a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="#suppliers">Browse Suppliers</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- market data -->
+<section class="section" id="commodities" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Market Data</span><h2 style="margin-top:8px">Live market intelligence</h2></div></div>
+    <div class="market-3">
+      <div class="mcard reveal" id="rfq">
+        <div class="mcard-head"><h3>Live RFQ Market</h3><span class="rfq-mini st open" style="margin:0">● Live</span></div>
+        <div class="mcard-body">
+          <div class="rfq-mini"><span style="flex:1"><b>100 Tons Copper Cathode</b><span>LME A · Türkiye · 12 quotes</span></span><span class="st open">Open</span></div>
+          <div class="rfq-mini"><span style="flex:1"><b>OEM Plastic Injection Parts</b><span>50,000 pcs · Germany · 7 quotes</span></span><span class="st open">Open</span></div>
+          <div class="rfq-mini"><span style="flex:1"><b>Battery-Grade Lithium</b><span>5 MT · USA · 9 quotes</span></span><span class="st quoted">Quoted</span></div>
+          <div class="rfq-mini"><span style="flex:1"><b>Steel Coil HRC</b><span>300 MT · Türkiye · 5 quotes</span></span><span class="st open">Open</span></div>
+        </div>
+      </div>
+      <div class="mcard reveal" style="transition-delay:.06s">
+        <div class="mcard-head"><h3>Live Commodity Market</h3><span class="mono" style="font-size:11px;color:var(--faint)">Indicative</span></div>
+        <div class="mcard-body" style="padding-top:10px">
+          <table class="com-table">
+            <tr><td><span class="com-name"><b>Copper Cathode</b><span>99.99%</span></span></td><td class="com-price">$8,742</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.18%</span></td></tr>
+            <tr><td><span class="com-name"><b>Antimony Ore</b><span>50-60%</span></span></td><td class="com-price">$14,500</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.56%</span></td></tr>
+            <tr><td><span class="com-name"><b>Lithium Carbonate</b><span>Battery</span></span></td><td class="com-price">$18,950</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.85%</span></td></tr>
+            <tr><td><span class="com-name"><b>Nickel</b><span>Grade I</span></span></td><td class="com-price">$16,420</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+0.95%</span></td></tr>
+            <tr><td><span class="com-name"><b>Rare Earth Oxide</b><span>NdPr 99%</span></span></td><td class="com-price">$46,200</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+1.75%</span></td></tr>
+            <tr><td><span class="com-name"><b>Iron Ore</b><span>62% Fe</span></span></td><td class="com-price">$117.40</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.25%</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="network reveal" style="transition-delay:.12s">
+        <span class="eyebrow" style="color:#5CA1FF">Global Trade Network</span>
+        <h3>On the ground in every sourcing corridor.</h3>
+        <p class="sub">In-country inspectors, partner laboratories and warehouses where your supply chains run.</p>
+        <div class="net-stats">
+          <div class="net-stat"><div class="n"><span data-count="80">0</span><em>+</em></div><div class="l">Countries</div></div>
+          <div class="net-stat"><div class="n"><span data-count="200">0</span><em>+</em></div><div class="l">Inspection Partners</div></div>
+          <div class="net-stat"><div class="n"><span data-count="50">0</span><em>+</em></div><div class="l">Laboratories</div></div>
+          <div class="net-stat"><div class="n"><span data-count="100">0</span><em>+</em></div><div class="l">Warehouses</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- services -->
+<section class="section" id="services" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Trade Services</span><h2 style="margin-top:8px">Every service international trade demands</h2></div></div>
+    <div class="svc-grid">
+      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></span><b>Factory Inspection</b></div>
+      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span><b>Quality Control</b></div>
+      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></span><b>Laboratory Testing</b></div>
+      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a3 3 0 013 3v3M5 9h14v8a3 3 0 01-3 3H8a3 3 0 01-3-3V9z"/></svg></span><b>Sample Purchasing</b></div>
+      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-6 4 3 5-8"/></svg></span><b>Production Monitoring</b></div>
+      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="8" rx="2"/><path d="M8 10V7h8v3M6 18v2M18 18v2"/></svg></span><b>Container Loading</b></div>
+      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V6l6-3v18"/></svg></span><b>Warehousing</b></div>
+      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h18M3 17l3-7h12l3 7M5 17v3M19 17v3"/></svg></span><b>Shipping</b></div>
+      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg></span><b>Customs Brokerage</b></div>
+      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><b>Business Consulting</b></div>
+      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M10 10h.01M14 10h.01"/></svg></span><b>Company Registration</b></div>
+      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V5l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span><b>Trade Insurance</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- suppliers -->
+<section class="section" id="suppliers" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div><span class="eyebrow">Top Verified Suppliers</span><h2 style="margin-top:8px">Manufacturers you can trust</h2></div>
+      <a class="btn btn-outline" href="#">All Suppliers →</a>
+    </div>
+    <div class="sup-grid">
+      <div class="sup-card reveal">
+        <div class="sup-top"><span class="sup-ava">JX</span><div style="flex:1"><h3>Jiangsu Xihua Metal Group</h3><div class="sup-meta">🇨🇳 China · Jiangsu · <span class="stars">★★★★★</span> 4.9</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 93</span></div>
+        <div class="sup-tags"><span>Copper Cathode</span><span>Smelting</span></div>
+        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
+      </div>
+      <div class="sup-card reveal" style="transition-delay:.06s">
+        <div class="sup-top"><span class="sup-ava">FS</span><div style="flex:1"><h3>Foshan Steel Co.</h3><div class="sup-meta">🇨🇳 China · Guangdong · <span class="stars">★★★★★</span> 4.8</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 89</span></div>
+        <div class="sup-tags"><span>Steel Coil</span><span>HRC</span></div>
+        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
+      </div>
+      <div class="sup-card reveal" style="transition-delay:.12s">
+        <div class="sup-top"><span class="sup-ava">SM</span><div style="flex:1"><h3>Shandong Mining Group</h3><div class="sup-meta">🇨🇳 China · Shandong · <span class="stars">★★★★★</span> 4.9</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 91</span></div>
+        <div class="sup-tags"><span>Antimony Ore</span><span>Mining</span></div>
+        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- testimonials -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head"><div><span class="eyebrow">Trusted by Businesses</span><h2 style="margin-top:8px">What our members say</h2></div></div>
+    <div class="testi-grid">
+      <div class="testi reveal">
+        <span class="qmark">"</span>
+        <span class="stars">★★★★★</span>
+        <p>FactoryDepo's inspection reports gave us confidence to buy from a new Chinese supplier for the first time. The factory photos matched reality exactly — no surprises at the port.</p>
+        <div class="who"><span class="av">AK</span><span><b>Ahmed K.</b><span>Procurement Manager · Saudi Arabia</span></span></div>
+      </div>
+      <div class="testi reveal" style="transition-delay:.08s">
+        <span class="qmark">"</span>
+        <span class="stars">★★★★★</span>
+        <p>We replaced three legacy suppliers with verified Turkish factories in two months. Delivery reliability is now 98% and our inspection costs dropped by half.</p>
+        <div class="who"><span class="av">LW</span><span><b>Li Wei</b><span>Sourcing Director · Germany</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- cta -->
+<section class="section" id="company" style="padding-top:0">
+  <div class="wrap cta-row">
+    <div class="cta-main reveal">
+      <span class="eyebrow" style="color:#5CA1FF">Ready to Grow Your Business?</span>
+      <h2>Your next global supplier is already here.</h2>
+      <p>Find trusted manufacturers. Book inspections. Verify suppliers. Ship globally — all from one platform.</p>
+      <div class="actions"><a class="btn btn-primary btn-lg" href="#">Start Free Now</a><a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="#">Book a Demo</a></div>
+    </div>
+    <div class="cta-partner reveal" style="transition-delay:.08s">
+      <h3>Partner With Us</h3>
+      <p>Join the world's most trusted industrial trade ecosystem — as a supplier or service partner.</p>
+      <div class="actions"><a class="btn btn-primary" href="#">Become a Supplier</a><a class="btn btn-outline" href="#">Join as a Service Partner</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- footer -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg></span><span><span class="brand-name" style="color:#fff">FACTORYDEPO</span></span></a>
+        <p>The operating system for global industrial trade. Verified supply, inspections, laboratories, logistics and intelligence — in one trusted ecosystem.</p>
+        <div class="newsletter"><input placeholder="Get market alerts in your inbox"><button>Subscribe</button></div>
+        <div class="socials" style="margin-top:16px">
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V23h-4V8zm7.5 0h3.8v2.05h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V23h-4v-7.7c0-1.84-.03-4.2-2.56-4.2-2.56 0-2.95 2-2.95 4.07V23H8V8z"/></svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41z"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.49h-2.8V24C19.62 23.09 24 18.1 24 12.07z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col"><h4>Marketplace</h4><ul><li><a href="#products">Products</a></li><li><a href="#suppliers">Suppliers</a></li><li><a href="#rfq">RFQ Market</a></li><li><a href="#commodities">Commodity Market</a></li></ul></div>
+      <div class="foot-col"><h4>Services</h4><ul><li><a href="#services">Inspection</a></li><li><a href="#services">Laboratory Testing</a></li><li><a href="#services">Logistics</a></li><li><a href="#services">Warehousing</a></li></ul></div>
+      <div class="foot-col"><h4>Resources</h4><ul><li><a href="#commodities">Market Reports</a></li><li><a href="#categories">Guides</a></li><li><a href="#suppliers">Supplier Rankings</a></li><li><a href="#company">Country Reports</a></li></ul></div>
+      <div class="foot-col"><h4>Company</h4><ul><li><a href="#company">About Us</a></li><li><a href="#company">Careers</a></li><li><a href="#company">Press</a></li><li><a href="#company">Contact Us</a></li><li><a href="#company">Terms of Service</a></li></ul></div>
+    </div>
+    <div class="foot-bottom"><span>© 2024 FactoryDepo.com All rights reserved.</span><span>Turkey · China · Germany · Russia · USA · Vietnam · India</span></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) { els.forEach(function(e){e.classList.add('in');}); }
+  else {
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }); }, {threshold:.1, rootMargin:'0px 0px -40px 0px'});
+    els.forEach(function(e){ io.observe(e); });
+  }
+  function count(el){
+    el.dataset.done = '1';
+    var t = parseFloat(el.dataset.count), s = el.dataset.suffix || '', d = 1500, st = null;
+    function step(ts){ if(!st) st = ts; var p = Math.min((ts-st)/d, 1); var e = 1-Math.pow(1-p,3); el.textContent = Math.round(t*e).toLocaleString('en-US')+s; if(p<1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  var cs = document.querySelectorAll('[data-count]');
+  if (reduce || !('IntersectionObserver' in window)) { cs.forEach(count); }
+  else {
+    var cio = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ count(e.target); cio.unobserve(e.target);} }); }, {threshold:.5});
+    cs.forEach(function(e){ cio.observe(e); });
+  }
+  setTimeout(function(){ document.querySelectorAll('.reveal:not(.in)').forEach(function(e){ e.classList.add('in'); }); }, 1600);
+  setTimeout(function(){ document.querySelectorAll('[data-count]:not([data-done])').forEach(count); }, 2200);
+})();
+</script>
+</body>
+</html>
