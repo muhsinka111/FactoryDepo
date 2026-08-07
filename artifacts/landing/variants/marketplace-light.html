@@ -285,7 +285,7 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
       <a href="#">Help Center</a>
       <a href="#">Messages</a>
       <a href="#">Trade Assurance</a>
-      <a href="#"><b>Sign Up / Login</b></a>
+      <a href="/sign-in"><b>Sign Up / Login</b></a>
     </div>
   </div>
 </div>
@@ -304,8 +304,8 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
     </div>
     <div class="nav-actions">
       <div class="split">
-        <a class="btn btn-outline btn-sm" href="#">Become a Supplier</a>
-        <a class="btn btn-primary btn-sm" href="#">Post RFQ</a>
+        <a class="btn btn-outline btn-sm" href="/sign-up">Become a Supplier</a>
+        <a class="btn btn-primary btn-sm" href="/rfq">Post RFQ</a>
       </div>
     </div>
   </div>
@@ -336,11 +336,11 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
       </div>
       <div class="popular">
         <span>Popular:</span>
-        <a href="#products">Copper Cathode</a>
-        <a href="#products">Steel Coil</a>
-        <a href="#products">Lithium Carbonate</a>
-        <a href="#products">Solar Panel 550W</a>
-        <a href="#products">CNC Machine</a>
+        <a href="/products?q=copper">Copper Cathode</a>
+        <a href="/products?q=steel">Steel Coil</a>
+        <a href="/products?q=lithium">Lithium Carbonate</a>
+        <a href="/products?q=solar">Solar Panel 550W</a>
+        <a href="/products?q=cnc">CNC Machine</a>
       </div>
     </div>
     <div class="hero-card reveal" style="transition-delay:.1s">
@@ -369,21 +369,21 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="wrap">
     <div class="section-head">
       <div><span class="eyebrow">Browse by Category</span><h2 style="margin-top:8px">Shop 12 industrial categories</h2></div>
-      <a class="btn btn-outline" href="#products">View All Categories →</a>
+      <a class="btn btn-outline" href="/products">View All Categories →</a>
     </div>
     <div class="cat-grid">
-      <a class="cat reveal" href="#products"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Metals &amp; Minerals</span></a>
-      <a class="cat reveal" style="transition-delay:.04s" href="#products"><img src="../../../assets/products/steel-coil.jpg" alt=""><span class="nm">Steel</span></a>
-      <a class="cat reveal" style="transition-delay:.08s" href="#products"><img src="../../../assets/products/lithium-carbonate.jpg" alt=""><span class="nm">Chemicals</span></a>
-      <a class="cat reveal" style="transition-delay:.12s" href="#products"><img src="../../../assets/products/cnc-machine.jpg" alt=""><span class="nm">Machinery</span></a>
-      <a class="cat reveal" style="transition-delay:.16s" href="#products"><img src="../../../assets/products/industrial-pump.jpg" alt=""><span class="nm">Industrial Equipment</span></a>
-      <a class="cat reveal" style="transition-delay:.2s" href="#products"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Renewable Energy</span></a>
-      <a class="cat reveal" href="#products"><img src="../../../assets/products/aluminum-ingot.jpg" alt=""><span class="nm">Aluminum &amp; Metals</span></a>
-      <a class="cat reveal" style="transition-delay:.04s" href="#products"><img src="../../../assets/products/antimony-ore.jpg" alt=""><span class="nm">Mining &amp; Ore</span></a>
-      <a class="cat reveal" style="transition-delay:.08s" href="#products"><img src="../../../assets/products/plastic-granules.jpg" alt=""><span class="nm">Plastic &amp; Rubber</span></a>
-      <a class="cat reveal" style="transition-delay:.12s" href="#products"><img src="../../../assets/products/kraft-paper.jpg" alt=""><span class="nm">Packaging</span></a>
-      <a class="cat reveal" style="transition-delay:.16s" href="#products"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Automotive</span></a>
-      <a class="cat reveal" style="transition-delay:.2s" href="#products"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Electronics</span></a>
+      <a class="cat reveal" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Metals &amp; Minerals</span></a>
+      <a class="cat reveal" style="transition-delay:.04s" href="/products?category=Steel"><img src="../../../assets/products/steel-coil.jpg" alt=""><span class="nm">Steel</span></a>
+      <a class="cat reveal" style="transition-delay:.08s" href="/products?category=Chemicals"><img src="../../../assets/products/lithium-carbonate.jpg" alt=""><span class="nm">Chemicals</span></a>
+      <a class="cat reveal" style="transition-delay:.12s" href="/products?category=Machinery"><img src="../../../assets/products/cnc-machine.jpg" alt=""><span class="nm">Machinery</span></a>
+      <a class="cat reveal" style="transition-delay:.16s" href="/products?category=Industrial+Equipment"><img src="../../../assets/products/industrial-pump.jpg" alt=""><span class="nm">Industrial Equipment</span></a>
+      <a class="cat reveal" style="transition-delay:.2s" href="/products?category=Renewable+Energy"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Renewable Energy</span></a>
+      <a class="cat reveal" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/aluminum-ingot.jpg" alt=""><span class="nm">Aluminum &amp; Metals</span></a>
+      <a class="cat reveal" style="transition-delay:.04s" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/antimony-ore.jpg" alt=""><span class="nm">Mining &amp; Ore</span></a>
+      <a class="cat reveal" style="transition-delay:.08s" href="/products?category=Plastic+%26+Rubber"><img src="../../../assets/products/plastic-granules.jpg" alt=""><span class="nm">Plastic &amp; Rubber</span></a>
+      <a class="cat reveal" style="transition-delay:.12s" href="/products?category=Packaging"><img src="../../../assets/products/kraft-paper.jpg" alt=""><span class="nm">Packaging</span></a>
+      <a class="cat reveal" style="transition-delay:.16s" href="/products?category=Automotive"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Automotive</span></a>
+      <a class="cat reveal" style="transition-delay:.2s" href="/products?category=Electronics"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Electronics</span></a>
     </div>
   </div>
 </section>
@@ -393,59 +393,59 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="wrap">
     <div class="section-head">
       <div><span class="eyebrow">Featured Products</span><h2 style="margin-top:8px">Factory-direct, ready to ship</h2><p>Verified listings with real MOQs. Request a quotation in one click.</p></div>
-      <a class="btn btn-primary" href="#">View All 500,000+ →</a>
+      <a class="btn btn-primary" href="/products">View All 500,000+ →</a>
     </div>
     <div class="prod-grid">
-      <a class="pcard reveal" href="#">
+      <a class="pcard reveal" href="/products?q=copper">
         <div class="pcard-art"><img src="../../../assets/products/copper-cathode.jpg" alt="Copper Cathode"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
         <div class="pcard-body"><h3>Copper Cathode 99.99%</h3>
           <div class="pcard-specs"><span>LME A</span><span>25 MT</span></div>
           <div class="pcard-foot"><span class="price"><b>$8,742</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.05s" href="#">
+      <a class="pcard reveal" style="transition-delay:.05s" href="/products?q=steel">
         <div class="pcard-art"><img src="../../../assets/products/steel-coil.jpg" alt="Steel Coil"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
         <div class="pcard-body"><h3>Steel Coil Cold Rolled</h3>
           <div class="pcard-specs"><span>DC01</span><span>EN 10130</span></div>
           <div class="pcard-foot"><span class="price"><b>$617</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 20 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.1s" href="#">
+      <a class="pcard reveal" style="transition-delay:.1s" href="/products?q=lithium">
         <div class="pcard-art"><img src="../../../assets/products/lithium-carbonate.jpg" alt="Lithium Carbonate"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
         <div class="pcard-body"><h3>Lithium Carbonate</h3>
           <div class="pcard-specs"><span>Battery Grade</span><span>99.5%</span></div>
           <div class="pcard-foot"><span class="price"><b>$18,850</b><span>/ MT · CIF</span></span><span class="minorder">MOQ 1 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.15s" href="#">
+      <a class="pcard reveal" style="transition-delay:.15s" href="/products?q=pump">
         <div class="pcard-art"><img src="../../../assets/products/industrial-pump.jpg" alt="Industrial Pump"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
         <div class="pcard-body"><h3>Industrial Pump IE4</h3>
           <div class="pcard-specs"><span>SS316</span><span>High Eff.</span></div>
           <div class="pcard-foot"><span class="price"><b>$2,450</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 5 Sets<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" href="#">
+      <a class="pcard reveal" href="/products?q=solar">
         <div class="pcard-art"><img src="../../../assets/products/solar-panel.jpg" alt="Solar Panel"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
         <div class="pcard-body"><h3>Solar Panel 550W</h3>
           <div class="pcard-specs"><span>Mono PERC</span><span>Half-cut</span></div>
           <div class="pcard-foot"><span class="price"><b>$0.21</b><span>/ W · FOB</span></span><span class="minorder">MOQ 1,000 W<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.05s" href="#">
+      <a class="pcard reveal" style="transition-delay:.05s" href="/products?q=aluminum">
         <div class="pcard-art"><img src="../../../assets/products/aluminum-ingot.jpg" alt="Aluminum Ingot"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
         <div class="pcard-body"><h3>Aluminum Ingot 99.7%</h3>
           <div class="pcard-specs"><span>20kg</span><span>Primary</span></div>
           <div class="pcard-foot"><span class="price"><b>$2,980</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.1s" href="#">
+      <a class="pcard reveal" style="transition-delay:.1s" href="/products?q=cnc">
         <div class="pcard-art"><img src="../../../assets/products/cnc-machine.jpg" alt="CNC Machine"><span class="verified">✓ Verified</span><span class="origin">DE</span></div>
         <div class="pcard-body"><h3>CNC Machining Center</h3>
           <div class="pcard-specs"><span>5-Axis</span><span>20k rpm</span></div>
           <div class="pcard-foot"><span class="price"><b>$28,000</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 1 Set<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
         </div>
       </a>
-      <a class="pcard reveal" style="transition-delay:.15s" href="#">
+      <a class="pcard reveal" style="transition-delay:.15s" href="/products?q=antimony">
         <div class="pcard-art"><img src="../../../assets/products/antimony-ore.jpg" alt="Antimony Ore"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
         <div class="pcard-body"><h3>Antimony Ore 50–60%</h3>
           <div class="pcard-specs"><span>Lump</span><span>Sb 50-60%</span></div>
@@ -465,8 +465,8 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
         <p>Every Level 2+ supplier is visited by FactoryDepo inspectors before the badge is issued.</p>
       </div>
       <div class="actions">
-        <a class="btn btn-primary btn-lg" href="#">Verify My Factory</a>
-        <a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="#suppliers">Browse Suppliers</a>
+        <a class="btn btn-primary btn-lg" href="/sign-up">Verify My Factory</a>
+        <a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="/suppliers">Browse Suppliers</a>
       </div>
     </div>
   </div>
@@ -485,7 +485,7 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
           <div class="rfq-mini"><span style="flex:1"><b>Battery-Grade Lithium</b><span>5 MT · USA · 9 quotes</span></span><span class="st quoted">Quoted</span></div>
           <div class="rfq-mini"><span style="flex:1"><b>Steel Coil HRC</b><span>300 MT · Türkiye · 5 quotes</span></span><span class="st open">Open</span></div>
         </div>
-        <div style="padding:13px 18px;border-top:1px solid var(--border);text-align:center"><a href="#" style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">Post Your RFQ →</a></div>
+        <div style="padding:13px 18px;border-top:1px solid var(--border);text-align:center"><a href="/rfq" style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">Post Your RFQ →</a></div>
       </div>
       <div class="mcard reveal" style="transition-delay:.06s">
         <div class="mcard-head"><h3>Live Commodity Market</h3><span class="mono" style="font-size:11px;color:var(--faint)">Indicative</span></div>
@@ -541,7 +541,7 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="wrap">
     <div class="section-head">
       <div><span class="eyebrow">Top Verified Suppliers</span><h2 style="margin-top:8px">Manufacturers you can trust</h2></div>
-      <a class="btn btn-outline" href="#">All Suppliers →</a>
+      <a class="btn btn-outline" href="/suppliers">All Suppliers →</a>
     </div>
     <div class="sup-grid">
       <div class="sup-card reveal">
@@ -591,12 +591,12 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
       <span class="eyebrow" style="color:#5CA1FF">Ready to Grow Your Business?</span>
       <h2>Your next global supplier is already here.</h2>
       <p>Find trusted manufacturers. Book inspections. Verify suppliers. Ship globally — all from one platform.</p>
-      <div class="actions"><a class="btn btn-primary btn-lg" href="#">Start Free Now</a><a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="#">Book a Demo</a></div>
+      <div class="actions"><a class="btn btn-primary btn-lg" href="/sign-up">Start Free Now</a><a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="/sign-up">Book a Demo</a></div>
     </div>
     <div class="cta-partner reveal" style="transition-delay:.08s">
       <h3>Partner With Us</h3>
       <p>Join the world's most trusted industrial trade ecosystem — as a supplier or service partner.</p>
-      <div class="actions"><a class="btn btn-primary" href="#">Become a Supplier</a><a class="btn btn-outline" href="#">Join as a Service Partner</a></div>
+      <div class="actions"><a class="btn btn-primary" href="/sign-up">Become a Supplier</a><a class="btn btn-outline" href="/sign-up">Join as a Service Partner</a></div>
     </div>
   </div>
 </section>
@@ -680,6 +680,18 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
       .catch(function(){ tryFetch(i + 1); });
   }
   tryFetch(0);
+})();
+/* ---- search bar → live marketplace search ---- */
+(function(){
+  'use strict';
+  function go(){
+    var v = (document.getElementById('heroSearch') || document.querySelector('.hero-search input')).value.trim();
+    window.location.href = '/products' + (v ? '?q=' + encodeURIComponent(v) : '');
+  }
+  var btn = document.querySelector('.hero-search button');
+  var input = document.querySelector('.hero-search input');
+  if (btn) btn.addEventListener('click', go);
+  if (input) input.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
 })();
 </script>
 </body>

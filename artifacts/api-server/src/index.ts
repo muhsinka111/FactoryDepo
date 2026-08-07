@@ -74,6 +74,40 @@ async function runMigrations(): Promise<void> {
   }
 }
 
+/** Locate the marketing landing (Design A). Null → SPA stays at root. */
+function findLandingFile(): string | null {
+  const candidates = [
+    fileURLToPath(new URL('../../../artifacts/landing/variants/marketplace-light.html', import.meta.url)),
+    fileURLToPath(new URL('../../artifacts/landing/variants/marketplace-light.html', import.meta.url)),
+    path.resolve(process.cwd(), 'artifacts/landing/variants/marketplace-light.html'),
+    path.resolve(process.cwd(), 'artifacts/landing/index.html'),
+  ];
+  for (const c of candidates) {
+    try {
+      if (existsSync(c)) return c;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
+/** Locate the shared image assets dir (served at /assets for the landing). */
+function findAssetsDir(): string | null {
+  const candidates = [
+    fileURLToPath(new URL('../../../assets/', import.meta.url)),
+    path.resolve(process.cwd(), 'assets'),
+  ];
+  for (const c of candidates) {
+    try {
+      if (existsSync(c)) return c;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
 /* ---------- app ---------- */
 
 const app = express();
@@ -119,9 +153,22 @@ app.use('/api', (_req, res) => {
 /* ---------- static frontend + SPA fallback (prod) ---------- */
 
 const staticDir = findStaticDir();
+const landingFile = findLandingFile();
+const assetsDir = findAssetsDir();
+if (assetsDir) app.use('/assets', express.static(assetsDir));
 if (staticDir) {
-  app.use(express.static(staticDir, { index: 'index.html' }));
   const indexPath = path.join(staticDir, 'index.html');
+  // Marketing landing at the exact root; the app (SPA) lives under /products, /suppliers, /rfq, …
+  if (landingFile) {
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && req.path === '/') {
+        res.sendFile(landingFile);
+        return;
+      }
+      next();
+    });
+  }
+  app.use(express.static(staticDir, { index: 'index.html', redirect: false }));
   // Express 5: no app.get('*') — use a GET fallback that skips /api.
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api')) {
