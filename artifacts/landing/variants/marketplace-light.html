@@ -100,6 +100,57 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media (prefers-reduced-motion:reduce){.float-chip{animation:none}}
 
+/* ===== new hero: RFQ & Ready Stock ===== */
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 20px}
+.role-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.role-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow-sm)}
+.role-chip .ic{width:22px;height:22px;border-radius:6px;background:rgba(37,99,235,.1);color:var(--accent-ink);display:grid;place-items:center}
+.role-chip .ic svg{width:12px;height:12px}
+.role-chip .sub{font-weight:500;color:var(--faint);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:2px}
+.hero-visual{position:relative}
+.rfq-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:18px;position:relative}
+.rfq-card .rfq-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rfq-card .st-open{background:var(--green-bg);color:var(--green);font-size:10.5px;font-weight:800;border-radius:6px;padding:4px 10px;letter-spacing:.08em}
+.rfq-card .st-rfq{background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:10.5px;font-weight:800;border-radius:6px;padding:4px 10px;letter-spacing:.08em;margin-left:auto}
+.rfq-card h3{font-size:16.5px;margin-bottom:4px}
+.rfq-card .rfq-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rfq-card .rfq-meta .flag{font-size:14px}
+.rfq-card .rfq-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.rfq-card .rfq-stat{background:var(--surface-2);border-radius:9px;padding:9px 10px;text-align:center}
+.rfq-card .rfq-stat b{display:block;font-size:14px;font-family:var(--font-display)}
+.rfq-card .rfq-stat span{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.rfq-card .rfq-actions{display:flex;gap:10px}
+.rfq-card .rfq-actions .btn{flex:1}
+.stock-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-top:14px}
+.stock-card img{width:74px;height:74px;object-fit:cover;border-radius:11px;flex:none}
+.stock-card .stock-info{flex:1;min-width:0}
+.stock-card .stock-tag{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--amber);background:var(--amber-bg);border-radius:5px;padding:2.5px 8px;display:inline-block;margin-bottom:5px}
+.stock-card b{font-size:13.5px;display:block}
+.stock-card span{font-size:11.5px;color:var(--muted)}
+.verified-seal{position:absolute;top:-16px;right:-12px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:50%;width:52px;height:52px;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(217,119,6,.6);border:3px solid #fff;z-index:2}
+.verified-seal svg{width:24px;height:24px}
+.notif-chip{position:absolute;bottom:-16px;left:-10px;z-index:2}
+.notif-chip .ic{background:var(--green);color:#fff}
+
+/* ===== how it works ===== */
+.how{background:var(--surface);border-bottom:1px solid var(--border)}
+.how-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.how-step{position:relative;border:1px solid var(--border);border-radius:14px;padding:22px 18px;background:var(--surface);transition:all .2s ease}
+.how-step:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.4)}
+.how-step .n{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent-ink);background:rgba(37,99,235,.08);border-radius:6px;padding:3px 9px;display:inline-block;margin-bottom:12px}
+.how-step .ic{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:grid;place-items:center;margin-bottom:12px}
+.how-step .ic svg{width:18px;height:18px}
+.how-step b{font-size:14.5px;display:block;margin-bottom:5px}
+.how-step p{font-size:12.5px;color:var(--muted)}
+.how-arrow{display:none}
+@media (max-width:960px){
+  .how-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .hero-ctas .btn{flex:1}
+  .rfq-card .rfq-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
 /* ===== stats ===== */
 .stats{background:var(--surface);border-bottom:1px solid var(--border)}
 .stats-inner{display:grid;grid-template-columns:repeat(5,1fr)}
@@ -312,12 +363,12 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="nav-links-row">
     <ul class="nav-links">
       <li><a class="cat" href="#">☰ All Categories</a></li>
-      <li><a href="#products">Products</a></li>
-      <li><a href="#suppliers">Suppliers</a></li>
+      <li><a href="#how">How It Works</a></li>
       <li><a href="#rfq">RFQ Market</a></li>
+      <li><a href="#products">Ready Stock</a></li>
+      <li><a href="#suppliers">Suppliers</a></li>
       <li><a href="#commodities">Commodity Market</a></li>
       <li><a href="#services">Services</a></li>
-      <li><a href="#resources">Resources</a></li>
       <li><a href="#company">Company</a></li>
     </ul>
   </div>
@@ -328,11 +379,20 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="wrap hero-inner">
     <div class="reveal">
       <span class="eyebrow">The Operating System for Global Industrial Trade</span>
-      <h1>Source the world's <span class="mark">industrial supply</span> — verified.</h1>
-      <p>Connect with verified manufacturers, mines and industrial suppliers. Inspections, testing, logistics and business services — all in one trusted platform.</p>
+      <h1>Buy smarter. <span class="mark">Quote faster.</span></h1>
+      <p>Post an RFQ and get verified quotes in 24 hours — or buy ready stock instantly. Buyers, sellers and manufacturers, connected in one trusted marketplace.</p>
       <div class="hero-search">
-        <input placeholder="What are you sourcing today? e.g. Copper Cathode 99.99%">
+        <input id="heroSearch" placeholder="What are you sourcing today? e.g. Copper Cathode 99.99%">
         <button>Search<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="/rfq">Post Your RFQ<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-outline btn-lg" href="/products">Browse Ready Stock →</a>
+      </div>
+      <div class="role-chips">
+        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>BUYER</span>
+        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l1.5-5h15L21 9M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9h18M9 21v-6h6v6"/></svg></span>SELLER</span>
+        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 10h.01M15 10h.01M9 13h.01M15 13h.01"/></svg></span>MANUFACTURER</span>
       </div>
       <div class="popular">
         <span>Popular:</span>
@@ -343,12 +403,33 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
         <a href="/products?q=cnc">CNC Machine</a>
       </div>
     </div>
-    <div class="hero-card reveal" style="transition-delay:.1s">
-      <span class="tag">✓ Trust Score 93 · On-site Verified</span>
-      <img src="../../../assets/inspector.jpg" alt="Factory inspection">
-      <div class="cap"><b>Real inspections, real factories</b><span>Jiangsu Xihua Metal Group · Copper Cathode · 24 inspections passed</span></div>
-      <div class="float-chip fc-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Inspection Passed</b><span>Anshan Steel · 12 min ago</span></span></div>
-      <div class="float-chip fc-2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><span><b>Copper $8,742</b><span>+2.18% today</span></span></div>
+    <div class="hero-visual reveal" style="transition-delay:.1s">
+      <div class="verified-seal" title="Verified by FactoryDepo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 2l2.4 2.4 3.4-.5 1 3.3 3 1.7-1.4 3.1 1.4 3.1-3 1.7-1 3.3-3.4-.5L12 22l-2.4-2.4-3.4.5-1-3.3-3-1.7 1.4-3.1L2.2 8.9l3-1.7 1-3.3 3.4.5L12 2z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="rfq-card">
+        <div class="rfq-head"><span class="st-open">● OPEN</span><span class="st-rfq">RFQ</span></div>
+        <h3>CNC Machined Aluminum Parts</h3>
+        <div class="rfq-meta"><span class="flag">🇹🇷</span> 5,000 pcs · Türkiye · <b style="color:var(--red)">Ends in 2d 14h</b></div>
+        <div class="rfq-stats">
+          <div class="rfq-stat"><b>12</b><span>Quotes</span></div>
+          <div class="rfq-stat"><b>$0.60</b><span>Price Band</span></div>
+          <div class="rfq-stat"><b>98%</b><span>Buyer Rating</span></div>
+        </div>
+        <div class="rfq-actions">
+          <a class="btn btn-primary" href="/rfq/1">Submit Quote<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-outline" href="/rfq">Details</a>
+        </div>
+      </div>
+      <div class="stock-card">
+        <img src="../../../assets/products/cnc-machine.jpg" alt="CNC Machine">
+        <div class="stock-info">
+          <span class="stock-tag">READY STOCK</span>
+          <b>CNC Machine VMC-850</b>
+          <span>$28,000 / Set · In stock · Türkiye</span>
+        </div>
+        <a class="btn btn-navy btn-sm" href="/products?q=cnc">Buy Now</a>
+      </div>
+      <div class="float-chip notif-chip fc-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Quote Received</b><span>Anshan Steel · 2 min ago</span></span></div>
+      <div class="float-chip fc-2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></span><span><b>24h Response</b><span>Fast quote guarantee</span></span></div>
     </div>
   </div>
 </section>
@@ -356,11 +437,27 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
 <!-- stats -->
 <section class="stats">
   <div class="wrap stats-inner">
-    <div class="stat reveal"><div class="num"><span data-count="500" data-suffix=",000+">0</span></div><div class="lbl">Industrial Products</div></div>
-    <div class="stat reveal" style="transition-delay:.05s"><div class="num"><span data-count="150" data-suffix=",000+">0</span></div><div class="lbl">Verified Suppliers</div></div>
-    <div class="stat reveal" style="transition-delay:.1s"><div class="num"><span data-count="80">0</span>+</div><div class="lbl">Countries</div></div>
-    <div class="stat reveal" style="transition-delay:.15s"><div class="num"><span data-count="2">0</span>M+</div><div class="lbl">RFQs Completed</div></div>
-    <div class="stat reveal" style="transition-delay:.2s"><div class="num"><span data-count="95">0</span>%</div><div class="lbl">On-time Delivery</div></div>
+    <div class="stat reveal"><div class="num"><span data-count="5">0</span></div><div class="lbl">Active RFQs</div></div>
+    <div class="stat reveal" style="transition-delay:.05s"><div class="num"><span data-count="619">0</span></div><div class="lbl">Verified Suppliers</div></div>
+    <div class="stat reveal" style="transition-delay:.1s"><div class="num"><span data-count="866">0</span>+</div><div class="lbl">Ready-Stock Products</div></div>
+    <div class="stat reveal" style="transition-delay:.15s"><div class="num"><span data-count="24">0</span>h</div><div class="lbl">Quote Response Target</div></div>
+    <div class="stat reveal" style="transition-delay:.2s"><div class="num"><span data-count="100">0</span>%</div><div class="lbl">Verified Buyers &amp; Sellers</div></div>
+  </div>
+</section>
+
+<!-- how it works -->
+<section class="section how" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div><span class="eyebrow">How It Works</span><h2 style="margin-top:8px">From RFQ to order in four steps</h2><p>One platform for buyers, sellers and manufacturers — quotes flow fast, trust is verified.</p></div>
+      <a class="btn btn-primary" href="/rfq">Post Your RFQ →</a>
+    </div>
+    <div class="how-grid">
+      <div class="how-step reveal"><span class="n">01</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span><b>Post Your RFQ</b><p>Describe what you need — specs, quantity, target price, delivery terms. Publish in minutes, free to browse.</p></div>
+      <div class="how-step reveal" style="transition-delay:.06s"><span class="n">02</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><b>Receive Quotes</b><p>Verified sellers and manufacturers respond with price, lead time and MOQ — often within 24 hours.</p></div>
+      <div class="how-step reveal" style="transition-delay:.12s"><span class="n">03</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="9"/></svg></span><b>Compare &amp; Negotiate</b><p>Compare quotes side by side, chat with suppliers, negotiate price and terms — then accept the best offer.</p></div>
+      <div class="how-step reveal" style="transition-delay:.18s"><span class="n">04</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span><b>Order &amp; Track</b><p>Turn the accepted quote into an order. Inspections, quality checks and logistics — handled end to end.</p></div>
+    </div>
   </div>
 </section>
 
@@ -393,7 +490,7 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   <div class="wrap">
     <div class="section-head">
       <div><span class="eyebrow">Featured Products</span><h2 style="margin-top:8px">Factory-direct, ready to ship</h2><p>Verified listings with real MOQs. Request a quotation in one click.</p></div>
-      <a class="btn btn-primary" href="/products">View All 500,000+ →</a>
+      <a class="btn btn-primary" href="/products">View All 866+ →</a>
     </div>
     <div class="prod-grid">
       <a class="pcard reveal" href="/products?q=copper">
