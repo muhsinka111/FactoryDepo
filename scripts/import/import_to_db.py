@@ -6,6 +6,11 @@ the common fields below. `source` (the site) is recorded on the supplier row so
 listings stay attributable; contact fields are stored when the source exposes
 them publicly and left NULL otherwise.
 
+COUNTRY POLICY (user-mandated): only Türkiye (TR), China (CN), USA (US), Europe
+(EU/EEA/CH/UK) and unknown ("Global"/None) are allowed. Records from India and
+other non-whitelisted countries are SKIPPED at import time — the marketplace is
+TR/CN/US/EU only. See ALLOWED_COUNTRIES below; add ISO codes there to expand.
+
 Creates real supplier rows (each needs a users row — suppliers.userId is NOT NULL
 UNIQUE) and product rows. DB-aware: re-running against an existing database reuses
 existing users/suppliers by email/companyName and skips products whose title is
@@ -19,6 +24,18 @@ Record fields (all optional except title/url/price):
 Usage:
   python scripts/import/import_to_db.py [path-to.jsonl ...]
 """
+
+# User-mandated country whitelist: TR / CN / US / Europe / unknown ("Global").
+ALLOWED_COUNTRIES = {
+    "TR", "CN", "US",                       # core markets
+    # Europe (EU + EEA + CH + UK + Balkans + Ukraine)
+    "DE", "FR", "IT", "ES", "PT", "NL", "BE", "LU", "AT", "CH", "LI",
+    "GB", "IE", "DK", "SE", "NO", "FI", "IS", "EE", "LV", "LT",
+    "PL", "CZ", "SK", "HU", "RO", "BG", "GR", "CY", "MT", "SI", "HR",
+    "RS", "BA", "ME", "AL", "MK", "UA", "MD",
+    # unknown / not attributable -> allowed, shown without a country flag
+    "GLOBAL", "NONE", "",
+}
 import json
 import os
 import re
@@ -121,12 +138,24 @@ def load_records(path):
     return recs
 
 
+def country_allowed(c):
+    """True if a country string passes the TR/CN/US/EU whitelist."""
+    if not c:
+        return True
+    return c.strip().upper() in ALLOWED_COUNTRIES
+
+
 def main():
     paths = sys.argv[1:] or [DEFAULT_JSONL]
     recs = []
     for p in paths:
         recs.extend(load_records(p))
-    print(f"loaded {len(recs)} records from {len(paths)} file(s)")
+    before = len(recs)
+    # country policy: drop non-whitelisted records (India, etc.) at the door
+    recs = [r for r in recs if country_allowed(r.get("country"))]
+    dropped = before - len(recs)
+    print(f"loaded {before} records from {len(paths)} file(s)"
+          + (f" ({dropped} dropped by country policy)" if dropped else ""))
 
     conn = psycopg2.connect(DB)
     conn.autocommit = False
