@@ -48,6 +48,10 @@ export const suppliers = pgTable('suppliers', {
   fulfillmentRate: numeric('fulfillmentRate', { precision: 5, scale: 1 }).default('0'),
   tags: jsonb('tags').default([]),
   since: integer('since'),
+  contactEmail: text('contactEmail'),
+  contactPhone: text('contactPhone'),
+  website: text('website'),
+  source: text('source'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 

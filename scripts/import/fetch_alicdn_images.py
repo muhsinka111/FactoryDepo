@@ -27,8 +27,10 @@ IMG_DIR = os.path.join(REPO, "artifacts", "web", "public", "products")
 
 
 def full_url(url):
-    """alicdn thumbs look like ....jpg_300x300.jpg -> strip the suffix."""
-    return re.sub(r"_\d+x\d+\.(jpg|jpeg|png|webp)$", r".\1", url)
+    """alicdn thumbs look like ....jpg_300x300.jpg -> strip the _WxH suffix entirely
+    (the base URL already carries its own extension; replacing the suffix with '.jpg'
+    produced a double extension like ....jpg.jpg -> 404)."""
+    return re.sub(r"_\d+x\d+\.(jpg|jpeg|png|webp)$", "", url)
 
 
 def download(url, timeout=25, retries=2):

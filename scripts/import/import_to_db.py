@@ -1,14 +1,20 @@
-"""Import scraped Alibaba records (JSONL) into the FactoryDepo database.
+"""Import scraped supplier/product records (JSONL) into the FactoryDepo database.
+
+Multi-source: any B2B source (Alibaba, Made-in-China, IndiaMART, Global Sources,
+direct manufacturer sites, ...) can feed records as long as each JSONL line has
+the common fields below. `source` (the site) is recorded on the supplier row so
+listings stay attributable; contact fields are stored when the source exposes
+them publicly and left NULL otherwise.
 
 Creates real supplier rows (each needs a users row — suppliers.userId is NOT NULL
 UNIQUE) and product rows. DB-aware: re-running against an existing database reuses
 existing users/suppliers by email/companyName and skips products whose title is
 already present (idempotent re-import), so it is safe to run per-batch.
 
-Real data only: what Alibaba publicly exposes (company, country, years, rating,
-product, price, MOQ, image URL). Email/phone are NOT publicly scrapeable on
-Alibaba (login + anti-bot), so each supplier's store URL is stored in the
-description as the contact pointer.
+Record fields (all optional except title/url/price):
+  query, title, url, image, price_low, price_high, company, supplier_url,
+  country, years, rating, sold, moq, moq_unit, source,
+  email, phone, whatsapp, website   <- contact (only if publicly exposed)
 
 Usage:
   python scripts/import/import_to_db.py [path-to.jsonl ...]
@@ -89,6 +95,13 @@ def clean_company(c):
         return None
     c = re.sub(r"\s+", " ", c).strip()
     c = re.sub(r"\[|\]", "", c)
+    # normalize common legal suffixes so "Co., Ltd" and "Co., Ltd." dedupe to one key
+    c = re.sub(r"[,.]", "", c)
+    c = re.sub(r"\bco\b", "Co", c, flags=re.I)
+    c = re.sub(r"\b(?:ltd|limited)\b", "Ltd", c, flags=re.I)
+    c = re.sub(r"\b(?:inc|incorporated)\b", "Inc", c, flags=re.I)
+    c = re.sub(r"\b(?:llc)\b", "LLC", c, flags=re.I)
+    c = re.sub(r"\s+", " ", c).strip()
     if len(c) < 3:
         return None
     return c
@@ -140,8 +153,18 @@ def main():
                 "years": r.get("years"),
                 "rating": r.get("rating"),
                 "url": r.get("supplier_url"),
+                "email": r.get("email"),
+                "phone": r.get("phone") or r.get("whatsapp"),
+                "website": r.get("website"),
+                "source": r.get("source"),
                 "queries": set(),
             }
+        else:
+            # fill in contact/source details if this record carries more info
+            for k in ("email", "phone", "website", "source"):
+                v = r.get(k)
+                if v and not suppliers[c].get(k):
+                    suppliers[c][k] = v
         suppliers[c]["queries"].add(r.get("query"))
 
     # dedupe products by url — prefer the record that carries an image
@@ -168,7 +191,7 @@ def main():
         email = "supplier-" + re.sub(r"[^a-z0-9]", "", c.lower())[:40] + "@import.local"
         base = email
         i = 1
-        while email in user_ids.values():
+        while email in user_ids.values() or email in existing_user:
             email = base.replace("@import.local", f"-{i}@import.local")
             i += 1
         if email in existing_user:
@@ -190,7 +213,7 @@ def main():
         if c in existing_sup:
             sup_ids[c] = existing_sup[c]
             continue
-        desc = f"Imported from Alibaba — {info['company']}."
+        desc = f"Imported from {info.get('source') or 'a public B2B listing'} — {info['company']}."
         if info["url"]:
             desc += f" Store: {info['url']}. Contact via platform (email/phone are not publicly listed)."
         if info["years"]:
@@ -198,11 +221,14 @@ def main():
         tags = sorted(info["queries"])[:5]
         cur.execute(
             "INSERT INTO suppliers (\"userId\", \"companyName\", country, description, "
-            "\"verifiedLevel\", rating, \"inspectionsCount\", \"fulfillmentRate\", tags, since) "
-            "VALUES (%s,%s,%s,%s,1,%s,0,'0',%s::jsonb,%s) RETURNING id",
+            "\"verifiedLevel\", rating, \"inspectionsCount\", \"fulfillmentRate\", tags, since, "
+            "\"contactEmail\", \"contactPhone\", website, source) "
+            "VALUES (%s,%s,%s,%s,1,%s,0,'0',%s::jsonb,%s,%s,%s,%s,%s) RETURNING id",
             (user_ids[c], info["company"], info["country"], desc,
              info["rating"] if info["rating"] is not None else '0',
-             json.dumps(tags), info["years"]),
+             json.dumps(tags), info["years"],
+             info.get("email"), info.get("phone") or info.get("whatsapp"),
+             info.get("website"), info.get("source")),
         )
         sup_ids[c] = cur.fetchone()[0]
         existing_sup[c] = sup_ids[c]
