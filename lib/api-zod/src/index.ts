@@ -75,6 +75,7 @@ export const zProductListQuery = z.object({
   country: z.string().max(60).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  hasImage: z.coerce.number().int().min(0).max(1).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -176,6 +177,58 @@ export const zRfqDetail = z.object({
   quotes: z.array(zQuote),
 });
 export type RfqDetail = z.infer<typeof zRfqDetail>;
+
+/* ---------- orders (buy-now / dropshipping) ---------- */
+export const zOrderStatus = z.enum(['pending', 'paid', 'shipped', 'delivered', 'cancelled']);
+export const zOrder = z.object({
+  id: z.number(),
+  buyerId: z.number(),
+  productId: z.number(),
+  supplierId: z.number(),
+  productName: z.string(),
+  supplierName: z.string(),
+  quantity: z.number(),
+  unitPrice: z.number(),
+  currency: z.string(),
+  total: z.number(),
+  status: zOrderStatus,
+  shippingName: z.string(),
+  shippingAddress: z.string(),
+  shippingCity: z.string(),
+  shippingCountry: z.string(),
+  shippingPhone: z.string().nullable(),
+  notes: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type Order = z.infer<typeof zOrder>;
+
+export const zCreateOrderInput = z.object({
+  productId: z.number().int().positive(),
+  quantity: z.coerce.number().positive(),
+  shippingName: z.string().min(2).max(120),
+  shippingAddress: z.string().min(5).max(300),
+  shippingCity: z.string().min(1).max(100),
+  shippingCountry: z.string().min(1).max(60),
+  shippingPhone: z.string().max(40).optional(),
+  notes: z.string().max(1000).optional(),
+});
+export type CreateOrderInput = z.infer<typeof zCreateOrderInput>;
+
+export const zOrderList = z.object({
+  items: z.array(zOrder),
+  total: z.number(),
+});
+export type OrderList = z.infer<typeof zOrderList>;
+
+/* ---------- dashboard stats ---------- */
+export const zDashboardStats = z.object({
+  totalListings: z.number(),
+  activeOffers: z.number(),
+  totalViews: z.number(),
+  orders: z.number(),
+  soldItems: z.number(),
+});
+export type DashboardStats = z.infer<typeof zDashboardStats>;
 
 /* ---------- misc ---------- */
 export const zHealth = z.object({

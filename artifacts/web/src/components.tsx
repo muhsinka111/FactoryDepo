@@ -175,6 +175,7 @@ export function StatusChip({ status }: { status: string }) {
     open: 'chip-green', quoted: 'chip-blue', closed: 'chip-gray',
     submitted: 'chip-blue', accepted: 'chip-green', rejected: 'chip-red',
     active: 'chip-green', scheduled: 'chip-amber', passed: 'chip-green', failed: 'chip-red',
+    pending: 'chip-amber', paid: 'chip-green', shipped: 'chip-blue', delivered: 'chip-green', cancelled: 'chip-red',
   };
   return <span className={`chip ${map[status] ?? 'chip-gray'}`}>{status}</span>;
 }

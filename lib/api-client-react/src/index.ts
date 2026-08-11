@@ -187,3 +187,32 @@ export function useCreateQuote(rfqId: number) {
     },
   });
 }
+
+/* ---------- orders (buy-now / dropshipping) ---------- */
+
+export function useCreateOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: c.CreateOrderInput) => apiFetch<c.Order>('/orders', { method: 'POST', body: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+      qc.invalidateQueries({ queryKey: ['order-stats'] });
+    },
+  });
+}
+
+export function useMyOrders(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['orders'],
+    queryFn: () => apiFetch<c.OrderList>('/orders'),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useDashboardStats(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['order-stats'],
+    queryFn: () => apiFetch<c.DashboardStats>('/orders/stats'),
+    enabled: options?.enabled ?? true,
+  });
+}

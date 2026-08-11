@@ -169,3 +169,26 @@ export function mapQuote(q: Record<string, unknown>): c.Quote {
     createdAt: toIso(q.createdAt),
   };
 }
+
+export function mapOrder(o: Record<string, unknown>): c.Order {
+  return {
+    id: toNum(o.id),
+    buyerId: toNum(o.buyerId),
+    productId: toNum(o.productId),
+    supplierId: toNum(o.supplierId),
+    productName: String(o.productName),
+    supplierName: String(o.supplierName),
+    quantity: toNum(o.quantity),
+    unitPrice: toNum(o.unitPrice),
+    currency: String(o.currency ?? 'USD'),
+    total: toNum(o.total),
+    status: o.status as c.Order['status'],
+    shippingName: String(o.shippingName),
+    shippingAddress: String(o.shippingAddress),
+    shippingCity: String(o.shippingCity),
+    shippingCountry: String(o.shippingCountry),
+    shippingPhone: o.shippingPhone == null ? null : String(o.shippingPhone),
+    notes: o.notes == null ? null : String(o.notes),
+    createdAt: toIso(o.createdAt),
+  };
+}

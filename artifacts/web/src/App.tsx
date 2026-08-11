@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from 'wouter';
+import { Switch, Route, Redirect, useLocation } from 'wouter';
 import { Nav, Footer, AuthGateModal } from './components';
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -9,11 +9,15 @@ import RfqExchange from './pages/RfqExchange';
 import RfqDetail from './pages/RfqDetail';
 import { SignIn, SignUp } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import Feed from './pages/Feed';
 
-export default function App() {
+/** Mobil feed tam ekran deneyimi — Nav/Footer'ı gizler. */
+function Shell() {
+  const [location] = useLocation();
+  const isFeed = location.startsWith('/feed');
   return (
     <>
-      <Nav />
+      {!isFeed && <Nav />}
       <AuthGateModal />
       <Switch>
         <Route path="/" component={Home} />
@@ -26,6 +30,7 @@ export default function App() {
         <Route path="/sign-in" component={SignIn} />
         <Route path="/sign-up" component={SignUp} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/feed" component={Feed} />
         <Route path="/landing">
           <Redirect to="/" />
         </Route>
@@ -33,7 +38,11 @@ export default function App() {
           <Redirect to="/" />
         </Route>
       </Switch>
-      <Footer />
+      {!isFeed && <Footer />}
     </>
   );
+}
+
+export default function App() {
+  return <Shell />;
 }

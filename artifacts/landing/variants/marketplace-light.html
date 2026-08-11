@@ -553,6 +553,19 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
   </div>
 </section>
 
+<!-- trending deals — live from DB -->
+<section class="section" id="trending" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div><span class="eyebrow">Trending Deals</span><h2 style="margin-top:8px">Live surplus. Buy now or make an offer.</h2><p>Real listings from verified factories — refreshed from the live catalog.</p></div>
+      <a class="btn btn-outline" href="/products">Browse All →</a>
+    </div>
+    <div class="prod-grid" id="trendingGrid">
+      <div class="pcard reveal" style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">Loading live deals…</div>
+    </div>
+  </div>
+</section>
+
 <!-- promo -->
 <section class="section" style="padding-top:0">
   <div class="wrap">
@@ -774,6 +787,55 @@ h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.01
     fetch(urls[i], {mode:'cors'})
       .then(function(r){ if (!r.ok) throw 0; return r.json(); })
       .then(function(d){ if (d && d.items && d.items.length) render(d.items.slice(0, 4)); })
+      .catch(function(){ tryFetch(i + 1); });
+  }
+  tryFetch(0);
+})();
+/* ---- live trending deals from the API (fallback: static products above) ---- */
+(function(){
+  'use strict';
+  var grid = document.getElementById('trendingGrid');
+  if (!grid) return;
+  var urls = [
+    'https://api-production-3fee.up.railway.app/api/products?limit=6&hasImage=1',
+    '/api/products?limit=6&hasImage=1',
+    'http://localhost:9091/api/products?limit=6&hasImage=1'
+  ];
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(p){
+    var sym = p.currency === 'USD' ? '$' : (p.currency || '');
+    return sym + Number(p.price).toLocaleString('en-US', {maximumFractionDigits: 2});
+  }
+  function render(items){
+    var html = '';
+    items.forEach(function(p, i){
+      var badge = p.category === 'Textiles' ? 'Overstock' : 'Ready Stock';
+      var img = p.imageKey
+        ? '<img src="' + esc(p.imageKey) + '" alt="' + esc(p.name) + '" loading="lazy">'
+        : '<div style="height:150px;display:grid;place-items:center;color:var(--faint);font-size:30px">🏭</div>';
+      html += '<a class="pcard reveal" style="transition-delay:' + (i * .04) + 's" href="/products/' + p.id + '">' +
+        '<div class="pcard-art" style="position:relative">' + img +
+        '<span class="tag" style="position:absolute;top:8px;left:8px;background:' + (p.category === 'Textiles' ? 'rgba(5,150,105,.14);color:var(--green)' : 'rgba(217,119,6,.14);color:var(--amber)') + ';font-weight:800;font-size:10px">' + badge + '</span>' +
+        (p.verified ? '<span class="verified">✓ Verified</span>' : '') +
+        '<span class="origin">' + esc((p.originCountry || '').slice(0, 2).toUpperCase()) + '</span></div>' +
+        '<div class="pcard-body"><h3>' + esc(p.name.slice(0, 48)) + '</h3>' +
+        '<div class="pcard-specs"><span>MOQ ' + esc(p.moq) + ' ' + esc(p.unit) + '</span><span>' + esc(p.category) + '</span></div>' +
+        '<div class="pcard-foot"><span class="price"><b>' + money(p) + '</b><span>/ ' + esc(p.unit) + '</span></span>' +
+        '<span class="minorder" style="color:var(--accent-ink);font-weight:700">Buy Now →</span></div></div></a>';
+    });
+    grid.innerHTML = html;
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.15});
+      grid.querySelectorAll('.reveal').forEach(function(e){ io.observe(e); });
+    } else {
+      grid.querySelectorAll('.reveal').forEach(function(e){ e.classList.add('in'); });
+    }
+  }
+  function tryFetch(i){
+    if (i >= urls.length) { grid.innerHTML = '<div class="pcard reveal" style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">Live deals unavailable — <a href="/products" style="color:var(--accent-ink);font-weight:600">browse the catalog</a>.</div>'; return; }
+    fetch(urls[i], {mode:'cors'})
+      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(function(d){ if (d && d.items && d.items.length) render(d.items.slice(0, 6)); else throw 0; })
       .catch(function(){ tryFetch(i + 1); });
   }
   tryFetch(0);

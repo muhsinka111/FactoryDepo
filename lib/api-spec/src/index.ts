@@ -30,6 +30,10 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/api/rfqs', auth: 'buyer', input: c.zCreateRfqInput, output: c.zRfq, desc: 'Post a request for quotation' },
   { method: 'GET', path: '/api/rfqs/:id', auth: 'public', output: c.zRfqDetail, desc: 'RFQ + submitted quotes' },
   { method: 'POST', path: '/api/rfqs/:id/quotes', auth: 'supplier', input: c.zCreateQuoteInput, output: c.zQuote, desc: 'Submit a quotation' },
+
+  { method: 'POST', path: '/api/orders', auth: 'user', input: c.zCreateOrderInput, output: c.zOrder, desc: 'Place a buy-now order (dropship)' },
+  { method: 'GET', path: '/api/orders', auth: 'user', output: c.zOrderList, desc: 'My orders (buyer: purchases, supplier: incoming)' },
+  { method: 'GET', path: '/api/orders/stats', auth: 'user', output: c.zDashboardStats, desc: 'Dashboard metrics' },
 ];
 
 export const CATEGORIES = [

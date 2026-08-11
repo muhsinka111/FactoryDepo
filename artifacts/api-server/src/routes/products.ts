@@ -33,7 +33,7 @@ productsRouter.get('/', async (req, res) => {
   if (!parsed.success) {
     throw new HttpError(400, { error: 'validation_error', details: parsed.error.message });
   }
-  const { q, category, country, minPrice, maxPrice, page, limit } = parsed.data;
+  const { q, category, country, minPrice, maxPrice, hasImage, page, limit } = parsed.data;
 
   const conds: ReturnType<typeof and>[] = [];
   if (q) {
@@ -49,6 +49,7 @@ productsRouter.get('/', async (req, res) => {
   if (country) conds.push(eq(products.originCountry, country));
   if (minPrice != null) conds.push(gte(products.price, String(minPrice)));
   if (maxPrice != null) conds.push(lte(products.price, String(maxPrice)));
+  if (hasImage === 1) conds.push(sql`${products.imageKey} IS NOT NULL`);
   const where = conds.length > 0 ? and(...conds) : undefined;
 
   const [totalRow, rows] = await Promise.all([

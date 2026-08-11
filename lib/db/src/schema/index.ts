@@ -126,6 +126,32 @@ export const inspections = pgTable('inspections', {
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
+export const orders = pgTable('orders', {
+  id: serial('id').primaryKey(),
+  buyerId: integer('buyerId')
+    .notNull()
+    .references(() => users.id),
+  productId: integer('productId')
+    .notNull()
+    .references(() => products.id),
+  supplierId: integer('supplierId')
+    .notNull()
+    .references(() => suppliers.id),
+  quantity: numeric('quantity', { precision: 14, scale: 2 }).notNull(),
+  unitPrice: numeric('unitPrice', { precision: 14, scale: 2 }).notNull(),
+  currency: text('currency').default('USD'),
+  total: numeric('total', { precision: 14, scale: 2 }).notNull(),
+  // pending | paid | shipped | delivered | cancelled
+  status: text('status').default('pending'),
+  shippingName: text('shippingName').notNull(),
+  shippingAddress: text('shippingAddress').notNull(),
+  shippingCity: text('shippingCity').notNull(),
+  shippingCountry: text('shippingCountry').notNull(),
+  shippingPhone: text('shippingPhone'),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+});
+
 // ---------- Types ----------
 
 export type User = typeof users.$inferSelect;
@@ -145,3 +171,6 @@ export type NewQuote = typeof quotes.$inferInsert;
 
 export type Inspection = typeof inspections.$inferSelect;
 export type NewInspection = typeof inspections.$inferInsert;
+
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;

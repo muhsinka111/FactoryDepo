@@ -21,6 +21,7 @@ import { authRouter, meRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
 import { suppliersRouter } from './routes/suppliers.js';
 import { rfqsRouter } from './routes/rfqs.js';
+import { ordersRouter } from './routes/orders.js';
 
 /* ---------- path resolution ---------- */
 
@@ -144,6 +145,7 @@ app.use('/api/me', meRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/suppliers', suppliersRouter);
 app.use('/api/rfqs', rfqsRouter);
+app.use('/api/orders', ordersRouter);
 
 // unknown /api/* → JSON 404
 app.use('/api', (_req, res) => {
