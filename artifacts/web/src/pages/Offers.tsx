@@ -5,6 +5,7 @@ import {
 } from '@workspace/api-client-react';
 import type { Offer } from '@workspace/api-zod';
 import { View, Empty, StatusChip, Spinner, DemoTag, requireAuthGate, dashboardRole } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * My offers — the lot-by-lot price negotiations the signed-in user is party to.
@@ -28,27 +29,14 @@ function money(currency: string, amount: number): string {
   return `${currency === 'USD' ? '$' : `${currency} `}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 function errMessage(e: unknown, fallback: string): string {
   const m = e instanceof Error ? e.message : '';
   return m && !/^Request failed \(\d+\)$/.test(m) ? m : fallback;
 }
 
-/** Who the user is negotiating with on this row, and in which seat. */
-function counterparty(o: Offer, meId: number): { name: string; seat: string } {
-  const iAmBuyer = o.buyerId === meId;
-  const name = iAmBuyer ? o.supplierName : o.buyerName;
-  return { name: name.trim() || '—', seat: iAmBuyer ? 'supplier' : 'buyer' };
-}
-
 /** Counter-offer form. Sent against the offer being answered (path id). */
 function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void }) {
+  const { t, locale } = useI18n();
   const counter = useCounterOffer();
   const [unitPrice, setUnitPrice] = useState(String(offer.unitPrice));
   const [quantity, setQuantity] = useState(String(offer.quantity));
@@ -63,7 +51,7 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
   const submit = async () => {
     setErr('');
     if (!getToken()) { requireAuthGate(); return; }
-    if (!valid) { setErr('Enter a unit price and quantity greater than zero.'); return; }
+    if (!valid) { setErr(t('myoffers.errInvalid')); return; }
     try {
       await counter.mutateAsync({
         id: offer.id,
@@ -73,7 +61,7 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
       });
       setDone(true);
     } catch (e) {
-      setErr(errMessage(e, 'The counter-offer could not be sent — try again.'));
+      setErr(errMessage(e, t('myoffers.errCounter')));
     }
   };
 
@@ -81,29 +69,38 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{done ? 'Counter-offer sent' : `Counter offer #${offer.id}`}</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{done ? t('myoffers.counterDoneTitle') : t('myoffers.counterTitle', { id: offer.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           {done ? (
             <>
-              <p className="strong" style={{ marginTop: 0 }}>Your counter-offer is with the other party</p>
+              <p className="strong" style={{ marginTop: 0 }}>{t('myoffers.counterDoneBody')}</p>
               <p className="muted" style={{ marginTop: 6 }}>
-                It arrives as a new open offer on {offer.productName}; the original offer is marked countered.
+                {t('myoffers.counterLead', {
+                  product: offer.productName,
+                  id: offer.id,
+                  qty: offer.quantity.toLocaleString(locale),
+                  price: money(offer.currency, offer.unitPrice),
+                })}
               </p>
               <div className="row" style={{ gap: 8, marginTop: 14 }}>
-                <button className="btn btn-primary" onClick={onClose}>Back to my offers</button>
+                <button className="btn btn-primary" onClick={onClose}>{t('myoffers.backToOffers')}</button>
               </div>
             </>
           ) : (
             <>
               <p className="muted" style={{ margin: '0 0 12px' }}>
-                {offer.productName} · offer #{offer.id} · {offer.quantity.toLocaleString()} offered at{' '}
-                {money(offer.currency, offer.unitPrice)} per unit
+                {t('myoffers.counterLead', {
+                  product: offer.productName,
+                  id: offer.id,
+                  qty: offer.quantity.toLocaleString(locale),
+                  price: money(offer.currency, offer.unitPrice),
+                })}
               </p>
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="counter-price">Unit price <i>*</i></label>
+                  <label htmlFor="counter-price">{t('myoffers.col.unitPrice')} <i>*</i></label>
                   <input
                     id="counter-price"
                     className={`in ${!unitPrice || !(price > 0) ? 'err' : ''}`}
@@ -111,10 +108,10 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
                     value={unitPrice}
                     onChange={(e) => setUnitPrice(e.target.value)}
                   />
-                  <div className="hint">In {offer.currency}, per unit.</div>
+                  <div className="hint">{t('myoffers.inCurrency', { currency: offer.currency })}</div>
                 </div>
                 <div className="field">
-                  <label htmlFor="counter-qty">Quantity <i>*</i></label>
+                  <label htmlFor="counter-qty">{t('myoffers.col.quantity')} <i>*</i></label>
                   <input
                     id="counter-qty"
                     className={`in ${!quantity || !(qty > 0) ? 'err' : ''}`}
@@ -122,16 +119,16 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                   />
-                  <div className="hint">Originally {offer.quantity.toLocaleString()}.</div>
+                  <div className="hint">{t('myoffers.originally', { qty: offer.quantity.toLocaleString(locale) })}</div>
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="counter-notes">Message to the other party</label>
+                <label htmlFor="counter-notes">{t('myoffers.messageLabel')}</label>
                 <textarea
                   id="counter-notes"
                   className="in"
                   rows={3}
-                  placeholder="Lead time, packing, payment terms…"
+                  placeholder={t('myoffers.messagePlaceholder')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -142,9 +139,9 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
         </div>
         {!done && (
           <div className="mf">
-            <button className="btn btn-grey" onClick={onClose}>Cancel</button>
+            <button className="btn btn-grey" onClick={onClose}>{t('action.cancel')}</button>
             <button className="btn btn-primary" disabled={counter.isPending || !valid} onClick={() => void submit()}>
-              {counter.isPending ? 'Sending…' : 'Send counter-offer'}
+              {counter.isPending ? t('myoffers.sending') : t('myoffers.sendCounter')}
             </button>
           </div>
         )}
@@ -158,6 +155,7 @@ function CounterModal({ offer, onClose }: { offer: Offer; onClose: () => void })
  * the consequence — an order on the accepted quantity — is stated up front.
  */
 function AcceptModal({ offer, onClose, onAccepted }: { offer: Offer; onClose: () => void; onAccepted: (id: number) => void }) {
+  const { t, locale } = useI18n();
   const accept = useAcceptOffer();
   const [err, setErr] = useState('');
 
@@ -168,7 +166,7 @@ function AcceptModal({ offer, onClose, onAccepted }: { offer: Offer; onClose: ()
       await accept.mutateAsync({ id: offer.id });
       onAccepted(offer.id);
     } catch (e) {
-      setErr(errMessage(e, 'The offer could not be accepted — try again.'));
+      setErr(errMessage(e, t('myoffers.errAccept')));
     }
   };
 
@@ -176,26 +174,30 @@ function AcceptModal({ offer, onClose, onAccepted }: { offer: Offer; onClose: ()
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>Accept offer #{offer.id}</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{t('myoffers.acceptTitle', { id: offer.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="muted" style={{ margin: '0 0 12px' }}>
-            {offer.productName} · {offer.quantity.toLocaleString()} at {money(offer.currency, offer.unitPrice)} per unit
+            {t('myoffers.acceptLead', {
+              product: offer.productName,
+              qty: offer.quantity.toLocaleString(locale),
+              price: money(offer.currency, offer.unitPrice),
+            })}
           </p>
           <div className="stripe" style={{ margin: 0 }}>
             <span>
-              Accepting agrees to this price and quantity and <b>creates an order</b> for it. The order then
-              appears under <Link href="/orders">Orders</Link>, where shipment milestones are tracked.
+              {t('myoffers.acceptStripeLead')} <b>{t('myoffers.acceptStripeStrong')}</b>{' '}
+              {t('myoffers.acceptStripeTail')}
             </span>
           </div>
-          <p className="hint" style={{ marginTop: 9 }}>This cannot be undone — the negotiation closes at the accepted terms.</p>
+          <p className="hint" style={{ marginTop: 9 }}>{t('myoffers.acceptHint')}</p>
           {err && <p className="errtext">{err}</p>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onClose}>Cancel</button>
+          <button className="btn btn-grey" onClick={onClose}>{t('action.cancel')}</button>
           <button className="btn btn-green" disabled={accept.isPending} onClick={() => void submit()}>
-            {accept.isPending ? 'Accepting…' : 'Accept and create order'}
+            {accept.isPending ? t('myoffers.accepting') : t('myoffers.acceptCta')}
           </button>
         </div>
       </div>
@@ -204,6 +206,7 @@ function AcceptModal({ offer, onClose, onAccepted }: { offer: Offer; onClose: ()
 }
 
 export default function Offers() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const user = me.data;
   const loggedIn = !!getToken();
@@ -220,12 +223,16 @@ export default function Offers() {
   const [actionErr, setActionErr] = useState('');
 
   const dashAdmin = dash === 'admin';
-  const title = isSupplier ? 'Offers on my stock' : dashAdmin ? 'All offers' : 'My offers';
-  const sub = isSupplier
-    ? 'Offers buyers have made on your stock. Counter, accept or reject each one.'
+  const title = isSupplier
+    ? t('myoffers.titleSupplier')
     : dashAdmin
-      ? 'Every offer on the platform, newest first.'
-      : 'Offers you have made on ready stock. Counter, accept or reject each one.';
+      ? t('myoffers.titleAdmin')
+      : t('myoffers.titleBuyer');
+  const sub = isSupplier
+    ? t('myoffers.subSupplier')
+    : dashAdmin
+      ? t('myoffers.subAdmin')
+      : t('myoffers.subBuyer');
 
   if (me.isLoading) {
     return (
@@ -237,12 +244,12 @@ export default function Offers() {
 
   if (!user) {
     return (
-      <View title="My offers" sub="Sign in to see the offers you are negotiating">
-        <Empty title="You are not signed in">
-          Offers are private to the two parties: sign in to open, counter or accept one.
+      <View title={t('myoffers.titleBuyer')} sub={t('myoffers.signInSub')}>
+        <Empty title={t('myoffers.notSignedIn')}>
+          {t('myoffers.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/sign-in?next=%2Foffers" className="btn btn-sm btn-primary">Sign in</Link>
-            <Link href="/sign-up?next=%2Foffers" className="btn btn-sm btn-ghost">Create an account</Link>
+            <Link href="/sign-in?next=%2Foffers" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
+            <Link href="/sign-up?next=%2Foffers" className="btn btn-sm btn-ghost">{t('action.createAccount')}</Link>
           </div>
         </Empty>
       </View>
@@ -260,7 +267,7 @@ export default function Offers() {
       await reject.mutateAsync({ id });
       setRejectingId(null);
     } catch (e) {
-      setActionErr(errMessage(e, `Offer #${id} could not be rejected — try again.`));
+      setActionErr(errMessage(e, t('myoffers.errReject', { id })));
     }
   };
 
@@ -270,7 +277,7 @@ export default function Offers() {
       sub={sub}
       actions={
         <button className="btn btn-sm btn-grey" onClick={() => void offers.refetch()} disabled={offers.isFetching}>
-          {offers.isFetching ? 'Refreshing…' : 'Refresh'}
+          {offers.isFetching ? t('action.refreshing') : t('action.refresh')}
         </button>
       }
     >
@@ -281,7 +288,7 @@ export default function Offers() {
           onClose={() => setAcceptFor(null)}
           onAccepted={(id) => {
             setAcceptFor(null);
-            setNotice(`Offer #${id} accepted. Check Orders for the resulting order.`);
+            setNotice(t('myoffers.accepted', { id }));
           }}
         />
       )}
@@ -289,8 +296,8 @@ export default function Offers() {
       {notice && (
         <div className="stripe">
           <span>{notice}</span>
-          <Link href="/orders" className="btn btn-sm btn-grey" style={{ marginLeft: 'auto' }}>View orders</Link>
-          <button className="x" onClick={() => setNotice('')} aria-label="Dismiss">✕</button>
+          <Link href="/orders" className="btn btn-sm btn-grey" style={{ marginLeft: 'auto' }}>{t('myoffers.viewOrders')}</Link>
+          <button className="x" onClick={() => setNotice('')} aria-label={t('action.dismiss')}>✕</button>
         </div>
       )}
 
@@ -299,49 +306,46 @@ export default function Offers() {
       {offers.isLoading ? (
         <Spinner />
       ) : offers.isError ? (
-        <Empty title="Offers could not be loaded">
-          The API did not return your offers — try again.
+        <Empty title={t('myoffers.loadErrorTitle')}>
+          {t('myoffers.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <button className="btn btn-sm btn-primary" onClick={() => void offers.refetch()} disabled={offers.isFetching}>
-              {offers.isFetching ? 'Trying…' : 'Try again'}
+              {offers.isFetching ? t('myoffers.trying') : t('action.tryAgain')}
             </button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No offers yet">
-          {isSupplier
-            ? 'Offers buyers make on your listings appear here, ready to counter or accept.'
-            : dashAdmin
-              ? 'No offer has been opened on the platform yet.'
-              : 'Open a lot you want and make an offer — the supplier can counter, accept or reject it.'}
+        <Empty title={t('myoffers.emptyTitle')}>
+          {isSupplier ? t('myoffers.emptySupplier') : dashAdmin ? t('myoffers.emptyAdmin') : t('myoffers.emptyBuyer')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/explore" className="btn btn-sm btn-primary">Browse ready stock</Link>
-            {isSupplier && <Link href="/supplier/listings" className="btn btn-sm btn-ghost">My listings</Link>}
+            <Link href="/explore" className="btn btn-sm btn-primary">{t('myoffers.browseStock')}</Link>
+            {isSupplier && <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>}
           </div>
         </Empty>
       ) : (
         <div className="card">
           <div className="hd">
-            <b>{count.toLocaleString()} offer{count === 1 ? '' : 's'}</b>
-            <span className="muted">{openCount} still open</span>
-            <span className="muted" style={{ marginLeft: 'auto' }}>Newest first</span>
+            <b>{t('myoffers.count', { n: count.toLocaleString(locale) })}</b>
+            <span className="muted">{t('myoffers.stillOpen', { n: openCount.toLocaleString(locale) })}</span>
+            <span className="muted" style={{ marginLeft: 'auto' }}>{t('common.newestFirst')}</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Offer</th>
-                  <th>Counterparty</th>
-                  <th style={{ textAlign: 'right' }}>Quantity</th>
-                  <th style={{ textAlign: 'right' }}>Unit price</th>
-                  <th>Status</th>
-                  <th className="hidem">Date</th>
-                  <th>Action</th>
+                  <th>{t('myoffers.col.offer')}</th>
+                  <th>{t('myoffers.col.counterparty')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('myoffers.col.quantity')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('myoffers.col.unitPrice')}</th>
+                  <th>{t('myoffers.col.status')}</th>
+                  <th className="hidem">{t('myoffers.col.date')}</th>
+                  <th>{t('myoffers.col.action')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((o) => {
-                  const other = counterparty(o, user.id);
+                  const iAmBuyer = o.buyerId === user.id;
+                  const otherName = iAmBuyer ? o.supplierName : o.buyerName;
                   return (
                     <tr key={o.id}>
                       <td>
@@ -351,23 +355,27 @@ export default function Offers() {
                         </div>
                         <div className="muted">
                           #{o.id}
-                          {o.parentOfferId != null ? ` · counter to #${o.parentOfferId}` : ''}
+                          {o.parentOfferId != null
+                            ? ` · ${t('myoffers.counterTo', { id: o.parentOfferId })}`
+                            : ''}
                         </div>
                         {o.notes && <div className="muted" style={{ maxWidth: 320 }}>“{o.notes}”</div>}
                       </td>
                       <td>
-                        {other.name}
-                        <div className="muted">{other.seat}</div>
+                        {otherName.trim() || '—'}
+                        <div className="muted">
+                          {iAmBuyer ? t('myoffers.seatSupplier') : t('myoffers.seatBuyer')}
+                        </div>
                       </td>
-                      <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString()}</td>
+                      <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString(locale)}</td>
                       <td style={{ textAlign: 'right' }} className="strong">{money(o.currency, o.unitPrice)}</td>
                       <td><StatusChip status={o.status} /></td>
-                      <td className="muted hidem" title={new Date(o.createdAt).toLocaleString()}>
-                        {shortDate(o.createdAt)}
+                      <td className="muted hidem" title={new Date(o.createdAt).toLocaleString(locale)}>
+                        {new Date(o.createdAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                       </td>
                       <td>
                         {!isOpen(o.status) ? (
-                          <span className="muted">No further action</span>
+                          <span className="muted">{t('myoffers.noAction')}</span>
                         ) : rejectingId === o.id ? (
                           <div className="row" style={{ gap: 5, flexWrap: 'wrap' }}>
                             <button
@@ -375,15 +383,15 @@ export default function Offers() {
                               disabled={reject.isPending}
                               onClick={() => void doReject(o.id)}
                             >
-                              {reject.isPending ? 'Rejecting…' : 'Confirm reject'}
+                              {reject.isPending ? t('offers.rejecting') : t('myoffers.confirmReject')}
                             </button>
-                            <button className="btn btn-sm btn-grey" onClick={() => setRejectingId(null)}>Cancel</button>
+                            <button className="btn btn-sm btn-grey" onClick={() => setRejectingId(null)}>{t('action.cancel')}</button>
                           </div>
                         ) : (
                           <div className="row" style={{ gap: 5, flexWrap: 'wrap' }}>
-                            <button className="btn btn-sm btn-ghost" onClick={() => setCounterFor(o)}>Counter</button>
-                            <button className="btn btn-sm btn-green" onClick={() => setAcceptFor(o)}>Accept</button>
-                            <button className="btn btn-sm btn-red" onClick={() => setRejectingId(o.id)}>Reject</button>
+                            <button className="btn btn-sm btn-ghost" onClick={() => setCounterFor(o)}>{t('myoffers.counter')}</button>
+                            <button className="btn btn-sm btn-green" onClick={() => setAcceptFor(o)}>{t('myoffers.accept')}</button>
+                            <button className="btn btn-sm btn-red" onClick={() => setRejectingId(o.id)}>{t('myoffers.reject')}</button>
                           </div>
                         )}
                       </td>

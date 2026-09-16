@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Switch, Route, Redirect, useLocation } from 'wouter';
 import { useMe, getToken } from '@workspace/api-client-react';
 import {
-  Topbar, CategoryRail, Sidebar, BottomNav, AuthGateModal,
+  Topbar, CategoryRail, Sidebar, BottomNav, AuthGateModal, Spinner,
   activeKeyFor, dashboardRole, navFor, homeFor,
 } from './components';
+// Eager: everything an anonymous visitor needs for first paint.
 import Explore from './pages/Explore';
 import ProductDetail from './pages/ProductDetail';
 import Suppliers from './pages/Suppliers';
@@ -15,28 +16,35 @@ import Orders from './pages/Orders';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import { SignIn, SignUp } from './pages/Auth';
+
+/**
+ * Lazy: the signed-in dashboards. An anonymous visitor browsing the marketplace
+ * never downloads the admin console or the supplier tooling — that alone is
+ * roughly half the JavaScript. Vite emits one chunk per page, fetched on the
+ * first visit to that route.
+ */
 // buyer
-import Offers from './pages/Offers';
-import Messages from './pages/Messages';
-import Shipments from './pages/Shipments';
-import Saved from './pages/Saved';
-import Notifications from './pages/Notifications';
-import Profile from './pages/Profile';
+const Offers = lazy(() => import('./pages/Offers'));
+const Messages = lazy(() => import('./pages/Messages'));
+const Shipments = lazy(() => import('./pages/Shipments'));
+const Saved = lazy(() => import('./pages/Saved'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Profile = lazy(() => import('./pages/Profile'));
 // supplier
-import SupplierListings from './pages/SupplierListings';
-import SupplierPost from './pages/SupplierPost';
-import SupplierOffers from './pages/SupplierOffers';
-import SupplierVerification from './pages/SupplierVerification';
+const SupplierListings = lazy(() => import('./pages/SupplierListings'));
+const SupplierPost = lazy(() => import('./pages/SupplierPost'));
+const SupplierOffers = lazy(() => import('./pages/SupplierOffers'));
+const SupplierVerification = lazy(() => import('./pages/SupplierVerification'));
 // admin
-import AdminOverview from './pages/AdminOverview';
-import AdminSuppliers from './pages/AdminSuppliers';
-import AdminVerification from './pages/AdminVerification';
-import AdminListings from './pages/AdminListings';
-import AdminRfqs from './pages/AdminRfqs';
-import AdminPayments from './pages/AdminPayments';
-import AdminSources from './pages/AdminSources';
-import AdminGrowth from './pages/AdminGrowth';
-import AdminFeatures from './pages/AdminFeatures';
+const AdminOverview = lazy(() => import('./pages/AdminOverview'));
+const AdminSuppliers = lazy(() => import('./pages/AdminSuppliers'));
+const AdminVerification = lazy(() => import('./pages/AdminVerification'));
+const AdminListings = lazy(() => import('./pages/AdminListings'));
+const AdminRfqs = lazy(() => import('./pages/AdminRfqs'));
+const AdminPayments = lazy(() => import('./pages/AdminPayments'));
+const AdminSources = lazy(() => import('./pages/AdminSources'));
+const AdminGrowth = lazy(() => import('./pages/AdminGrowth'));
+const AdminFeatures = lazy(() => import('./pages/AdminFeatures'));
 
 /** Views that show the category rail, matching the reference template. */
 const RAIL_VIEWS = ['/explore', '/feed', '/suppliers'];
@@ -88,7 +96,9 @@ function Shell() {
           />
         )}
         <main className="main">
-          <Switch>
+          {/* Lazy dashboard pages render a spinner while their chunk loads. */}
+          <Suspense fallback={<Spinner />}>
+            <Switch>
             {/* ---------- public marketplace ---------- */}
             <Route path="/explore" component={Explore} />
             <Route path="/products/:id" component={ProductDetail} />
@@ -136,6 +146,7 @@ function Shell() {
             <Route path="/" component={() => <Redirect to={loggedIn ? homeFor(dash) : '/explore'} />} />
             <Route component={() => <Redirect to="/explore" />} />
           </Switch>
+          </Suspense>
         </main>
       </div>
       {loggedIn && dash && <BottomNav items={nav} activeKey={activeKey} />}

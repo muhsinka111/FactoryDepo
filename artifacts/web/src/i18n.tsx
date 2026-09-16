@@ -916,58 +916,134 @@ export interface Dict {
 
   /* ---- shipments ---- */
   'ship.title': string;
-  'ship.sub': string;
+  'ship.subSupplier': string;
+  'ship.subAdmin': string;
+  'ship.subBuyer': string;
   'ship.signInSub': string;
   'ship.notSignedIn': string;
   'ship.notSignedInBody': string;
   'ship.loadErrorTitle': string;
   'ship.loadErrorBody': string;
+  'ship.trying': string;
   'ship.emptyTitle': string;
-  'ship.emptyBody': string;
-  'ship.statInTransit': string;
-  'ship.statDelivered': string;
-  'ship.statPending': string;
+  'ship.emptySupplier': string;
+  'ship.emptyBuyer': string;
+  'ship.myListings': string;
+  'ship.viewOrders': string;
+  'ship.count': string;
+  'ship.delivered': string;
+  'ship.advanceRecorded': string;
+  'ship.advanceBySupplier': string;
+  'ship.trackingTitle': string;
   'ship.col.shipment': string;
-  'ship.col.order': string;
+  'ship.col.product': string;
   'ship.col.carrier': string;
-  'ship.col.mode': string;
-  'ship.col.status': string;
-  'ship.col.eta': string;
+  'ship.col.trackingNo': string;
+  'ship.col.documents': string;
   'ship.col.updated': string;
-  'ship.milestones': string;
-  'ship.tracking': string;
-  'ship.noTracking': string;
-  'ship.docs': string;
-  'ship.noDocs': string;
+  'ship.col.milestone': string;
+  'ship.noDocumentTitle': string;
+  'ship.advance': string;
+  'ship.advancing': string;
+  'ship.deliveredLabel': string;
+  'ship.advancedBySupplier': string;
+  'ship.completeTitle': string;
+  'ship.advanceTitle': string;
+  'ship.noMilestones': string;
+  'ship.reached': string;
+  'ship.reachedDelivered': string;
+  'ship.reachedNext': string;
+  'ship.footLead': string;
+  'ship.footLink': string;
+  'ship.footTail': string;
+  'ship.errAdvance': string;
 
   /* ---- saved ---- */
   'saved.title': string;
-  'saved.sub': string;
   'saved.signInSub': string;
   'saved.notSignedIn': string;
   'saved.notSignedInBody': string;
+  'saved.sub': string;
+  'saved.loadErrorTitle': string;
+  'saved.loadErrorBody': string;
+  'saved.trying': string;
   'saved.emptyTitle': string;
   'saved.emptyBody': string;
   'saved.browse': string;
-  'saved.remove': string;
-  'saved.removed': string;
-  'saved.loadErrorTitle': string;
+  'saved.goToFeed': string;
   'saved.count': string;
+  'saved.mostRecent': string;
+  'saved.savedOn': string;
+  'saved.remove': string;
+  'saved.removing': string;
+  'saved.removeTitle': string;
+  'saved.errRemove': string;
 
   /* ---- notifications ---- */
   'notes.title': string;
-  'notes.sub': string;
   'notes.signInSub': string;
   'notes.notSignedIn': string;
   'notes.notSignedInBody': string;
+  'notes.sub': string;
+  'notes.markAll': string;
+  'notes.marking': string;
+  'notes.markAllTitle': string;
+  'notes.nothingUnread': string;
+  'notes.loadErrorTitle': string;
+  'notes.loadErrorBody': string;
+  'notes.trying': string;
   'notes.emptyTitle': string;
   'notes.emptyBody': string;
-  'notes.loadErrorTitle': string;
-  'notes.markAll': string;
-  'notes.markRead': string;
-  'notes.unread': string;
-  'notes.allRead': string;
+  'notes.browse': string;
+  'notes.myOrders': string;
   'notes.count': string;
+  'notes.unreadCount': string;
+  'notes.allRead': string;
+  'notes.unreadLabel': string;
+  'notes.footnote': string;
+  'notes.errMark': string;
+  'notes.justNow': string;
+  'notes.minutesAgo': string;
+  'notes.hoursAgo': string;
+  'notes.daysAgo': string;
+  'notes.open': string;
+
+  /* ---- messages ---- */
+  'msg.title': string;
+  'msg.subSupplier': string;
+  'msg.subBuyer': string;
+  'msg.signInSub': string;
+  'msg.notSignedIn': string;
+  'msg.notSignedInBody': string;
+  'msg.loadErrorTitle': string;
+  'msg.loadErrorBody': string;
+  'msg.trying': string;
+  'msg.emptyTitle': string;
+  'msg.emptySupplier': string;
+  'msg.emptyBuyer': string;
+  'msg.browse': string;
+  'msg.myListings': string;
+  'msg.noMessagesYet': string;
+  'msg.count': string;
+  'msg.pickTitle': string;
+  'msg.pickBody': string;
+  'msg.threadLoadError': string;
+  'msg.threadLoadErrorBody': string;
+  'msg.noLot': string;
+  'msg.viewLot': string;
+  'msg.emptyThreadTitle': string;
+  'msg.emptyThreadBody': string;
+  'msg.messagePlaceholder': string;
+  'msg.messageAria': string;
+  'msg.send': string;
+  'msg.sending': string;
+  'msg.read': string;
+  'msg.otherParty': string;
+  'msg.errSend': string;
+  'msg.justNow': string;
+  'msg.minutesAgo': string;
+  'msg.hoursAgo': string;
+  'msg.daysAgo': string;
 
   /* ---- supplier verification ---- */
   'verify.title': string;
@@ -1803,6 +1879,195 @@ const en: Dict = {
   'offers.rejecting': 'Rejecting…',
   'offers.rejectErr': 'Could not reject this offer.',
   'offers.rejectDone': 'Offer #{id} rejected.',
+
+  'myoffers.titleSupplier': 'Offers on my stock',
+  'myoffers.titleAdmin': 'All offers',
+  'myoffers.titleBuyer': 'My offers',
+  'myoffers.subSupplier': 'Offers buyers have made on your stock. Counter, accept or reject each one.',
+  'myoffers.subAdmin': 'Every offer on the platform, newest first.',
+  'myoffers.subBuyer': 'Offers you have made on ready stock. Counter, accept or reject each one.',
+  'myoffers.signInSub': 'Sign in to see the offers you are negotiating',
+  'myoffers.notSignedIn': 'You are not signed in',
+  'myoffers.notSignedInBody': 'Offers are private to the two parties: sign in to open, counter or accept one.',
+  'myoffers.loadErrorTitle': 'Offers could not be loaded',
+  'myoffers.loadErrorBody': 'The API did not return your offers — try again.',
+  'myoffers.trying': 'Trying…',
+  'myoffers.emptyTitle': 'No offers yet',
+  'myoffers.emptySupplier': 'Offers buyers make on your listings appear here, ready to counter or accept.',
+  'myoffers.emptyAdmin': 'No offer has been opened on the platform yet.',
+  'myoffers.emptyBuyer': 'Open a lot you want and make an offer — the supplier can counter, accept or reject it.',
+  'myoffers.browseStock': 'Browse ready stock',
+  'myoffers.count': '{n} offers',
+  'myoffers.stillOpen': '{n} still open',
+  'myoffers.col.offer': 'Offer',
+  'myoffers.col.counterparty': 'Counterparty',
+  'myoffers.col.quantity': 'Quantity',
+  'myoffers.col.unitPrice': 'Unit price',
+  'myoffers.col.status': 'Status',
+  'myoffers.col.date': 'Date',
+  'myoffers.col.action': 'Action',
+  'myoffers.counterTo': 'counter to #{id}',
+  'myoffers.seatSupplier': 'supplier',
+  'myoffers.seatBuyer': 'buyer',
+  'myoffers.noAction': 'No further action',
+  'myoffers.confirmReject': 'Confirm reject',
+  'myoffers.counter': 'Counter',
+  'myoffers.accept': 'Accept',
+  'myoffers.reject': 'Reject',
+  'myoffers.counterTitle': 'Counter offer #{id}',
+  'myoffers.counterDoneTitle': 'Counter-offer sent',
+  'myoffers.counterDoneBody': 'Your counter-offer is with the other party',
+  'myoffers.backToOffers': 'Back to my offers',
+  'myoffers.counterLead': '{product} · offer #{id} · {qty} offered at {price} per unit',
+  'myoffers.perUnit': 'In {currency}, per unit.',
+  'myoffers.inCurrency': 'In {currency}, per unit.',
+  'myoffers.originally': 'Originally {qty}.',
+  'myoffers.messageLabel': 'Message to the other party',
+  'myoffers.messagePlaceholder': 'Lead time, packing, payment terms…',
+  'myoffers.sendCounter': 'Send counter-offer',
+  'myoffers.sending': 'Sending…',
+  'myoffers.errInvalid': 'Enter a unit price and quantity greater than zero.',
+  'myoffers.errCounter': 'The counter-offer could not be sent — try again.',
+  'myoffers.acceptTitle': 'Accept offer #{id}',
+  'myoffers.acceptLead': '{product} · {qty} at {price} per unit',
+  'myoffers.acceptStripeLead': 'Accepting agrees to this price and quantity and',
+  'myoffers.acceptStripeStrong': 'creates an order',
+  'myoffers.acceptStripeTail': 'for it. The order then appears under Orders, where shipment milestones are tracked.',
+  'myoffers.acceptHint': 'This cannot be undone — the negotiation closes at the accepted terms.',
+  'myoffers.acceptCta': 'Accept and create order',
+  'myoffers.accepting': 'Accepting…',
+  'myoffers.errAccept': 'The offer could not be accepted — try again.',
+  'myoffers.accepted': 'Offer #{id} accepted. Check Orders for the resulting order.',
+  'myoffers.viewOrders': 'View orders',
+  'myoffers.errReject': 'Offer #{id} could not be rejected — try again.',
+
+  'ship.title': 'Shipments',
+  'ship.subSupplier': 'Milestones on orders placed against your stock. You move each shipment forward.',
+  'ship.subAdmin': 'Milestones on every order. Admins can advance a shipment on the supplier’s behalf.',
+  'ship.subBuyer': 'Milestone tracking for the orders you placed. Your supplier advances each step.',
+  'ship.signInSub': 'Sign in to track your shipments',
+  'ship.notSignedIn': 'You are not signed in',
+  'ship.notSignedInBody': 'Shipment tracking is private to the buyer and supplier on an order.',
+  'ship.loadErrorTitle': 'Shipments could not be loaded',
+  'ship.loadErrorBody': 'The API did not return your shipments — try again.',
+  'ship.trying': 'Trying…',
+  'ship.emptyTitle': 'No shipments yet',
+  'ship.emptySupplier': 'A shipment is created automatically when a buyer orders from your stock.',
+  'ship.emptyBuyer': 'A shipment is created automatically for each order you place, and its milestones appear here.',
+  'ship.myListings': 'My listings',
+  'ship.viewOrders': 'View my orders',
+  'ship.count': 'shipments visible to your account',
+  'ship.delivered': 'delivered',
+  'ship.advanceRecorded': 'Advancing a milestone is recorded with a timestamp and shared with the buyer.',
+  'ship.advanceBySupplier': 'Milestones are advanced by the supplier on each order.',
+  'ship.trackingTitle': 'Shipment tracking',
+  'ship.col.shipment': 'Shipment',
+  'ship.col.product': 'Product',
+  'ship.col.carrier': 'Carrier',
+  'ship.col.trackingNo': 'Tracking no.',
+  'ship.col.documents': 'Documents',
+  'ship.col.updated': 'Last update',
+  'ship.col.milestone': 'Milestone',
+  'ship.noDocumentTitle': 'No document is attached to a shipment yet',
+  'ship.advance': 'Advance milestone',
+  'ship.advancing': 'Advancing…',
+  'ship.deliveredLabel': 'Delivered',
+  'ship.advancedBySupplier': 'Advanced by the supplier',
+  'ship.completeTitle': 'Every milestone is reached',
+  'ship.advanceTitle': 'Move this shipment one step forward',
+  'ship.noMilestones': 'No milestones are recorded on this shipment yet.',
+  'ship.reached': '{step} of {total} milestones reached',
+  'ship.reachedDelivered': 'delivered',
+  'ship.reachedNext': 'next: {next}',
+  'ship.footLead': 'Milestone history is shared by both parties on the order. Orders and their totals live under',
+  'ship.footLink': 'Orders',
+  'ship.footTail': '.',
+  'ship.errAdvance': 'Shipment #{id} could not be advanced — try again.',
+
+  'saved.title': 'Saved lots',
+  'saved.signInSub': 'Sign in to keep a shortlist of lots',
+  'saved.notSignedIn': 'You are not signed in',
+  'saved.notSignedInBody': 'Your shortlist is private to your account: sign in to save and remove lots.',
+  'saved.sub': 'Lots you shortlisted. Prices and stock are the supplier’s current figures, not a reservation.',
+  'saved.loadErrorTitle': 'Saved lots could not be loaded',
+  'saved.loadErrorBody': 'The API did not return your shortlist — try again.',
+  'saved.trying': 'Trying…',
+  'saved.emptyTitle': 'Nothing saved yet',
+  'saved.emptyBody': 'Save a lot from the marketplace and it appears here for a quick comparison later.',
+  'saved.browse': 'Browse ready stock',
+  'saved.goToFeed': 'Go to my feed',
+  'saved.count': '{n} saved lots',
+  'saved.mostRecent': 'Most recently saved first',
+  'saved.savedOn': 'Saved {date}',
+  'saved.remove': 'Remove',
+  'saved.removing': 'Removing…',
+  'saved.removeTitle': 'Remove this lot from your shortlist',
+  'saved.errRemove': 'That lot could not be removed from your shortlist — try again.',
+
+  'notes.title': 'Notifications',
+  'notes.signInSub': 'Sign in to see your account activity',
+  'notes.notSignedIn': 'You are not signed in',
+  'notes.notSignedInBody': 'Notifications are private to your account: sign in to read them.',
+  'notes.sub': 'Offers, messages and shipment updates on your account, newest first.',
+  'notes.markAll': 'Mark all read',
+  'notes.marking': 'Marking…',
+  'notes.markAllTitle': 'Mark {n} unread notifications read',
+  'notes.nothingUnread': 'Nothing is unread',
+  'notes.loadErrorTitle': 'Notifications could not be loaded',
+  'notes.loadErrorBody': 'The API did not return your notifications — try again.',
+  'notes.trying': 'Trying…',
+  'notes.emptyTitle': 'No notifications yet',
+  'notes.emptyBody': 'When an offer is countered, a message arrives or a shipment moves, it is recorded here.',
+  'notes.browse': 'Browse ready stock',
+  'notes.myOrders': 'My orders',
+  'notes.count': '{n} notifications',
+  'notes.unreadCount': '{n} unread',
+  'notes.allRead': 'All read',
+  'notes.unreadLabel': 'Unread',
+  'notes.footnote':
+    'Unread counts come straight from the API. Opening a conversation or an offer from here does not clear a notification on its own — use “Mark all read”.',
+  'notes.errMark': 'Notifications could not be marked read — try again.',
+  'notes.justNow': 'just now',
+  'notes.minutesAgo': '{n}m ago',
+  'notes.hoursAgo': '{n}h ago',
+  'notes.daysAgo': '{n}d ago',
+  'notes.open': 'Open',
+
+  'msg.title': 'Messages',
+  'msg.subSupplier': 'Buyer enquiries on your stock. Opening a conversation marks it read.',
+  'msg.subBuyer': 'Your conversations with suppliers. Opening a conversation marks it read.',
+  'msg.signInSub': 'Sign in to see your conversations',
+  'msg.notSignedIn': 'You are not signed in',
+  'msg.notSignedInBody': 'Conversations are private to the two parties: sign in to read and reply.',
+  'msg.loadErrorTitle': 'Conversations could not be loaded',
+  'msg.loadErrorBody': 'The API did not return your threads — try again.',
+  'msg.trying': 'Trying…',
+  'msg.emptyTitle': 'No conversations yet',
+  'msg.emptySupplier': 'When a buyer asks about one of your lots, the conversation appears here.',
+  'msg.emptyBuyer': 'Open a lot you are interested in and message the supplier — the conversation appears here.',
+  'msg.browse': 'Browse ready stock',
+  'msg.myListings': 'My listings',
+  'msg.noMessagesYet': 'No messages yet',
+  'msg.count': '{n} messages',
+  'msg.pickTitle': 'Pick a conversation',
+  'msg.pickBody': 'Its messages appear here.',
+  'msg.threadLoadError': 'This conversation could not be loaded',
+  'msg.threadLoadErrorBody': 'It may have been removed, or it is not open to your account — try again.',
+  'msg.noLot': 'No lot attached',
+  'msg.viewLot': 'View lot',
+  'msg.emptyThreadTitle': 'No messages in this conversation yet',
+  'msg.emptyThreadBody': 'Write the first one below.',
+  'msg.messagePlaceholder': 'Message {name}…',
+  'msg.messageAria': 'Write a message',
+  'msg.send': 'Send',
+  'msg.sending': 'Sending…',
+  'msg.read': 'read',
+  'msg.otherParty': 'the other party',
+  'msg.errSend': 'The message could not be sent — try again.',
+  'msg.justNow': 'just now',
+  'msg.minutesAgo': '{n}m ago',
+  'msg.hoursAgo': '{n}h ago',
+  'msg.daysAgo': '{n}d ago',
 
   'verify.title': 'Verification',
   'verify.sub': 'File your documents, track the review decision, and see what buyers are told about it',
@@ -2648,6 +2913,195 @@ const tr: Partial<Record<DictKey, string>> = {
   'offers.rejectErr': 'Bu teklif reddedilemedi.',
   'offers.rejectDone': 'Teklif #{id} reddedildi.',
 
+  'myoffers.titleSupplier': 'Stoğumdaki teklifler',
+  'myoffers.titleAdmin': 'Tüm teklifler',
+  'myoffers.titleBuyer': 'Tekliflerim',
+  'myoffers.subSupplier': 'Alıcıların stoğunuza verdiği teklifler. Her birini karşılayın, kabul edin veya reddedin.',
+  'myoffers.subAdmin': 'Platformdaki tüm teklifler, en yeniler önce.',
+  'myoffers.subBuyer': 'Hazır stokta verdiğiniz teklifler. Her birini karşılayın, kabul edin veya reddedin.',
+  'myoffers.signInSub': 'Pazarlık ettiğiniz teklifleri görmek için giriş yapın',
+  'myoffers.notSignedIn': 'Giriş yapmadınız',
+  'myoffers.notSignedInBody': 'Teklifler iki tarafa özeldir: açmak, karşılamak veya kabul etmek için giriş yapın.',
+  'myoffers.loadErrorTitle': 'Teklifler yüklenemedi',
+  'myoffers.loadErrorBody': 'API tekliflerinizi döndürmedi — yeniden deneyin.',
+  'myoffers.trying': 'Deneniyor…',
+  'myoffers.emptyTitle': 'Henüz teklif yok',
+  'myoffers.emptySupplier': 'Alıcıların ilanlarınıza verdiği teklifler burada görünür ve karşılamaya veya kabul etmeye hazırdır.',
+  'myoffers.emptyAdmin': 'Platformda henüz hiç teklif açılmadı.',
+  'myoffers.emptyBuyer': 'İstediğiniz bir lotu açıp teklif verin — tedarikçi karşılayabilir, kabul edebilir veya reddedebilir.',
+  'myoffers.browseStock': 'Hazır stoğa göz at',
+  'myoffers.count': '{n} teklif',
+  'myoffers.stillOpen': '{n} hâlâ açık',
+  'myoffers.col.offer': 'Teklif',
+  'myoffers.col.counterparty': 'Karşı taraf',
+  'myoffers.col.quantity': 'Miktar',
+  'myoffers.col.unitPrice': 'Birim fiyat',
+  'myoffers.col.status': 'Durum',
+  'myoffers.col.date': 'Tarih',
+  'myoffers.col.action': 'İşlem',
+  'myoffers.counterTo': '#{id} numaralı teklife karşı',
+  'myoffers.seatSupplier': 'tedarikçi',
+  'myoffers.seatBuyer': 'alıcı',
+  'myoffers.noAction': 'Başka işlem yok',
+  'myoffers.confirmReject': 'Reddi onayla',
+  'myoffers.counter': 'Karşı teklif',
+  'myoffers.accept': 'Kabul et',
+  'myoffers.reject': 'Reddet',
+  'myoffers.counterTitle': 'Karşı teklif #{id}',
+  'myoffers.counterDoneTitle': 'Karşı teklif gönderildi',
+  'myoffers.counterDoneBody': 'Karşı teklifiniz karşı tarafta',
+  'myoffers.backToOffers': 'Tekliflerime dön',
+  'myoffers.counterLead': '{product} · teklif #{id} · {qty} adede birim {price} teklif edildi',
+  'myoffers.perUnit': '{currency} cinsinden, birim başına.',
+  'myoffers.inCurrency': '{currency} cinsinden, birim başına.',
+  'myoffers.originally': 'Başlangıçta {qty}.',
+  'myoffers.messageLabel': 'Karşı tarafa mesaj',
+  'myoffers.messagePlaceholder': 'Termin, paketleme, ödeme koşulları…',
+  'myoffers.sendCounter': 'Karşı teklifi gönder',
+  'myoffers.sending': 'Gönderiliyor…',
+  'myoffers.errInvalid': 'Sıfırdan büyük bir birim fiyat ve miktar girin.',
+  'myoffers.errCounter': 'Karşı teklif gönderilemedi — yeniden deneyin.',
+  'myoffers.acceptTitle': '#{id} numaralı teklifi kabul et',
+  'myoffers.acceptLead': '{product} · {qty} adet, birim {price}',
+  'myoffers.acceptStripeLead': 'Kabul etmek bu fiyat ve miktarı onaylar ve',
+  'myoffers.acceptStripeStrong': 'bir sipariş oluşturur',
+  'myoffers.acceptStripeTail': '. Sipariş daha sonra sevkiyat aşamalarının izlendiği Siparişler altında görünür.',
+  'myoffers.acceptHint': 'Bu geri alınamaz — pazarlık kabul edilen koşullarla kapanır.',
+  'myoffers.acceptCta': 'Kabul et ve sipariş oluştur',
+  'myoffers.accepting': 'Kabul ediliyor…',
+  'myoffers.errAccept': 'Teklif kabul edilemedi — yeniden deneyin.',
+  'myoffers.accepted': 'Teklif #{id} kabul edildi. Oluşan siparişi Siparişler’de görün.',
+  'myoffers.viewOrders': 'Siparişleri gör',
+  'myoffers.errReject': 'Teklif #{id} reddedilemedi — yeniden deneyin.',
+
+  'ship.title': 'Sevkiyatlar',
+  'ship.subSupplier': 'Stoğunuza verilen siparişlerin aşamaları. Her sevkiyatı siz ilerletirsiniz.',
+  'ship.subAdmin': 'Tüm siparişlerin aşamaları. Yöneticiler bir sevkiyatı tedarikçi adına ilerletebilir.',
+  'ship.subBuyer': 'Verdiğiniz siparişler için aşama takibi. Her adımı tedarikçiniz ilerletir.',
+  'ship.signInSub': 'Sevkiyatlarınızı izlemek için giriş yapın',
+  'ship.notSignedIn': 'Giriş yapmadınız',
+  'ship.notSignedInBody': 'Sevkiyat takibi bir siparişteki alıcı ve tedarikçiye özeldir.',
+  'ship.loadErrorTitle': 'Sevkiyatlar yüklenemedi',
+  'ship.loadErrorBody': 'API sevkiyatlarınızı döndürmedi — yeniden deneyin.',
+  'ship.trying': 'Deneniyor…',
+  'ship.emptyTitle': 'Henüz sevkiyat yok',
+  'ship.emptySupplier': 'Bir alıcı stoğunuzdan sipariş verdiğinde sevkiyat otomatik oluşturulur.',
+  'ship.emptyBuyer': 'Verdiğiniz her sipariş için sevkiyat otomatik oluşturulur ve aşamaları burada görünür.',
+  'ship.myListings': 'İlanlarım',
+  'ship.viewOrders': 'Siparişlerimi gör',
+  'ship.count': 'sevkiyat hesabınıza görünür',
+  'ship.delivered': 'teslim edildi',
+  'ship.advanceRecorded': 'Bir aşamayı ilerletmek zaman damgasıyla kaydedilir ve alıcıyla paylaşılır.',
+  'ship.advanceBySupplier': 'Aşamaları her siparişte tedarikçi ilerletir.',
+  'ship.trackingTitle': 'Sevkiyat takibi',
+  'ship.col.shipment': 'Sevkiyat',
+  'ship.col.product': 'Ürün',
+  'ship.col.carrier': 'Taşıyıcı',
+  'ship.col.trackingNo': 'Takip no.',
+  'ship.col.documents': 'Belgeler',
+  'ship.col.updated': 'Son güncelleme',
+  'ship.col.milestone': 'Aşama',
+  'ship.noDocumentTitle': 'Bir sevkiyata henüz belge eklenmedi',
+  'ship.advance': 'Aşamayı ilerlet',
+  'ship.advancing': 'İlerletiliyor…',
+  'ship.deliveredLabel': 'Teslim edildi',
+  'ship.advancedBySupplier': 'Tedarikçi tarafından ilerletilir',
+  'ship.completeTitle': 'Tüm aşamalara ulaşıldı',
+  'ship.advanceTitle': 'Bu sevkiyatı bir adım ilerlet',
+  'ship.noMilestones': 'Bu sevkiyatta henüz aşama kaydedilmedi.',
+  'ship.reached': '{total} aşamadan {step} tanesine ulaşıldı',
+  'ship.reachedDelivered': 'teslim edildi',
+  'ship.reachedNext': 'sıradaki: {next}',
+  'ship.footLead': 'Aşama geçmişi siparişteki iki tarafça paylaşılır. Siparişler ve tutarları',
+  'ship.footLink': 'Siparişler',
+  'ship.footTail': 'altındadır.',
+  'ship.errAdvance': 'Sevkiyat #{id} ilerletilemedi — yeniden deneyin.',
+
+  'saved.title': 'Kaydedilen lotlar',
+  'saved.signInSub': 'Lotlardan bir kısa liste tutmak için giriş yapın',
+  'saved.notSignedIn': 'Giriş yapmadınız',
+  'saved.notSignedInBody': 'Kısa listeniz hesabınıza özeldir: lot kaydetmek ve kaldırmak için giriş yapın.',
+  'saved.sub': 'Kısa listenize aldığınız lotlar. Fiyatlar ve stok tedarikçinin güncel değerleridir, rezervasyon değildir.',
+  'saved.loadErrorTitle': 'Kaydedilen lotlar yüklenemedi',
+  'saved.loadErrorBody': 'API kısa listenizi döndürmedi — yeniden deneyin.',
+  'saved.trying': 'Deneniyor…',
+  'saved.emptyTitle': 'Henüz bir şey kaydedilmedi',
+  'saved.emptyBody': 'Pazar yerinden bir lot kaydedin, sonra hızlı karşılaştırma için burada görünür.',
+  'saved.browse': 'Hazır stoğa göz at',
+  'saved.goToFeed': 'Akışıma git',
+  'saved.count': '{n} kayıtlı lot',
+  'saved.mostRecent': 'En son kaydedilen önce',
+  'saved.savedOn': '{date} tarihinde kaydedildi',
+  'saved.remove': 'Kaldır',
+  'saved.removing': 'Kaldırılıyor…',
+  'saved.removeTitle': 'Bu lotu kısa listenizden kaldır',
+  'saved.errRemove': 'Bu lot kısa listenizden kaldırılamadı — yeniden deneyin.',
+
+  'notes.title': 'Bildirimler',
+  'notes.signInSub': 'Hesap hareketlerinizi görmek için giriş yapın',
+  'notes.notSignedIn': 'Giriş yapmadınız',
+  'notes.notSignedInBody': 'Bildirimler hesabınıza özeldir: okumak için giriş yapın.',
+  'notes.sub': 'Hesabınızdaki teklifler, mesajlar ve sevkiyat güncellemeleri, en yeniler önce.',
+  'notes.markAll': 'Tümünü okundu işaretle',
+  'notes.marking': 'İşaretleniyor…',
+  'notes.markAllTitle': '{n} okunmamış bildirimi okundu işaretle',
+  'notes.nothingUnread': 'Okunmamış yok',
+  'notes.loadErrorTitle': 'Bildirimler yüklenemedi',
+  'notes.loadErrorBody': 'API bildirimlerinizi döndürmedi — yeniden deneyin.',
+  'notes.trying': 'Deneniyor…',
+  'notes.emptyTitle': 'Henüz bildirim yok',
+  'notes.emptyBody': 'Bir teklife karşı teklif verildiğinde, mesaj geldiğinde veya sevkiyat ilerlediğinde buraya kaydedilir.',
+  'notes.browse': 'Hazır stoğa göz at',
+  'notes.myOrders': 'Siparişlerim',
+  'notes.count': '{n} bildirim',
+  'notes.unreadCount': '{n} okunmamış',
+  'notes.allRead': 'Tümü okundu',
+  'notes.unreadLabel': 'Okunmamış',
+  'notes.footnote':
+    'Okunmamış sayıları doğrudan API’den gelir. Buradan bir sohbeti veya teklifi açmak bildirimi kendiliğinden temizlemez — “Tümünü okundu işaretle”yi kullanın.',
+  'notes.errMark': 'Bildirimler okundu olarak işaretlenemedi — yeniden deneyin.',
+  'notes.justNow': 'az önce',
+  'notes.minutesAgo': '{n} dk önce',
+  'notes.hoursAgo': '{n} sa önce',
+  'notes.daysAgo': '{n} gün önce',
+  'notes.open': 'Aç',
+
+  'msg.title': 'Mesajlar',
+  'msg.subSupplier': 'Stoğunuzla ilgili alıcı soruları. Bir sohbeti açmak onu okundu yapar.',
+  'msg.subBuyer': 'Tedarikçilerle sohbetleriniz. Bir sohbeti açmak onu okundu yapar.',
+  'msg.signInSub': 'Sohbetlerinizi görmek için giriş yapın',
+  'msg.notSignedIn': 'Giriş yapmadınız',
+  'msg.notSignedInBody': 'Sohbetler iki tarafa özeldir: okumak ve yanıtlamak için giriş yapın.',
+  'msg.loadErrorTitle': 'Sohbetler yüklenemedi',
+  'msg.loadErrorBody': 'API konu listelerinizi döndürmedi — yeniden deneyin.',
+  'msg.trying': 'Deneniyor…',
+  'msg.emptyTitle': 'Henüz sohbet yok',
+  'msg.emptySupplier': 'Bir alıcı lotlarınızdan biri hakkında sorduğunda sohbet burada görünür.',
+  'msg.emptyBuyer': 'İlgilendiğiniz bir lotu açıp tedarikçiye mesaj gönderin — sohbet burada görünür.',
+  'msg.browse': 'Hazır stoğa göz at',
+  'msg.myListings': 'İlanlarım',
+  'msg.noMessagesYet': 'Henüz mesaj yok',
+  'msg.count': '{n} mesaj',
+  'msg.pickTitle': 'Bir sohbet seçin',
+  'msg.pickBody': 'Mesajları burada görünür.',
+  'msg.threadLoadError': 'Bu sohbet yüklenemedi',
+  'msg.threadLoadErrorBody': 'Kaldırılmış olabilir veya hesabınıza açık değil — yeniden deneyin.',
+  'msg.noLot': 'Lot eklenmemiş',
+  'msg.viewLot': 'Lotu gör',
+  'msg.emptyThreadTitle': 'Bu sohbette henüz mesaj yok',
+  'msg.emptyThreadBody': 'İlkini aşağıya yazın.',
+  'msg.messagePlaceholder': '{name} kişisine mesaj yaz…',
+  'msg.messageAria': 'Mesaj yaz',
+  'msg.send': 'Gönder',
+  'msg.sending': 'Gönderiliyor…',
+  'msg.read': 'okundu',
+  'msg.otherParty': 'karşı taraf',
+  'msg.errSend': 'Mesaj gönderilemedi — yeniden deneyin.',
+  'msg.justNow': 'az önce',
+  'msg.minutesAgo': '{n} dk önce',
+  'msg.hoursAgo': '{n} sa önce',
+  'msg.daysAgo': '{n} gün önce',
+
   'verify.title': 'Doğrulama',
   'verify.sub': 'Belgelerinizi dosyalayın, inceleme kararını izleyin ve alıcılara ne söylendiğini görün',
   'verify.signInSub': 'Alıcıların parayı bağlamadan önce güvendiği belgeler',
@@ -3482,6 +3936,194 @@ const ar: Partial<Record<DictKey, string>> = {
   'offers.rejecting': 'جارٍ الرفض…',
   'offers.rejectErr': 'تعذّر رفض هذا العرض.',
   'offers.rejectDone': 'تم رفض العرض #{id}.',
+
+  'myoffers.titleSupplier': 'العروض المقدَّمة على مخزوني',
+  'myoffers.titleAdmin': 'كل العروض',
+  'myoffers.titleBuyer': 'عروضي',
+  'myoffers.subSupplier': 'العروض التي قدّمها المشترون على مخزونك. قدّم عرضًا مقابلًا أو اقبل أو ارفض كل عرض.',
+  'myoffers.subAdmin': 'كل عرض على المنصة، الأحدث أولًا.',
+  'myoffers.subBuyer': 'العروض التي قدّمتها على المخزون الجاهز. قدّم عرضًا مقابلًا أو اقبل أو ارفض كل عرض.',
+  'myoffers.signInSub': 'سجّل الدخول لرؤية العروض التي تتفاوض عليها',
+  'myoffers.notSignedIn': 'لم تسجّل الدخول',
+  'myoffers.notSignedInBody': 'العروض خاصة بالطرفين: سجّل الدخول لفتح عرض أو تقديم عرض مقابل أو قبوله.',
+  'myoffers.loadErrorTitle': 'تعذّر تحميل العروض',
+  'myoffers.loadErrorBody': 'لم تُرجع الواجهة عروضك — حاول مرة أخرى.',
+  'myoffers.trying': 'جارٍ المحاولة…',
+  'myoffers.emptyTitle': 'لا توجد عروض بعد',
+  'myoffers.emptySupplier': 'تظهر هنا العروض التي يقدّمها المشترون على إعلاناتك، جاهزة لتقديم عرض مقابل أو للقبول.',
+  'myoffers.emptyAdmin': 'لم يُفتح أي عرض على المنصة بعد.',
+  'myoffers.emptyBuyer': 'افتح الدفعة التي تريدها وقدّم عرضًا — يمكن للمورّد تقديم عرض مقابل أو القبول أو الرفض.',
+  'myoffers.browseStock': 'تصفّح المخزون الجاهز',
+  'myoffers.count': '{n} عرضًا',
+  'myoffers.stillOpen': '{n} ما زالت مفتوحة',
+  'myoffers.col.offer': 'العرض',
+  'myoffers.col.counterparty': 'الطرف الآخر',
+  'myoffers.col.quantity': 'الكمية',
+  'myoffers.col.unitPrice': 'سعر الوحدة',
+  'myoffers.col.status': 'الحالة',
+  'myoffers.col.date': 'التاريخ',
+  'myoffers.col.action': 'الإجراء',
+  'myoffers.counterTo': 'عرض مقابل على #{id}',
+  'myoffers.seatSupplier': 'مورّد',
+  'myoffers.seatBuyer': 'مشترٍ',
+  'myoffers.noAction': 'لا إجراء إضافي',
+  'myoffers.confirmReject': 'تأكيد الرفض',
+  'myoffers.counter': 'عرض مقابل',
+  'myoffers.accept': 'قبول',
+  'myoffers.reject': 'رفض',
+  'myoffers.counterTitle': 'عرض مقابل على العرض #{id}',
+  'myoffers.counterDoneTitle': 'أُرسل العرض المقابل',
+  'myoffers.counterDoneBody': 'عرضك المقابل لدى الطرف الآخر',
+  'myoffers.backToOffers': 'العودة إلى عروضي',
+  'myoffers.counterLead': '{product} · العرض #{id} · عُرضت {qty} بسعر {price} للوحدة',
+  'myoffers.perUnit': 'بالـ{currency}، للوحدة.',
+  'myoffers.inCurrency': 'بالـ{currency}، للوحدة.',
+  'myoffers.originally': 'في الأصل {qty}.',
+  'myoffers.messageLabel': 'رسالة إلى الطرف الآخر',
+  'myoffers.messagePlaceholder': 'مدة التسليم، التغليف، شروط الدفع…',
+  'myoffers.sendCounter': 'إرسال العرض المقابل',
+  'myoffers.sending': 'جارٍ الإرسال…',
+  'myoffers.errInvalid': 'أدخل سعر وحدة وكمية أكبر من صفر.',
+  'myoffers.errCounter': 'تعذّر إرسال العرض المقابل — حاول مرة أخرى.',
+  'myoffers.acceptTitle': 'قبول العرض #{id}',
+  'myoffers.acceptLead': '{product} · {qty} بسعر {price} للوحدة',
+  'myoffers.acceptStripeLead': 'القبول يعني الموافقة على هذا السعر والكمية و',
+  'myoffers.acceptStripeStrong': 'إنشاء طلب',
+  'myoffers.acceptStripeTail': 'له. ثم يظهر الطلب ضمن الطلبات، حيث تُتابَع مراحل الشحن.',
+  'myoffers.acceptHint': 'لا يمكن التراجع عن هذا — تُغلق المفاوضة بالشروط المقبولة.',
+  'myoffers.acceptCta': 'قبول وإنشاء طلب',
+  'myoffers.accepting': 'جارٍ القبول…',
+  'myoffers.errAccept': 'تعذّر قبول العرض — حاول مرة أخرى.',
+  'myoffers.accepted': 'تم قبول العرض #{id}. راجع الطلبات للاطلاع على الطلب الناتج.',
+  'myoffers.viewOrders': 'عرض الطلبات',
+  'myoffers.errReject': 'تعذّر رفض العرض #{id} — حاول مرة أخرى.',
+
+  'ship.title': 'الشحنات',
+  'ship.subSupplier': 'مراحل الطلبات المقدَّمة على مخزونك. أنت من يقدّم كل شحنة إلى الأمام.',
+  'ship.subAdmin': 'مراحل كل طلب. يمكن للمشرفين تقديم الشحنة نيابة عن المورّد.',
+  'ship.subBuyer': 'متابعة مراحل الطلبات التي قدّمتها. يتولى مورّدك تقديم كل خطوة.',
+  'ship.signInSub': 'سجّل الدخول لمتابعة شحناتك',
+  'ship.notSignedIn': 'لم تسجّل الدخول',
+  'ship.notSignedInBody': 'متابعة الشحن خاصة بالمشتري والمورّد في الطلب.',
+  'ship.loadErrorTitle': 'تعذّر تحميل الشحنات',
+  'ship.loadErrorBody': 'لم تُرجع الواجهة شحناتك — حاول مرة أخرى.',
+  'ship.trying': 'جارٍ المحاولة…',
+  'ship.emptyTitle': 'لا توجد شحنات بعد',
+  'ship.emptySupplier': 'تُنشأ الشحنة تلقائيًا عندما يطلب مشترٍ من مخزونك.',
+  'ship.emptyBuyer': 'تُنشأ شحنة تلقائيًا لكل طلب تقدّمه، وتظهر مراحلها هنا.',
+  'ship.myListings': 'إعلاناتي',
+  'ship.viewOrders': 'عرض طلباتي',
+  'ship.count': 'شحنة ظاهرة لحسابك',
+  'ship.delivered': 'مُسلَّمة',
+  'ship.advanceRecorded': 'يُسجَّل تقديم المرحلة بطابع زمني ويُشارَك مع المشتري.',
+  'ship.advanceBySupplier': 'يتولى المورّد تقديم المراحل في كل طلب.',
+  'ship.trackingTitle': 'متابعة الشحنة',
+  'ship.col.shipment': 'الشحنة',
+  'ship.col.product': 'المنتج',
+  'ship.col.carrier': 'الناقل',
+  'ship.col.trackingNo': 'رقم التتبّع',
+  'ship.col.documents': 'المستندات',
+  'ship.col.updated': 'آخر تحديث',
+  'ship.col.milestone': 'المرحلة',
+  'ship.noDocumentTitle': 'لم يُرفق أي مستند بالشحنة بعد',
+  'ship.advance': 'تقديم المرحلة',
+  'ship.advancing': 'جارٍ التقديم…',
+  'ship.deliveredLabel': 'تم التسليم',
+  'ship.advancedBySupplier': 'قدّمه المورّد',
+  'ship.completeTitle': 'تم بلوغ جميع المراحل',
+  'ship.advanceTitle': 'تقديم هذه الشحنة خطوة واحدة',
+  'ship.noMilestones': 'لم تُسجَّل أي مراحل على هذه الشحنة بعد.',
+  'ship.reached': 'تم بلوغ {step} من {total} مرحلة',
+  'ship.reachedDelivered': 'مُسلَّمة',
+  'ship.reachedNext': 'التالي: {next}',
+  'ship.footLead': 'سجل المراحل مشترك بين طرفي الطلب. توجد الطلبات وإجمالياتها ضمن',
+  'ship.footLink': 'الطلبات',
+  'ship.footTail': '.',
+  'ship.errAdvance': 'تعذّر تقديم الشحنة #{id} — حاول مرة أخرى.',
+
+  'saved.title': 'الدفعات المحفوظة',
+  'saved.signInSub': 'سجّل الدخول للاحتفاظ بقائمة مختصرة من الدفعات',
+  'saved.notSignedIn': 'لم تسجّل الدخول',
+  'saved.notSignedInBody': 'قائمتك المختصرة خاصة بحسابك: سجّل الدخول لحفظ الدفعات وإزالتها.',
+  'saved.sub': 'الدفعات التي أضفتها إلى قائمتك المختصرة. الأسعار والمخزون أرقام المورّد الحالية وليست حجزًا.',
+  'saved.loadErrorTitle': 'تعذّر تحميل الدفعات المحفوظة',
+  'saved.loadErrorBody': 'لم تُرجع الواجهة قائمتك المختصرة — حاول مرة أخرى.',
+  'saved.trying': 'جارٍ المحاولة…',
+  'saved.emptyTitle': 'لم يُحفظ شيء بعد',
+  'saved.emptyBody': 'احفظ دفعة من السوق لتظهر هنا لمقارنة سريعة لاحقًا.',
+  'saved.browse': 'تصفّح المخزون الجاهز',
+  'saved.goToFeed': 'الانتقال إلى تدفق السوق',
+  'saved.count': '{n} دفعة محفوظة',
+  'saved.mostRecent': 'الأحدث حفظًا أولًا',
+  'saved.savedOn': 'حُفظت في {date}',
+  'saved.remove': 'إزالة',
+  'saved.removing': 'جارٍ الإزالة…',
+  'saved.removeTitle': 'إزالة هذه الدفعة من قائمتك المختصرة',
+  'saved.errRemove': 'تعذّرت إزالة تلك الدفعة من قائمتك المختصرة — حاول مرة أخرى.',
+
+  'notes.title': 'الإشعارات',
+  'notes.signInSub': 'سجّل الدخول لرؤية نشاط حسابك',
+  'notes.notSignedIn': 'لم تسجّل الدخول',
+  'notes.notSignedInBody': 'الإشعارات خاصة بحسابك: سجّل الدخول لقراءتها.',
+  'notes.sub': 'العروض والرسائل وتحديثات الشحن على حسابك، الأحدث أولًا.',
+  'notes.markAll': 'تعليم الكل كمقروء',
+  'notes.marking': 'جارٍ التعليم…',
+  'notes.markAllTitle': 'تعليم {n} إشعارًا غير مقروء كمقروء',
+  'notes.nothingUnread': 'لا شيء غير مقروء',
+  'notes.loadErrorTitle': 'تعذّر تحميل الإشعارات',
+  'notes.loadErrorBody': 'لم تُرجع الواجهة إشعاراتك — حاول مرة أخرى.',
+  'notes.trying': 'جارٍ المحاولة…',
+  'notes.emptyTitle': 'لا توجد إشعارات بعد',
+  'notes.emptyBody': 'عند تقديم عرض مقابل أو وصول رسالة أو تحرّك شحنة، يُسجَّل ذلك هنا.',
+  'notes.browse': 'تصفّح المخزون الجاهز',
+  'notes.myOrders': 'طلباتي',
+  'notes.count': '{n} إشعارًا',
+  'notes.unreadCount': '{n} غير مقروء',
+  'notes.allRead': 'كلها مقروءة',
+  'notes.unreadLabel': 'غير مقروء',
+  'notes.footnote': 'تأتي أعداد غير المقروء مباشرة من الواجهة. فتح محادثة أو عرض من هنا لا يمسح الإشعار تلقائيًا — استخدم «تعليم الكل كمقروء».',
+  'notes.errMark': 'تعذّر تعليم الإشعارات كمقروءة — حاول مرة أخرى.',
+  'notes.justNow': 'الآن',
+  'notes.minutesAgo': 'قبل {n} د',
+  'notes.hoursAgo': 'قبل {n} س',
+  'notes.daysAgo': 'قبل {n} ي',
+  'notes.open': 'فتح',
+
+  'msg.title': 'الرسائل',
+  'msg.subSupplier': 'استفسارات المشترين عن مخزونك. فتح المحادثة يعلّمها كمقروءة.',
+  'msg.subBuyer': 'محادثاتك مع المورّدين. فتح المحادثة يعلّمها كمقروءة.',
+  'msg.signInSub': 'سجّل الدخول لرؤية محادثاتك',
+  'msg.notSignedIn': 'لم تسجّل الدخول',
+  'msg.notSignedInBody': 'المحادثات خاصة بالطرفين: سجّل الدخول للقراءة والرد.',
+  'msg.loadErrorTitle': 'تعذّر تحميل المحادثات',
+  'msg.loadErrorBody': 'لم تُرجع الواجهة محادثاتك — حاول مرة أخرى.',
+  'msg.trying': 'جارٍ المحاولة…',
+  'msg.emptyTitle': 'لا توجد محادثات بعد',
+  'msg.emptySupplier': 'عندما يسأل مشترٍ عن إحدى دفعاتك، تظهر المحادثة هنا.',
+  'msg.emptyBuyer': 'افتح دفعة تهمّك وراسل المورّد — تظهر المحادثة هنا.',
+  'msg.browse': 'تصفّح المخزون الجاهز',
+  'msg.myListings': 'إعلاناتي',
+  'msg.noMessagesYet': 'لا توجد رسائل بعد',
+  'msg.count': '{n} رسالة',
+  'msg.pickTitle': 'اختر محادثة',
+  'msg.pickBody': 'تظهر رسائلها هنا.',
+  'msg.threadLoadError': 'تعذّر تحميل هذه المحادثة',
+  'msg.threadLoadErrorBody': 'ربما أُزيلت أو لم تعد متاحة لحسابك — حاول مرة أخرى.',
+  'msg.noLot': 'لا توجد دفعة مرتبطة',
+  'msg.viewLot': 'عرض الدفعة',
+  'msg.emptyThreadTitle': 'لا توجد رسائل في هذه المحادثة بعد',
+  'msg.emptyThreadBody': 'اكتب الرسالة الأولى أدناه.',
+  'msg.messagePlaceholder': 'راسل {name}…',
+  'msg.messageAria': 'اكتب رسالة',
+  'msg.send': 'إرسال',
+  'msg.sending': 'جارٍ الإرسال…',
+  'msg.read': 'مقروءة',
+  'msg.otherParty': 'الطرف الآخر',
+  'msg.errSend': 'تعذّر إرسال الرسالة — حاول مرة أخرى.',
+  'msg.justNow': 'الآن',
+  'msg.minutesAgo': 'قبل {n} د',
+  'msg.hoursAgo': 'قبل {n} س',
+  'msg.daysAgo': 'قبل {n} ي',
 
   'verify.title': 'التوثيق',
   'verify.sub': 'أودع مستنداتك، وتابع قرار المراجعة، واعرف ما يُقال للمشترين عنها',
