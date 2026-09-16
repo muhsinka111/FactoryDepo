@@ -63,7 +63,7 @@ authRouter.post('/register', async (req, res) => {
 
   const user = mapUser(inserted);
   res.status(201);
-  respond(res, c.zAuthResponse, { token: signToken(user.id), user });
+  respond(res, c.zAuthResponse, { token: signToken(user.id, inserted.tokenVersion ?? 0), user });
 });
 
 /** POST /api/auth/login — 401 {error:'invalid_credentials'} on bad email/password. */
@@ -83,7 +83,7 @@ authRouter.post('/login', async (req, res) => {
     throw new HttpError(401, { error: 'invalid_credentials' });
   }
 
-  respond(res, c.zAuthResponse, { token: signToken(toNum(row.id)), user: mapUser(row) });
+  respond(res, c.zAuthResponse, { token: signToken(toNum(row.id), toNum(row.tokenVersion)), user: mapUser(row) });
 });
 
 /** GET /api/me — auth required, returns the current user. */

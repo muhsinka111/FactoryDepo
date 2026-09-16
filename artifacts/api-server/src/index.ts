@@ -5,8 +5,8 @@
  */
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
-import cors from 'cors';
 import compression from 'compression';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -60,17 +60,52 @@ function findStaticDir(): string | null {
   return null;
 }
 
-/** Boot-time idempotent migrations: every *.sql in the dir, sorted, executed. */
+/**
+ * Boot-time idempotent migrations: every *.sql in the dir, sorted, executed.
+ * A checksum ledger (_migrations) tracks what ran so an already-applied file
+ * that was edited afterwards gets flagged — the migration itself still
+ * re-runs (all files here are written to be safely re-runnable), but a
+ * changed checksum on a file that already ran means someone edited history
+ * instead of adding a new numbered file, which AGENTS.md says not to do.
+ */
 async function runMigrations(): Promise<void> {
   const dir = findMigrationsDir();
   if (!dir) {
     console.warn('[migrate] migrations dir not found — skipping (healthz reports db state)');
     return;
   }
+
+  // The ledger tracks every other migration file's checksum; it can't track
+  // itself, so it's created directly here rather than via a numbered file.
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "_migrations" (
+      "filename" text PRIMARY KEY,
+      "checksum" text NOT NULL,
+      "appliedAt" timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+
   const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort();
   for (const file of files) {
     const content = await readFile(path.join(dir, file), 'utf8');
+    const checksum = createHash('sha256').update(content).digest('hex');
+
+    const { rows } = await db.execute(sql`SELECT "checksum" FROM "_migrations" WHERE "filename" = ${file}`);
+    const prevChecksum = (rows[0] as { checksum?: string } | undefined)?.checksum;
+    if (prevChecksum && prevChecksum !== checksum) {
+      console.warn(
+        `[migrate] WARNING: ${file} was already applied but its content has changed since ` +
+          '(checksum mismatch). Re-running it anyway — migrations must stay idempotent — but an ' +
+          'applied file should never be edited; add a new numbered migration instead.',
+      );
+    }
+
     await db.execute(sql.raw(content));
+    await db.execute(sql`
+      INSERT INTO "_migrations" ("filename", "checksum")
+      VALUES (${file}, ${checksum})
+      ON CONFLICT ("filename") DO UPDATE SET "checksum" = EXCLUDED."checksum", "appliedAt" = now()
+    `);
     console.log(`[migrate] applied ${file}`);
   }
 }
@@ -109,23 +144,139 @@ function findAssetsDir(): string | null {
   return null;
 }
 
+/* ---------- CORS: two-tier allow-list ---------- */
+//
+// Anonymous catalog reads (products/suppliers/rfqs/healthz, GET only) stay
+// open with ACAO:* — the static marketing landing fetches them cross-origin
+// and none of it is sensitive. Everything else (auth, orders, writes) is
+// restricted to SITE_URL (+ EXTRA_ORIGINS), with credentials allowed only
+// for an origin on that list. This replaces the previous
+// cors({origin: true, credentials: true}) which reflected any caller's
+// origin — combined with credentials:true that let any site read a logged-in
+// user's authenticated responses.
+
+const isProd = process.env.NODE_ENV === 'production';
+const SITE_URL = process.env.SITE_URL;
+if (isProd && !SITE_URL) {
+  console.error('[boot] SITE_URL must be set in production — it drives the CORS allow-list for authenticated routes.');
+  process.exit(1);
+}
+const EXTRA_ORIGINS = (process.env.EXTRA_ORIGINS ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const ALLOWED_ORIGINS = new Set([SITE_URL, ...EXTRA_ORIGINS].filter((v): v is string => Boolean(v)));
+
+const PUBLIC_GET_PREFIXES = ['/api/healthz', '/api/products', '/api/suppliers', '/api/rfqs'];
+
+function isPublicGet(req: Request): boolean {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+  return PUBLIC_GET_PREFIXES.some((p) => req.path === p || req.path.startsWith(`${p}/`));
+}
+
+function corsMiddleware(req: Request, res: Response, next: NextFunction): void {
+  if (isPublicGet(req) || (req.method === 'OPTIONS' && PUBLIC_GET_PREFIXES.some((p) => req.path === p || req.path.startsWith(`${p}/`)))) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+    return;
+  }
+
+  const origin = req.headers.origin;
+  if (typeof origin === 'string' && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+}
+
+/* ---------- rate limiting (hand-rolled, no new dependency) ---------- */
+//
+// In-memory fixed-window counters per client IP. Good enough for a
+// single-instance deploy (this app runs one Railway service, no horizontal
+// scaling yet); would need a shared store (Redis) behind a load balancer.
+
+interface RateBucket {
+  count: number;
+  resetAt: number;
+}
+
+function makeRateLimiter(windowMs: number, max: number) {
+  const buckets = new Map<string, RateBucket>();
+
+  // Periodic sweep so the map doesn't grow unbounded under many distinct IPs.
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, bucket] of buckets) {
+      if (bucket.resetAt <= now) buckets.delete(key);
+    }
+  }, windowMs).unref();
+
+  return function rateLimit(req: Request, res: Response, next: NextFunction): void {
+    const key = req.ip ?? 'unknown';
+    const now = Date.now();
+    let bucket = buckets.get(key);
+    if (!bucket || bucket.resetAt <= now) {
+      bucket = { count: 0, resetAt: now + windowMs };
+      buckets.set(key, bucket);
+    }
+    bucket.count += 1;
+    if (bucket.count > max) {
+      res.setHeader('Retry-After', String(Math.ceil((bucket.resetAt - now) / 1000)));
+      next(new HttpError(429, { error: 'rate_limited' }));
+      return;
+    }
+    next();
+  };
+}
+
+const authLoginLimiter = makeRateLimiter(15 * 60 * 1000, 10); // 10 / 15min on login
+const apiLimiter = makeRateLimiter(60 * 1000, 300); // 300 / min on /api overall
+const writeLimiter = makeRateLimiter(60 * 1000, 30); // 30 / min on write methods
+
+function isWriteMethod(req: Request): boolean {
+  return req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE';
+}
+
 /* ---------- app ---------- */
 
 const app = express();
 
-// Public-read CORS: the static marketing landing fetches catalog/RFQ data cross-origin.
+app.disable('x-powered-by');
+app.set('trust proxy', true); // Railway/most PaaS sit behind a proxy — req.ip needs this for rate limiting
+
+app.use(corsMiddleware);
+
+// Security headers on every response.
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  if (isProd) {
+    res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  }
   next();
 });
-app.disable('x-powered-by');
 
-app.use(cors({ origin: true, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '2mb' }));
+
+app.use('/api', apiLimiter);
+app.use('/api', (req, res, next) => (isWriteMethod(req) ? writeLimiter(req, res, next) : next()));
+app.use('/api/auth/login', authLoginLimiter);
 
 // request logger (method + path + duration)
 app.use((req, res, next) => {
