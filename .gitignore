@@ -10,3 +10,10 @@ __pycache__/
 *.pyc
 scripts/import/test.html
 scripts/import/alibaba_sample.html
+
+# Local pnpm content-addressable store (pnpm writes this inside the workspace here)
+.pnpm-store/
+
+# Stray agent scratch files that must never ship
+.claude-restart.*
+
