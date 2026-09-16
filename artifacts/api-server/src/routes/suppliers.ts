@@ -31,6 +31,7 @@ const supplierCols = {
   since: suppliers.since,
   trustScore: users.trustScore,
   productCount: sql<number>`coalesce(${productCounts.count}, 0)`.as('productCount'),
+  dataSource: suppliers.dataSource,
 };
 
 /** GET /api/suppliers — ordered verifiedLevel desc, rating desc. */

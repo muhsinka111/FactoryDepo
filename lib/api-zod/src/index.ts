@@ -48,6 +48,9 @@ export const zAuthResponse = z.object({
 export type AuthResponse = z.infer<typeof zAuthResponse>;
 
 /* ---------- products ---------- */
+export const zProductStatus = z.enum(['active', 'sold_out']);
+export const zDataSource = z.enum(['platform', 'demo']);
+
 export const zProduct = z.object({
   id: z.number(),
   supplierId: z.number(),
@@ -65,6 +68,9 @@ export const zProduct = z.object({
   verified: z.boolean(),
   trustScore: z.number(),
   imageKey: z.string().nullable(),
+  quantityAvailable: z.number(),
+  status: zProductStatus,
+  dataSource: zDataSource,
   createdAt: z.string(),
 });
 export type Product = z.infer<typeof zProduct>;
@@ -104,6 +110,7 @@ export const zSupplier = z.object({
   since: z.number().nullable(),
   trustScore: z.number(),
   productCount: z.number(),
+  dataSource: zDataSource,
 });
 export type Supplier = z.infer<typeof zSupplier>;
 
@@ -198,6 +205,7 @@ export const zOrder = z.object({
   shippingCountry: z.string(),
   shippingPhone: z.string().nullable(),
   notes: z.string().nullable(),
+  side: z.enum(['buying', 'selling']),
   createdAt: z.string(),
 });
 export type Order = z.infer<typeof zOrder>;

@@ -115,6 +115,9 @@ export function mapProduct(p: Record<string, unknown>): c.Product {
     verified: Boolean(p.verified),
     trustScore: toNum(p.trustScore),
     imageKey: p.imageKey == null ? null : String(p.imageKey),
+    quantityAvailable: toNum(p.quantityAvailable),
+    status: p.status as c.Product['status'],
+    dataSource: p.dataSource as c.Product['dataSource'],
     createdAt: toIso(p.createdAt),
   };
 }
@@ -134,6 +137,7 @@ export function mapSupplier(s: Record<string, unknown>): c.Supplier {
     since: toNumOrNull(s.since),
     trustScore: toNum(s.trustScore),
     productCount: toNum(s.productCount),
+    dataSource: s.dataSource as c.Supplier['dataSource'],
   };
 }
 
@@ -189,6 +193,7 @@ export function mapOrder(o: Record<string, unknown>): c.Order {
     shippingCountry: String(o.shippingCountry),
     shippingPhone: o.shippingPhone == null ? null : String(o.shippingPhone),
     notes: o.notes == null ? null : String(o.notes),
+    side: o.side as c.Order['side'],
     createdAt: toIso(o.createdAt),
   };
 }

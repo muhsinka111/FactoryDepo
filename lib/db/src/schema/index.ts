@@ -29,6 +29,7 @@ export const users = pgTable('users', {
   lang: text('lang').default('en'),
   trustScore: numeric('trustScore', { precision: 5, scale: 2 }).default('0'),
   emailVerified: boolean('emailVerified').default(false),
+  tokenVersion: integer('tokenVersion').notNull().default(0),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
@@ -52,6 +53,8 @@ export const suppliers = pgTable('suppliers', {
   contactPhone: text('contactPhone'),
   website: text('website'),
   source: text('source'),
+  // platform (real listing) | demo (bootstrap seed data)
+  dataSource: text('dataSource').notNull().default('platform'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
@@ -72,6 +75,11 @@ export const products = pgTable('products', {
   purityGrade: text('purityGrade'),
   verified: boolean('verified').default(false),
   imageKey: text('imageKey'),
+  quantityAvailable: numeric('quantityAvailable', { precision: 14, scale: 2 }).notNull().default('0'),
+  // active | sold_out
+  status: text('status').notNull().default('active'),
+  // platform (real listing) | demo (bootstrap seed data)
+  dataSource: text('dataSource').notNull().default('platform'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 

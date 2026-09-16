@@ -24,6 +24,9 @@ const productCols = {
   verified: products.verified,
   trustScore: users.trustScore,
   imageKey: products.imageKey,
+  quantityAvailable: products.quantityAvailable,
+  status: products.status,
+  dataSource: products.dataSource,
   createdAt: products.createdAt,
 };
 

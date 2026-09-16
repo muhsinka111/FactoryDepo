@@ -282,6 +282,7 @@ async function main() {
         fulfillmentRate: String(s.fulfillmentRate),
         tags: s.tags,
         since: s.since,
+        dataSource: 'demo',
       })),
     )
     .returning({ id: suppliers.id, companyName: suppliers.companyName });
@@ -317,6 +318,9 @@ async function main() {
         purityGrade: p.purityGrade ?? null,
         verified: p.verified,
         imageKey,
+        quantityAvailable: String(Math.max(p.moq * 20, 100)),
+        status: 'active',
+        dataSource: 'demo',
       };
     }),
   );
