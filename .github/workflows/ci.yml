@@ -1,0 +1,143 @@
+name: CI
+
+# Gate 1 (typecheck) and Gate 2 (build) from AGENTS.md, plus a real smoke test
+# against Postgres 16 so today's fixes cannot regress silently.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: typecheck + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Typecheck (gate 1)
+        run: pnpm run typecheck
+
+      - name: Build (gate 2)
+        run: pnpm run build
+
+  smoke:
+    name: smoke test (real Postgres)
+    runs-on: ubuntu-latest
+    needs: gates
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: factorydepo
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/factorydepo
+      APP_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+      SITE_URL: http://localhost:9090
+      PORT: '9090'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Boot API (runs migrations 001+ then seeds an empty DB)
+        run: |
+          node artifacts/api-server/dist/index.mjs > /tmp/api.log 2>&1 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:9090/api/healthz > /dev/null; then
+              echo "API is up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "API failed to boot — log follows"; cat /tmp/api.log; exit 1
+
+      - name: Smoke — health reports db up
+        run: |
+          curl -s http://localhost:9090/api/healthz | tee /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+          grep -q '"db":"up"' /tmp/health.json
+
+      - name: Smoke — migrations recorded in the ledger
+        run: |
+          COUNT=$(psql "$DATABASE_URL" -t -A -c 'SELECT count(*) FROM "_migrations"')
+          echo "applied migrations: $COUNT"
+          test "$COUNT" -ge 8
+
+      - name: Smoke — anonymous catalog read is open, authenticated write is not
+        run: |
+          # public GET must stay reachable without a token
+          curl -sf http://localhost:9090/api/products > /dev/null
+          # a protected route must reject an unauthenticated caller
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9090/api/me)
+          echo "/api/me without a token -> $CODE"
+          test "$CODE" = "401"
+
+      - name: Smoke — register, login and read own profile
+        run: |
+          EMAIL="ci-$RANDOM@example.com"
+          curl -sf -X POST http://localhost:9090/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d "{\"name\":\"CI Buyer\",\"email\":\"$EMAIL\",\"password\":\"ci-password-123\",\"role\":\"buyer\"}" \
+            -o /tmp/reg.json
+          TOKEN=$(node -e "process.stdout.write(require('/tmp/reg.json').token)")
+          test -n "$TOKEN"
+          curl -sf http://localhost:9090/api/me -H "Authorization: Bearer $TOKEN" -o /tmp/me.json
+          grep -q "$EMAIL" /tmp/me.json
+
+      - name: Smoke — login rate limiting engages
+        run: |
+          # 14 rapid bad logins should be throttled well before the end
+          SAW429=0
+          for i in $(seq 1 14); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:9090/api/auth/login \
+              -H 'Content-Type: application/json' \
+              -d '{"email":"nobody@example.com","password":"wrong"}')
+            if [ "$CODE" = "429" ]; then SAW429=1; fi
+          done
+          echo "saw 429: $SAW429"
+          test "$SAW429" = "1"
+
+      - name: API log on failure
+        if: failure()
+        run: cat /tmp/api.log
