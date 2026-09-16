@@ -7,6 +7,7 @@
 import { Link, useLocation } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMe, useLogout, getToken } from '@workspace/api-client-react';
+import { CATEGORIES } from '@workspace/api-spec';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
 
 /* ============================ navigation model ============================ */
@@ -16,7 +17,7 @@ export type NavKey =
   | 'messages' | 'saved' | 'notifications' | 'help' | 'profile'
   | 'listings' | 'post' | 'offers-sup' | 'rfq-opps' | 'verification'
   | 'overview' | 'admin-suppliers' | 'admin-verify' | 'admin-listings'
-  | 'admin-rfqs' | 'sources' | 'growth' | 'features' | 'suppliers';
+  | 'admin-rfqs' | 'admin-payments' | 'sources' | 'growth' | 'features' | 'suppliers';
 
 interface NavItem {
   key: NavKey;
@@ -59,6 +60,7 @@ export const NAV_ADMIN: NavItem[] = [
   { key: 'admin-verify', icon: '🛡️', label: 'Verification desk', path: '/admin/verification' },
   { key: 'admin-listings', icon: '📦', label: 'Listings', path: '/admin/listings' },
   { key: 'admin-rfqs', icon: '📄', label: 'RFQs', path: '/admin/rfqs' },
+  { key: 'admin-payments', icon: '💳', label: 'Payments', path: '/admin/payments' },
   { key: 'sources', icon: '🔌', label: 'Supply sources', path: '/admin/sources' },
   { key: 'growth', icon: '📣', label: 'Banners and promos', path: '/admin/growth' },
   { key: 'shipments', icon: '🚚', label: 'Shipments', path: '/shipments' },
@@ -98,12 +100,12 @@ export function homeFor(dash: DashboardRole | null): string {
   return '/explore';
 }
 
-/** Categories from lib/api-spec, kept in sync with the rail. */
-export const RAIL_CATEGORIES = [
-  'Metals & Steel', 'Plastics', 'Textiles & Fabrics', 'Electronics',
-  'Machinery & Equipment', 'Packaging', 'Building Materials', 'Hardware & Fasteners',
-  'Chemicals', 'Automotive', 'Energy', 'Agriculture',
-] as const;
+/**
+ * Categories come from lib/api-spec — ONE list, shared by the rail, the Explore
+ * filter and the listing form. A second local list previously drifted from it,
+ * which is why some rail categories matched nothing in the catalogue.
+ */
+export { CATEGORIES as RAIL_CATEGORIES } from '@workspace/api-spec';
 
 export const MARKET_COUNTRIES: [string, string][] = [
   ['Turkey', '🇹🇷'], ['China', '🇨🇳'], ['USA', '🇺🇸'],
@@ -112,10 +114,39 @@ export const MARKET_COUNTRIES: [string, string][] = [
 
 /* ============================== chrome pieces ============================= */
 
+/**
+ * Logo mark — a warehouse/depot roofline over stacked cargo, in the brand's
+ * navy + gold. Drawn as inline SVG rather than the previous CSS clip-path so it
+ * stays crisp at small sizes and reads as industrial, not generic.
+ */
+export function LogoMark({ size = 24 }: { size?: number }) {
+  return (
+    <svg
+      className="logomark"
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      role="img"
+      aria-label="FactoryDepo"
+      focusable="false"
+    >
+      <rect x="0" y="0" width="32" height="32" rx="7" fill="#f5a623" />
+      {/* depot roof */}
+      <path d="M5 12.2 16 5.6l11 6.6v1.9H5z" fill="#132238" />
+      {/* stacked cargo bays */}
+      <rect x="7.4" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
+      <rect x="13.5" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
+      <rect x="19.6" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
+      {/* loading bay light */}
+      <rect x="13.5" y="19.6" width="5.1" height="2.2" rx="0.8" fill="#f5a623" />
+    </svg>
+  );
+}
+
 export function Logo() {
   return (
     <Link href="/" className="logo">
-      <span className="mark" />
+      <LogoMark />
       factory<b>depo</b>
     </Link>
   );
@@ -192,7 +223,7 @@ export function CategoryRail({ active, onPick }: { active?: string; onPick?: (c:
   return (
     <div className="rail">
       <button className={!active ? 'on' : ''} onClick={() => onPick?.('All')}>All industries</button>
-      {RAIL_CATEGORIES.map((c) => (
+      {CATEGORIES.map((c) => (
         <button key={c} className={active === c ? 'on' : ''} onClick={() => onPick?.(c)}>{c}</button>
       ))}
       <Link href="/help" style={{ marginLeft: 'auto', color: 'var(--blue)', alignSelf: 'center', padding: '8px 11px', fontSize: 12.5 }}>

@@ -15,13 +15,21 @@ import { sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { db } from './db.js';
 import { HttpError } from './http.js';
-import { bootstrapSeedIfEmpty } from './bootstrap-seed.js';
+import { bootstrapSeedIfEmpty, ensureOwnerAdmin } from './bootstrap-seed.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, meRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
 import { suppliersRouter } from './routes/suppliers.js';
 import { rfqsRouter } from './routes/rfqs.js';
 import { ordersRouter } from './routes/orders.js';
+import { offersRouter } from './routes/offers.js';
+import { savedRouter } from './routes/saved.js';
+import { messagesRouter } from './routes/messages.js';
+import { shipmentsRouter } from './routes/shipments.js';
+import { notificationsRouter } from './routes/notifications.js';
+import { verificationRouter } from './routes/verification.js';
+import { adminPaymentsRouter, paymentsRouter, proformaRouter } from './routes/payments.js';
+import { adminRouter } from './routes/admin.js';
 
 /* ---------- path resolution ---------- */
 
@@ -297,6 +305,16 @@ app.use('/api/products', productsRouter);
 app.use('/api/suppliers', suppliersRouter);
 app.use('/api/rfqs', rfqsRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/offers', offersRouter);
+app.use('/api/saved', savedRouter);
+app.use('/api/threads', messagesRouter);
+app.use('/api/shipments', shipmentsRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/supplier', verificationRouter);
+app.use('/api/orders', proformaRouter);
+app.use('/api/orders', paymentsRouter);
+app.use('/api/payments', adminPaymentsRouter);
+app.use('/api/admin', adminRouter);
 
 // unknown /api/* → JSON 404
 app.use('/api', (_req, res) => {
@@ -375,6 +393,11 @@ async function main(): Promise<void> {
     await bootstrapSeedIfEmpty();
   } catch (err) {
     console.warn('[seed] bootstrap failed (continuing boot):', err instanceof Error ? err.message : String(err));
+  }
+  try {
+    await ensureOwnerAdmin();
+  } catch (err) {
+    console.warn('[admin] owner admin setup failed (continuing boot):', err instanceof Error ? err.message : String(err));
   }
   app.listen(PORT, () => {
     console.log(`[api] FactoryDepo API listening on http://localhost:${PORT}`);

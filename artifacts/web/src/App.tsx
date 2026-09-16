@@ -15,7 +15,28 @@ import Orders from './pages/Orders';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import { SignIn, SignUp } from './pages/Auth';
-import ComingSoon from './pages/ComingSoon';
+// buyer
+import Offers from './pages/Offers';
+import Messages from './pages/Messages';
+import Shipments from './pages/Shipments';
+import Saved from './pages/Saved';
+import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
+// supplier
+import SupplierListings from './pages/SupplierListings';
+import SupplierPost from './pages/SupplierPost';
+import SupplierOffers from './pages/SupplierOffers';
+import SupplierVerification from './pages/SupplierVerification';
+// admin
+import AdminOverview from './pages/AdminOverview';
+import AdminSuppliers from './pages/AdminSuppliers';
+import AdminVerification from './pages/AdminVerification';
+import AdminListings from './pages/AdminListings';
+import AdminRfqs from './pages/AdminRfqs';
+import AdminPayments from './pages/AdminPayments';
+import AdminSources from './pages/AdminSources';
+import AdminGrowth from './pages/AdminGrowth';
+import AdminFeatures from './pages/AdminFeatures';
 
 /** Views that show the category rail, matching the reference template. */
 const RAIL_VIEWS = ['/explore', '/feed', '/suppliers'];
@@ -82,29 +103,30 @@ function Shell() {
             <Route path="/rfqs" component={RfqExchange} />
             <Route path="/rfqs/:id" component={RfqDetail} />
             <Route path="/orders" component={Orders} />
-            <Route path="/offers" component={() => <ComingSoon title="My offers" note="The offers and counter-offers table lands in the next build phase." />} />
-            <Route path="/shipments" component={() => <ComingSoon title="Shipments" note="Shipment milestones and documents land in the next build phase." />} />
-            <Route path="/messages" component={() => <ComingSoon title="Messages" note="Buyer ↔ supplier messaging lands in the next build phase." />} />
-            <Route path="/saved" component={() => <ComingSoon title="Saved lots" note="Saved lots land in the next build phase." />} />
-            <Route path="/notifications" component={() => <ComingSoon title="Notifications" note="The notification centre lands in the next build phase." />} />
-            <Route path="/profile" component={() => <ComingSoon title="Profile" note="Profile editing lands in the next build phase." />} />
+            <Route path="/offers" component={Offers} />
+            <Route path="/shipments" component={Shipments} />
+            <Route path="/messages" component={Messages} />
+            <Route path="/saved" component={Saved} />
+            <Route path="/notifications" component={Notifications} />
+            <Route path="/profile" component={Profile} />
 
             {/* ---------- supplier ---------- */}
-            <Route path="/supplier/listings" component={() => <ComingSoon title="My listings" note="Supplier product CRUD with ownership checks lands in the next build phase." />} />
-            <Route path="/supplier/post" component={() => <ComingSoon title="Post stock" note="Listing create/edit with image upload lands in the next build phase." />} />
-            <Route path="/supplier/offers" component={() => <ComingSoon title="Offers on your stock" note="Lands in the next build phase." />} />
+            <Route path="/supplier/listings" component={SupplierListings} />
+            <Route path="/supplier/post" component={SupplierPost} />
+            <Route path="/supplier/offers" component={SupplierOffers} />
             <Route path="/supplier/rfq-opportunities" component={RfqExchange} />
-            <Route path="/supplier/verification" component={() => <ComingSoon title="Verification" note="Verification tiers and document submission land in the next build phase." />} />
+            <Route path="/supplier/verification" component={SupplierVerification} />
 
             {/* ---------- admin ---------- */}
-            <Route path="/admin" component={() => <ComingSoon title="Marketplace overview" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/suppliers" component={() => <ComingSoon title="Suppliers" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/verification" component={() => <ComingSoon title="Verification desk" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/listings" component={() => <ComingSoon title="Listings" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/rfqs" component={() => <ComingSoon title="RFQs" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/sources" component={() => <ComingSoon title="Supply sources" note="Manual supplier intake lands in the next build phase." />} />
-            <Route path="/admin/growth" component={() => <ComingSoon title="Banners and promos" note="The admin console lands in the next build phase." />} />
-            <Route path="/admin/features" component={() => <ComingSoon title="Features" note="Feature flags land in the next build phase." />} />
+            <Route path="/admin" component={AdminOverview} />
+            <Route path="/admin/suppliers" component={AdminSuppliers} />
+            <Route path="/admin/verification" component={AdminVerification} />
+            <Route path="/admin/listings" component={AdminListings} />
+            <Route path="/admin/rfqs" component={AdminRfqs} />
+            <Route path="/admin/payments" component={AdminPayments} />
+            <Route path="/admin/sources" component={AdminSources} />
+            <Route path="/admin/growth" component={AdminGrowth} />
+            <Route path="/admin/features" component={AdminFeatures} />
 
             {/* ---------- legacy redirects (the marketing landing links here) ---------- */}
             <Route path="/products" component={LegacyProducts} />

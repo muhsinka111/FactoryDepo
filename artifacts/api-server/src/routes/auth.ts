@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import * as c from '@workspace/api-zod';
 import { db, users, suppliers } from '../db.js';
 import { requireAuth, signToken } from '../auth.js';
@@ -90,6 +91,47 @@ authRouter.post('/login', async (req, res) => {
 meRouter.get('/', requireAuth, async (req, res) => {
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+  const [row] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
+  if (!row) throw new HttpError(401, { error: 'auth_required' });
+  respond(res, c.zUser, mapUser(row));
+});
+
+/**
+ * PATCH /api/me — the caller edits their OWN profile.
+ *
+ * Deliberately limited to self-service fields (name, company, country, lang).
+ * `role`, `tokenVersion`, `emailVerified`, `trustScore` and the email address
+ * are NOT patchable here: role/tokenVersion are privilege and session-revocation
+ * state, and emailVerified/trustScore are verification outcomes granted by an
+ * admin flow, never self-asserted.
+ */
+const zUpdateMeInput = z
+  .object({
+    name: z.string().min(2).max(80).optional(),
+    company: z.string().max(120).nullable().optional(),
+    country: z.string().max(60).nullable().optional(),
+    lang: z.string().min(2).max(8).optional(),
+  })
+  .strict();
+
+meRouter.patch('/', requireAuth, async (req, res) => {
+  const input = zUpdateMeInput.safeParse(req.body ?? {});
+  if (!input.success) {
+    throw new HttpError(400, { error: 'validation_error', details: input.error.message });
+  }
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const patch: Record<string, unknown> = {};
+  if (input.data.name !== undefined) patch.name = input.data.name;
+  if (input.data.company !== undefined) patch.company = input.data.company;
+  if (input.data.country !== undefined) patch.country = input.data.country;
+  if (input.data.lang !== undefined) patch.lang = input.data.lang;
+
+  if (Object.keys(patch).length > 0) {
+    await db.update(users).set(patch).where(eq(users.id, uid));
+  }
+
   const [row] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
   if (!row) throw new HttpError(401, { error: 'auth_required' });
   respond(res, c.zUser, mapUser(row));

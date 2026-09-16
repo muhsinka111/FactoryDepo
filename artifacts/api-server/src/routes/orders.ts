@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { desc, eq, or, sql } from 'drizzle-orm';
 import * as c from '@workspace/api-zod';
-import { db, orders, products, quotes, rfqs, suppliers, users } from '../db.js';
+import { db, orders, products, productViews, quotes, rfqs, savedLots, suppliers, users } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { HttpError, mapOrder, respond, toNum } from '../http.js';
+import { seedShipmentForOrder } from './shipments.js';
 
 export const ordersRouter = Router();
 
@@ -111,6 +112,12 @@ ordersRouter.post('/', requireAuth, async (req, res) => {
     return { inserted: insertedRow, productName: row.name, supplierName: row.supplierName };
   });
 
+  // Every order gets a trackable shipment at step 0 (nothing reached yet), so
+  // the supplier can advance milestones without a separate "create shipment"
+  // call. Same transaction boundary as the order: a failed seed must not leave
+  // an order that cannot be tracked.
+  await seedShipmentForOrder(toNum(inserted?.id));
+
   res.status(201);
   respond(
     res,
@@ -191,10 +198,25 @@ ordersRouter.get('/stats', requireAuth, async (req, res) => {
         .where(sql`${orders.supplierId} = ${me.supplierId as number} AND ${orders.status} IN ('shipped','delivered')`)
     : await db.select({ n: sql<number>`0` }).from(orders).where(sql`false`);
 
+  // totalViews is a REAL count of product_views rows for the caller's own scope:
+  // a supplier's views are the views of their listings, a buyer's are the views
+  // of the listings they saved. No rows yet → an honest 0.
+  const [viewsRow] = isSupplier
+    ? await db
+        .select({ n: sql<number>`count(*)` })
+        .from(productViews)
+        .innerJoin(products, eq(productViews.productId, products.id))
+        .where(eq(products.supplierId, me.supplierId as number))
+    : await db
+        .select({ n: sql<number>`count(*)` })
+        .from(productViews)
+        .innerJoin(savedLots, eq(productViews.productId, savedLots.productId))
+        .where(eq(savedLots.userId, uid));
+
   respond(res, c.zDashboardStats, {
     totalListings: toNum(listingsRow?.n),
     activeOffers: toNum(offersRow?.n),
-    totalViews: 0, // honest: view tracking not implemented yet
+    totalViews: toNum(viewsRow?.n),
     orders: toNum(ordersRow?.n),
     soldItems: toNum(soldRow?.n),
   });

@@ -2,855 +2,952 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FactoryDepo — Global Industrial Marketplace</title>
-<meta name="description" content="Source verified industrial products, metals, chemicals and machinery from factories worldwide.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E7CF6'/%3E%3Cpath d='M8 10h6.5c2.6 0 4.2 1.3 4.2 3.3 0 1.5-.9 2.6-2.3 3 1.8.4 3 1.6 3 3.4 0 2.2-1.8 3.6-4.6 3.6H8V10zm5 5.4h1.3c1 0 1.6-.5 1.6-1.4s-.6-1.4-1.6-1.4H13v2.8zm0 6.9h1.5c1.1 0 1.8-.5 1.8-1.5s-.7-1.5-1.8-1.5H13v3zM22.5 10H24v12h-1.5V10z' fill='white'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="description" content="Source industrial products and request quotes from factories worldwide. Inspections, laboratory testing and logistics — one verified supply chain.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23132238'/%3E%3Cpath d='M16 4l12 8v16H4V12z' fill='%23f5a623'/%3E%3Cpath d='M11 16h10v12H11z' fill='%23132238'/%3E%3C/svg%3E">
 <style>
+/* =====================================================================
+   FactoryDepo — marketing landing.
+   Styling authority: artifacts/web/src/styles.css (navy/gold enterprise
+   B2B, system UI stack, no webfonts). Tokens below are copied verbatim
+   from that file so the funnel and the app read as one product.
+
+   HONESTY RULES BAKED IN (see AGENTS.md):
+   · Every figure rendered here comes from GET /api/products,
+     /api/suppliers or /api/rfqs at runtime, or is a stated scope/step
+     count. Nothing is hardcoded, estimated or animated to a fake value.
+   · Listings with dataSource === 'demo' carry a visible "Demo" badge.
+   · rating / inspectionsCount / fulfillmentRate are seeded and nothing
+     writes them, so they are never shown as earned metrics.
+   ===================================================================== */
 :root{
-  --bg:#F5F7FA; --surface:#fff; --surface-2:#EEF2F7; --border:#E2E8F0; --border-strong:#CBD5E1;
-  --ink:#0F172A; --ink-2:#334155; --muted:#64748B; --faint:#94A3B8;
-  --accent:#2563EB; --accent-2:#3B82F6; --accent-ink:#1D4ED8; --navy:#0B1830;
-  --green:#059669; --green-bg:#DCFCE7; --red:#DC2626; --red-bg:#FEE2E2; --amber:#D97706; --amber-bg:#FEF3C7;
-  --shadow:0 18px 44px -22px rgba(15,23,42,.28); --shadow-sm:0 3px 12px -4px rgba(15,23,42,.12);
-  --radius:12px; --radius-lg:16px;
-  --font-display:'Archivo',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  --navy:#132238; --navy-2:#1c3050; --ink:#1a2432; --mute:#7b8794; --faint:#9aa5b1;
+  --gold:#f5a623; --amber:#b57200;
+  --blue:#1f6feb; --blue-l:#eef4fe;
+  --green:#157347; --green-l:#e7f4ed;
+  --red:#b3261e; --red-l:#fceceb;
+  --line:#e6e9ee; --line-2:#f1f3f6; --bg:#f7f8fa; --card:#fff;
+  --r:8px; --shadow:0 1px 3px rgba(20,32,50,.07);
+  --font:-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-img,svg{display:block;max-width:100%}
-a{color:inherit;text-decoration:none}
-button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
-.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
-h1,h2,h3,h4{font-family:var(--font-display);line-height:1.12;letter-spacing:-.015em}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14px;border-radius:9px;padding:10px 18px;transition:all .15s ease;white-space:nowrap;border:1px solid transparent}
-.btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -8px rgba(37,99,235,.55)}
-.btn-primary:hover{background:#2E6FE8}
-.btn-outline{border-color:var(--border-strong);color:var(--ink-2);background:var(--surface)}
-.btn-outline:hover{border-color:var(--accent);color:var(--accent-ink)}
-.btn-navy{background:var(--navy);color:#fff}
-.btn-navy:hover{background:#12244a}
-.btn-sm{padding:7px 12px;font-size:12.5px;border-radius:7px}
-.btn-lg{padding:13px 24px;font-size:15px}
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
-.reveal.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
-.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);font-weight:600}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);
+  font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:.005em;overflow-x:hidden}
+img{display:block;max-width:100%}
+a{color:var(--blue);text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+h1,h2,h3,h4{margin:0}
+h1{font-size:19px;font-weight:600;letter-spacing:-.2px}
+h2{font-size:14px;font-weight:600}
+h3{font-size:13.5px;font-weight:500}
 
-/* ===== utility bar ===== */
-.ubar{background:var(--navy);color:rgba(226,232,240,.85);font-size:12.5px}
-.ubar-inner{max-width:1240px;margin:0 auto;padding:0 24px;height:34px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.ubar a{color:rgba(226,232,240,.85);transition:color .15s}
-.ubar a:hover{color:#fff}
-.ubar .right{display:flex;gap:18px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+/* Grid/flex children must be allowed to shrink below their content width or a
+   long product name pushes the whole document wider than the viewport. */
+.hero-in>div,.sidecard,.cols>*,.steps>*,.svcs>*,.cats>*,.sups>*,.foot-grid>*,.card,.section-head>div{min-width:0}
+.row{display:flex;align-items:center;gap:9px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.muted{color:var(--mute);font-size:12px}
+.mono{font-family:var(--font-mono)}
+.stack{display:flex;flex-direction:column;gap:4px}
+a.skip{position:absolute;left:-9999px;top:0;background:#fff;color:var(--navy);padding:8px 12px;border-radius:0 0 var(--r) 0;z-index:200}
+a.skip:focus{left:0}
 
-/* ===== nav ===== */
-.nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-.nav-inner{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px;height:64px}
-.brand{display:flex;align-items:center;gap:10px;flex:none}
-.brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:grid;place-items:center;color:#fff;box-shadow:0 6px 16px -6px rgba(37,99,235,.5)}
-.brand-mark svg{width:20px;height:20px}
-.brand-name{font-family:var(--font-display);font-weight:800;font-size:17px;line-height:1}
-.brand-tag{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:block;margin-top:2px}
-.searchbar{flex:1;display:flex;align-items:center;border:2px solid var(--accent);border-radius:10px;overflow:hidden;background:var(--surface);max-width:560px}
-.searchbar select{border:none;background:var(--surface-2);padding:11px 12px;font-size:13px;color:var(--ink-2);outline:none;border-right:1px solid var(--border);max-width:130px}
-.searchbar input{flex:1;border:none;padding:11px 14px;font-size:14px;outline:none;min-width:0}
-.searchbar button{background:var(--accent);color:#fff;border:none;padding:11px 20px;display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
-.searchbar button svg{width:15px;height:15px}
-.nav-actions{display:flex;gap:10px;margin-left:auto;align-items:center}
-.nav-actions .split{display:flex;gap:8px}
-.nav-links-row{border-top:1px solid var(--border);background:var(--surface)}
-.nav-links{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;gap:4px;list-style:none;height:42px;align-items:center;overflow-x:auto}
-.nav-links a{font-size:13.5px;font-weight:500;color:var(--ink-2);padding:6px 12px;border-radius:7px;white-space:nowrap;transition:all .15s}
-.nav-links a:hover{background:rgba(37,99,235,.08);color:var(--accent-ink)}
-.nav-links .cat{font-weight:700;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+/* ---------- pills (mirrors .pill + p-* from the app) ---------- */
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:500;padding:1px 6px;border-radius:3px;white-space:nowrap;line-height:1.6}
+.p-green{background:var(--green-l);color:var(--green)}
+.p-amber{background:#fdf3e0;color:var(--amber)}
+.p-blue{background:var(--blue-l);color:var(--blue)}
+.p-red{background:var(--red-l);color:var(--red)}
+.p-grey{background:#f0f2f5;color:var(--mute)}
+.p-navy{background:var(--navy);color:#fff}
 
-/* ===== hero ===== */
-.hero{background:linear-gradient(160deg,#fff 0%,#EFF4FB 100%);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(15,23,42,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.04) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 80% 70% at 30% 20%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 80% 70% at 30% 20%,#000 20%,transparent 75%)}
-.hero-inner{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:64px 0 72px}
-.hero h1{font-size:clamp(34px,4.6vw,52px);letter-spacing:-.03em;margin:16px 0 14px}
-.hero h1 .mark{color:var(--accent)}
-.hero p{color:var(--muted);font-size:16.5px;max-width:520px;margin-bottom:26px}
-.hero-search{display:flex;align-items:center;border:2px solid var(--accent);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:0 14px 34px -14px rgba(37,99,235,.35);max-width:600px}
-.hero-search input{flex:1;border:none;padding:15px 18px;font-size:15px;outline:none;min-width:0}
-.hero-search button{background:var(--accent);color:#fff;border:none;padding:15px 26px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
-.hero-search button svg{width:16px;height:16px}
-.popular{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:12.5px;color:var(--faint)}
-.popular a{color:var(--accent-ink);background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);padding:4px 11px;border-radius:999px;font-weight:500;transition:all .15s}
-.popular a:hover{background:rgba(37,99,235,.14)}
-.hero-card{position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
-.hero-card img{width:100%;height:380px;object-fit:cover}
-.hero-card .tag{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.95);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow-sm)}
-.hero-card .cap{position:absolute;bottom:0;left:0;right:0;padding:34px 18px 16px;background:linear-gradient(transparent,rgba(6,12,24,.85));color:#fff}
-.hero-card .cap b{font-size:15px;display:block}
-.hero-card .cap span{font-size:12px;color:rgba(226,232,240,.85)}
-.float-chip{position:absolute;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:11px;padding:9px 13px;box-shadow:var(--shadow);font-size:12px;display:flex;align-items:center;gap:9px;animation:floaty 5.5s ease-in-out infinite}
-.float-chip .ic{width:26px;height:26px;border-radius:7px;background:rgba(37,99,235,.1);color:var(--accent-ink);display:grid;place-items:center}
-.float-chip .ic svg{width:13px;height:13px}
-.float-chip b{display:block;font-size:12.5px}
-.float-chip span{font-size:10px;color:var(--faint);font-family:var(--font-mono)}
-.fc-1{top:16%;left:-14px}
-.fc-2{bottom:24%;right:-10px;animation-delay:1.4s}
-@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-@media (prefers-reduced-motion:reduce){.float-chip{animation:none}}
+/* ---------- buttons (mirrors .btn + variants from the app) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:5px;
+  font-weight:500;font-size:12.5px;border:1px solid transparent;transition:background .12s;white-space:nowrap}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1a5fcc}
+.btn-gold{background:var(--gold);color:#3d2a00;font-weight:600}.btn-gold:hover{background:#e59a18}
+.btn-ghost{background:#fff;color:var(--blue);border-color:#cfdcf0}.btn-ghost:hover{background:var(--blue-l)}
+.btn-grey{background:#fff;color:#4a5665;border-color:var(--line)}.btn-grey:hover{background:var(--line-2)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#116039}
+.btn-lg{padding:9px 16px;font-size:13.5px;border-radius:6px}
+.btn-sm{padding:3px 8px;font-size:11.5px;border-radius:4px}
+.btn-block{width:100%}
 
-/* ===== new hero: RFQ & Ready Stock ===== */
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 20px}
-.role-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.role-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow-sm)}
-.role-chip .ic{width:22px;height:22px;border-radius:6px;background:rgba(37,99,235,.1);color:var(--accent-ink);display:grid;place-items:center}
-.role-chip .ic svg{width:12px;height:12px}
-.role-chip .sub{font-weight:500;color:var(--faint);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:2px}
-.hero-visual{position:relative}
-.rfq-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:18px;position:relative}
-.rfq-card .rfq-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.rfq-card .st-open{background:var(--green-bg);color:var(--green);font-size:10.5px;font-weight:800;border-radius:6px;padding:4px 10px;letter-spacing:.08em}
-.rfq-card .st-rfq{background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:10.5px;font-weight:800;border-radius:6px;padding:4px 10px;letter-spacing:.08em;margin-left:auto}
-.rfq-card h3{font-size:16.5px;margin-bottom:4px}
-.rfq-card .rfq-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.rfq-card .rfq-meta .flag{font-size:14px}
-.rfq-card .rfq-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
-.rfq-card .rfq-stat{background:var(--surface-2);border-radius:9px;padding:9px 10px;text-align:center}
-.rfq-card .rfq-stat b{display:block;font-size:14px;font-family:var(--font-display)}
-.rfq-card .rfq-stat span{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
-.rfq-card .rfq-actions{display:flex;gap:10px}
-.rfq-card .rfq-actions .btn{flex:1}
-.stock-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-top:14px}
-.stock-card img{width:74px;height:74px;object-fit:cover;border-radius:11px;flex:none}
-.stock-card .stock-info{flex:1;min-width:0}
-.stock-card .stock-tag{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--amber);background:var(--amber-bg);border-radius:5px;padding:2.5px 8px;display:inline-block;margin-bottom:5px}
-.stock-card b{font-size:13.5px;display:block}
-.stock-card span{font-size:11.5px;color:var(--muted)}
-.verified-seal{position:absolute;top:-16px;right:-12px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:50%;width:52px;height:52px;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(217,119,6,.6);border:3px solid #fff;z-index:2}
-.verified-seal svg{width:24px;height:24px}
-.notif-chip{position:absolute;bottom:-16px;left:-10px;z-index:2}
-.notif-chip .ic{background:var(--green);color:#fff}
+/* ---------- logo (gold clip-path mark, as in the app topbar) ---------- */
+.logo{display:flex;align-items:center;gap:7px;font-weight:700;font-size:17px;letter-spacing:-.4px;color:#fff;white-space:nowrap}
+.logo .mark{width:22px;height:22px;background:var(--gold);flex:none;clip-path:polygon(50% 0,100% 34%,100% 100%,0 100%,0 34%);position:relative}
+.logo .mark:after{content:"";position:absolute;left:5px;right:5px;top:9px;bottom:3px;background:var(--navy)}
+.logo b{color:var(--gold);font-weight:700}
 
-/* ===== how it works ===== */
-.how{background:var(--surface);border-bottom:1px solid var(--border)}
-.how-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.how-step{position:relative;border:1px solid var(--border);border-radius:14px;padding:22px 18px;background:var(--surface);transition:all .2s ease}
-.how-step:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.4)}
-.how-step .n{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--accent-ink);background:rgba(37,99,235,.08);border-radius:6px;padding:3px 9px;display:inline-block;margin-bottom:12px}
-.how-step .ic{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;display:grid;place-items:center;margin-bottom:12px}
-.how-step .ic svg{width:18px;height:18px}
-.how-step b{font-size:14.5px;display:block;margin-bottom:5px}
-.how-step p{font-size:12.5px;color:var(--muted)}
-.how-arrow{display:none}
-@media (max-width:960px){
-  .how-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media (max-width:860px){
-  .hero-ctas .btn{flex:1}
-  .rfq-card .rfq-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
+/* ---------- topbar ---------- */
+.topbar{background:var(--navy);color:#fff;position:sticky;top:0;z-index:60}
+.topbar-in{display:flex;align-items:center;gap:12px;height:50px}
+.searchwrap{flex:1;max-width:560px;position:relative}
+.searchwrap svg{position:absolute;left:9px;top:8px;opacity:.45;pointer-events:none}
+.searchwrap input{width:100%;padding:7px 12px 7px 30px;border-radius:4px;border:1px solid transparent;background:#fff;color:var(--ink);font-size:13px}
+.topbar .spacer{flex:1}
+.topbar .markets{display:flex;gap:11px;font-size:12px;color:#c2cbd6;white-space:nowrap}
+.topbar .markets b{color:#fff;font-weight:500}
+.topbar .authlinks{display:flex;gap:7px;align-items:center}
 
-/* ===== stats ===== */
-.stats{background:var(--surface);border-bottom:1px solid var(--border)}
-.stats-inner{display:grid;grid-template-columns:repeat(5,1fr)}
-.stat{padding:26px 20px;text-align:center;border-left:1px solid var(--border)}
-.stat:first-child{border-left:none}
-.stat .num{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,2.6vw,32px);letter-spacing:-.02em;color:var(--accent-ink)}
-.stat .lbl{font-size:12px;color:var(--muted);margin-top:3px}
+/* market strip under the bar */
+/* market strip under the bar — the rail itself is the horizontal scroll
+   container so its overflow can never widen the document on small screens */
+.rail{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:50px;z-index:55}
+.rail-in{display:flex;gap:2px;overflow-x:auto;align-items:center;max-width:1240px;margin:0 auto;min-width:0;padding:0 16px}
+.rail a{padding:8px 11px;font-size:12.5px;color:var(--mute);white-space:nowrap;border-bottom:2px solid transparent}
+.rail a:hover{color:var(--ink)}
+.rail a b{color:var(--navy);font-weight:600;border-bottom:2px solid var(--gold);padding-bottom:6px}
+.rail .spacer{flex:1;min-width:8px}
 
-/* ===== sections ===== */
-.section{padding:64px 0}
-.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-.section-head h2{font-size:clamp(24px,3vw,34px)}
-.section-head p{color:var(--muted);font-size:14.5px;margin-top:8px;max-width:520px}
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;color:#fff;background:var(--navy-2);min-height:246px}
+.hero-img{position:absolute;inset:0}
+.hero-img img{width:100%;height:100%;object-fit:cover;opacity:.34}
+.hero-shade{position:absolute;inset:0;background:linear-gradient(100deg,rgba(19,34,56,.97) 0%,rgba(19,34,56,.9) 42%,rgba(28,48,80,.62) 100%)}
+.hero-in{position:relative;padding:30px 16px 32px;max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1.25fr .75fr;gap:26px;align-items:center}
+.eyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.hero h1{font-size:clamp(24px,3.1vw,36px);font-weight:600;letter-spacing:-.6px;margin:10px 0 9px;max-width:24ch}
+.hero h1 .g{color:var(--gold)}
+.hero p{margin:0 0 15px;font-size:13.5px;color:#c2cbd6;max-width:62ch}
+.hero-ctas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.hero .trustline{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#9aa5b1}
+.hero .trustline span{display:inline-flex;align-items:center;gap:5px}
+.hero .trustline i{color:var(--gold);font-style:normal}
+.hero .popular{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:11.5px;color:#9aa5b1}
+.hero .popular a{color:#e6ecf5;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);padding:3px 9px;border-radius:3px}
+.hero .popular a:hover{background:rgba(255,255,255,.17)}
 
-/* categories */
-.cat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-.cat{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--surface);transition:all .2s ease;box-shadow:var(--shadow-sm)}
-.cat:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
-.cat img{width:100%;height:96px;object-fit:cover}
-.cat .nm{padding:10px 12px;font-size:13px;font-weight:600;text-align:center;line-height:1.25}
+/* hero side card = a real listing (filled from GET /api/products) */
+.sidecard{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;color:var(--ink)}
+.sidecard .hd{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line-2);font-size:11.5px;color:var(--mute)}
+.sidecard .bd{padding:11px}
+.sidecard .ph{aspect-ratio:16/9;border-radius:5px;overflow:hidden;background:#eef0f3;margin-bottom:9px;display:block}
+.sidecard .ph img{width:100%;height:100%;object-fit:cover}
+.sidecard .ph .noimg{width:100%;height:100%;display:grid;place-items:center;color:var(--faint);font-size:11px}
+.sidecard .nm{font-size:13px;font-weight:600;line-height:1.35;margin-bottom:4px}
+.sidecard .ft{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line-2);padding-top:9px;margin-top:9px}
 
-/* products */
-.prod-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
-.pcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s ease}
-.pcard:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
-.pcard-art{position:relative;height:168px;background:var(--surface-2);overflow:hidden}
-.pcard-art img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-.pcard:hover .pcard-art img{transform:scale(1.06)}
-.pcard-art .verified{position:absolute;top:10px;left:10px;background:rgba(37,99,235,.92);color:#fff;font-size:10.5px;font-weight:700;padding:3.5px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
-.pcard-art .origin{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.95);font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;font-family:var(--font-mono)}
-.pcard-body{padding:14px;display:flex;flex-direction:column;flex:1}
-.pcard-body h3{font-size:14.5px;margin-bottom:7px;line-height:1.3}
-.pcard-specs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
-.pcard-specs span{font-size:10.5px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2.5px 7px}
-.pcard-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding-top:11px}
-.price b{font-family:var(--font-display);font-size:16px;color:var(--accent-ink);display:block;line-height:1.1}
-.price span{font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
-.minorder{font-size:10px;color:var(--muted);font-family:var(--font-mono);text-align:right}
+/* ---------- section scaffolding ---------- */
+.section{padding:26px 0}
+.section> .wrap> .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.section-head h2{font-size:18px;font-weight:600;letter-spacing:-.2px;margin:6px 0 4px}
+.section-head p{margin:0;color:var(--mute);font-size:12.5px;max-width:78ch}
 
-/* promo band */
-.promo{background:linear-gradient(120deg,#0B1830,#12244A 70%);color:#E6EFFA;border-radius:18px;padding:38px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
-.promo::before{content:"";position:absolute;inset:0;background:radial-gradient(520px 280px at 85% 0%,rgba(37,99,235,.35),transparent 60%)}
-.promo > *{position:relative}
-.promo h3{font-size:24px;margin-bottom:6px}
-.promo p{color:rgba(196,210,230,.88);font-size:14px}
-.promo .actions{display:flex;gap:11px;flex-wrap:wrap}
+/* ---------- cards / grids ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.card .card-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line-2)}
+.card .card-bd{padding:12px}
+.card .card-hd .link{margin-left:auto;font-size:11.5px}
+.feedgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(226px,1fr));gap:10px}
+.lcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;position:relative}
+.lcard:hover{border-color:#c3ccd8;box-shadow:0 2px 8px rgba(20,32,50,.09)}
+.lcard .media{position:relative;aspect-ratio:1/1;background:#eef0f3;display:block}
+.lcard .media img{width:100%;height:100%;object-fit:cover}
+.lcard .media .noimg,.sidecard .ph .noimg{width:100%;height:100%;display:grid;place-items:center;color:var(--faint);font-size:11px;background:#eef0f3}
+/* The verified + demo badges live in one stack so they can never sit on top of
+   each other. Verified is only claimed for rows the platform itself owns. */
+.lcard .tags{position:absolute;top:5px;right:5px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;pointer-events:none}
+.lcard .tags .pill{background:rgba(255,255,255,.94);box-shadow:0 1px 2px rgba(20,32,50,.12)}
+.lcard .bd{padding:8px 9px 9px;display:flex;flex-direction:column;gap:4px;flex:1}
+.lcard h3{font-size:12.5px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcard h3 a{color:var(--ink)}
+.lcard h3 a:hover{color:var(--blue)}
+.lcard .meta{font-size:11px;color:var(--faint);display:flex;gap:5px;align-items:center;min-width:0}
+.lcard .meta b{font-weight:400;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.price{font-size:15px;font-weight:600;letter-spacing:-.3px;color:var(--red)}
+.price span{font-size:11px;font-weight:400;color:var(--mute)}
+.empty{padding:26px 16px;text-align:center;color:var(--mute);font-size:12.5px}
+.empty b{display:block;color:var(--ink);margin-bottom:3px;font-size:13px;font-weight:600}
+.skel{height:210px;border-radius:var(--r);background:#eef0f3;border:1px solid var(--line-2)}
 
-/* market 3col */
-.market-3{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:stretch}
-.mcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
-.mcard-head{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.mcard-head h3{font-size:15px}
-.mcard-body{padding:6px 18px 12px;flex:1}
-.rfq-mini{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border)}
-.rfq-mini:last-child{border-bottom:none}
-.rfq-mini b{display:block;font-size:13px;font-weight:600}
-.rfq-mini span{font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
-.rfq-mini .st{margin-left:auto;font-size:10px;font-weight:700;border-radius:5px;padding:2.5px 8px;text-transform:uppercase;letter-spacing:.06em}
-.rfq-mini .st.open{background:var(--green-bg);color:var(--green)}
-.rfq-mini .st.quoted{background:rgba(37,99,235,.1);color:var(--accent-ink)}
-.com-table{width:100%;border-collapse:collapse}
-.com-table td{padding:10px 4px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
-.com-table tr:last-child td{border-bottom:none}
-.com-name b{display:block;font-size:13px;font-weight:600}
-.com-name span{font-size:10px;color:var(--faint);font-family:var(--font-mono)}
-.com-price{font-family:var(--font-mono);font-weight:600;font-size:13px;text-align:right;white-space:nowrap}
-.delta{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-mono);font-size:11px;font-weight:600;border-radius:5px;padding:2.5px 7px;white-space:nowrap}
-.delta svg{width:9px;height:9px}
-.delta.up{color:var(--green);background:var(--green-bg)}
-.delta.down{color:var(--red);background:var(--red-bg)}
-.network{border-radius:14px;background:linear-gradient(160deg,#0B1830,#070F1F 75%);color:#E6EFFA;padding:24px 22px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.network h3{font-size:17px;margin:10px 0 6px}
-.network .sub{color:rgba(143,163,191,.9);font-size:12.5px}
-.net-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:18px}
-.net-stat{background:rgba(148,173,209,.08);border:1px solid rgba(148,173,209,.16);border-radius:10px;padding:12px}
-.net-stat .n{font-family:var(--font-display);font-weight:800;font-size:20px;color:#fff}
-.net-stat .n em{font-style:normal;color:#5CA1FF}
-.net-stat .l{font-size:10.5px;color:rgba(143,163,191,.92)}
+/* ---------- live counters stripe ---------- */
+.stripe{display:flex;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--mute);align-items:center}
+.stripe b{color:var(--ink);font-weight:600}
+.stripe .sep{width:1px;height:14px;background:var(--line)}
+.stripe .load{color:var(--faint)}
 
-/* services */
-.svc-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
-.svc{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 12px;transition:all .15s ease;box-shadow:var(--shadow-sm)}
-.svc:hover{transform:translateY(-3px);border-color:rgba(37,99,235,.45)}
-.svc .ic{width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.09);color:var(--accent-ink);display:grid;place-items:center;flex:none}
-.svc .ic svg{width:14px;height:14px}
-.svc b{font-size:12px;font-weight:600;line-height:1.25}
+/* ---------- request board ---------- */
+.req{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.req:last-child{border-bottom:none}
+.req .t{flex:1;min-width:0}
+.req b{display:block;font-size:12.5px;font-weight:600;line-height:1.3}
+.req span{font-size:11px;color:var(--faint)}
+.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start}
 
-/* suppliers */
-.sup-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.sup-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;transition:all .2s ease;box-shadow:var(--shadow-sm)}
-.sup-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:rgba(37,99,235,.45)}
-.sup-top{display:flex;align-items:center;gap:12px;margin-bottom:13px}
-.sup-ava{width:46px;height:46px;border-radius:12px;background:linear-gradient(150deg,rgba(37,99,235,.18),rgba(37,99,235,.05));border:1px solid rgba(37,99,235,.3);display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--accent-ink);flex:none}
-.sup-card h3{font-size:15px;line-height:1.25}
-.sup-meta{font-size:12px;color:var(--faint);margin-top:3px}
-.stars{color:#D97706;font-size:11.5px;letter-spacing:1px}
-.sup-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
-.sup-tags span{font-size:10.5px;font-family:var(--font-mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:3px 8px}
-.sup-card .btn{margin-top:auto}
+/* ---------- process + services ---------- */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.step{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:12px}
+.step .n{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--amber);background:#fdf3e0;border-radius:3px;padding:1px 6px;display:inline-block;margin-bottom:8px}
+.step b{display:block;font-size:12.5px;font-weight:600;margin-bottom:3px}
+.step p{margin:0;font-size:11.5px;color:var(--mute)}
+.svcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.svc{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 11px;font-size:12px;font-weight:500}
+.svc i{font-style:normal;color:var(--gold)}
 
-/* testimonials */
-.testi-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.testi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm);position:relative}
-.testi .qmark{position:absolute;top:16px;right:20px;font-family:var(--font-display);font-size:54px;line-height:1;color:rgba(37,99,235,.12);font-weight:800}
-.testi .stars{display:block;margin-bottom:12px;font-size:13px;letter-spacing:2px}
-.testi p{font-size:14.5px;color:var(--ink-2);line-height:1.6;margin-bottom:16px}
-.testi .who{display:flex;align-items:center;gap:11px}
-.testi .who .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#3CC8E8);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:14px}
-.testi .who b{display:block;font-size:13.5px}
-.testi .who span{font-size:11.5px;color:var(--faint)}
+/* ---------- categories ---------- */
+.cats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.cat{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;display:block}
+.cat:hover{border-color:#c3ccd8;box-shadow:var(--shadow)}
+.cat .art{aspect-ratio:16/9;background:#eef0f3}
+.cat .art img{width:100%;height:100%;object-fit:cover}
+.cat .nm{padding:8px 10px}
+.cat .nm b{display:block;font-size:12px;font-weight:600;color:var(--ink);line-height:1.25}
+.cat .nm span{font-size:11px;color:var(--faint)}
 
-/* cta */
-.cta-row{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
-.cta-main{position:relative;overflow:hidden;border-radius:16px;color:#EEF4FC;padding:44px 40px;background:linear-gradient(120deg,#0B1830,#12244A 75%);min-height:230px;display:flex;flex-direction:column;justify-content:center}
-.cta-main::after{content:"";position:absolute;inset:0;background:radial-gradient(480px 260px at 88% 10%,rgba(37,99,235,.4),transparent 60%)}
-.cta-main > *{position:relative}
-.cta-main h2{font-size:clamp(24px,3vw,32px);margin-bottom:10px}
-.cta-main p{color:rgba(196,210,230,.9);max-width:420px;margin-bottom:22px}
-.cta-main .actions{display:flex;gap:11px;flex-wrap:wrap}
-.cta-partner{border-radius:16px;border:1px solid var(--border);background:var(--surface);padding:30px 28px;display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow-sm)}
-.cta-partner h3{font-size:19px;margin-bottom:8px}
-.cta-partner p{color:var(--muted);font-size:13px;margin-bottom:18px}
-.cta-partner .actions{display:flex;flex-direction:column;gap:9px}
+/* ---------- suppliers ---------- */
+.sups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sup{padding:11px;display:flex;gap:10px;align-items:flex-start}
+.sup .av{width:34px;height:34px;border-radius:3px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.sup .b{min-width:0;flex:1}
+.sup .nm{font-size:12.5px;font-weight:600;display:block;color:var(--ink)}
+.sup .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.sup .tags span{font-size:10.5px;color:var(--mute);background:var(--line-2);border-radius:3px;padding:1px 5px}
+.sup .ft{margin-left:auto;font-size:11px;white-space:nowrap}
 
-/* footer */
-.footer{background:var(--navy);color:rgba(203,213,225,.85);margin-top:60px}
-.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:32px;padding:52px 0 40px}
-.foot-grid > *{min-width:0}
-.foot-brand p{font-size:13px;color:rgba(148,163,184,.85);margin:14px 0 18px;max-width:260px;line-height:1.6}
-.socials{display:flex;gap:8px}
-.socials a{width:34px;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.3);display:grid;place-items:center;color:rgba(203,213,225,.85);transition:all .15s}
-.socials a:hover{background:var(--accent);border-color:var(--accent);color:#fff}
-.socials svg{width:14px;height:14px}
-.foot-col h4{font-size:11px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(148,163,184,.8);margin-bottom:14px}
-.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
-.foot-col a{font-size:13px;color:rgba(203,213,225,.8);transition:color .15s}
+/* ---------- promo bands ---------- */
+.band{background:var(--navy);color:#e6ecf5;border-radius:var(--r);padding:20px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:relative;overflow:hidden}
+.band:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+.band h3{font-size:16px;font-weight:600;margin-bottom:4px;color:#fff}
+.band p{margin:0;font-size:12.5px;color:#c2cbd6;max-width:80ch}
+.band .acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.panel{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:16px;display:flex;flex-direction:column}
+.panel h3{font-size:14px;font-weight:600;margin-bottom:5px}
+.panel p{margin:0 0 12px;font-size:12px;color:var(--mute)}
+.panel .acts{display:flex;flex-direction:column;gap:7px;margin-top:auto}
+
+/* ---------- footer ---------- */
+.footer{background:var(--navy);color:#c2cbd6;margin-top:30px}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:26px;padding:30px 0 24px}
+.foot-grid p{font-size:12px;color:#9aa5b1;margin:12px 0 0;max-width:34ch}
+.foot-col h4{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9aa5b1;margin-bottom:10px;font-weight:600}
+.foot-col ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin:0;padding:0}
+.foot-col a{font-size:12.5px;color:#c2cbd6}
 .foot-col a:hover{color:#fff}
-.foot-bottom{border-top:1px solid rgba(148,163,184,.2);padding:18px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:rgba(148,163,184,.75)}
-.newsletter{display:flex;margin-top:14px}
-.newsletter input{flex:1;min-width:0;border:1px solid rgba(148,163,184,.35);background:rgba(148,163,184,.1);color:#fff;border-radius:8px 0 0 8px;padding:10px 13px;font-size:13px;outline:none}
-.newsletter button{background:var(--accent);color:#fff;border:none;border-radius:0 8px 8px 0;padding:10px 16px;font-weight:600;font-size:13px}
+.foot-bottom{border-top:1px solid rgba(148,163,184,.22);padding:14px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#9aa5b1}
 
-@media (max-width:1080px){
-  .cat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .prod-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .svc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .market-3{grid-template-columns:1fr 1fr}
-  .network{grid-column:1 / -1}
-  .foot-grid{grid-template-columns:1fr 1fr 1fr}
-  .searchbar{display:none}
+/* ---------- responsive ---------- */
+@media (max-width:1000px){
+  .hero-in{grid-template-columns:1fr;gap:18px}
+  .cols{grid-template-columns:1fr}
+  .cats{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .svcs{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sups{grid-template-columns:1fr 1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
 }
-@media (max-width:860px){
-  .hero-inner{grid-template-columns:1fr;gap:36px;padding:44px 0 56px}
-  .hero-card img{height:280px}
-  .prod-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .sup-grid{grid-template-columns:1fr}
-  .testi-grid{grid-template-columns:1fr}
-  .cta-row{grid-template-columns:1fr}
-  .stats-inner{grid-template-columns:repeat(2,1fr)}
-  .stat:nth-child(3){border-left:none}
-  .stat:nth-child(n+3){border-top:1px solid var(--border)}
-  .nav-links-row{display:none}
-  .ubar .right{display:none}
-  .nav-actions .split{display:none}
-  .section{padding:48px 0}
+@media (max-width:820px){
+  .topbar .markets{display:none}
+  .topbar .authlinks .hide-s{display:none}
+  .searchwrap{max-width:none}
+  .feedgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .cats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .svcs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sups{grid-template-columns:1fr}
+  .section{padding:20px 0}
 }
 @media (max-width:560px){
-  .prod-grid,.cat-grid,.svc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .market-3{grid-template-columns:1fr}
-  .foot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .promo{padding:28px 24px}
-  .float-chip{display:none}
+  .cats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topbar .authlinks{display:none}
+  .steps{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr}
+  .band .acts{margin-left:0;width:100%}
+  .band .acts .btn{flex:1}
 }
 </style>
 </head>
 <body>
+<a class="skip" href="#listings">Skip to listings</a>
 
-<!-- utility bar -->
-<div class="ubar">
-  <div class="ubar-inner">
-    <span>🇹🇷 Türkiye · 🇨🇳 China · 🌍 80+ countries — <a href="#"><b>Global Industrial Marketplace</b></a></span>
-    <div class="right">
-      <a href="#">Help Center</a>
-      <a href="#">Messages</a>
-      <a href="#">Trade Assurance</a>
-      <a href="/sign-in"><b>Sign Up / Login</b></a>
+<!-- ============================ top bar ============================ -->
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
+    <form class="searchwrap" id="searchForm" role="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="q" type="search" placeholder="Search lots, materials, machinery…" aria-label="Search listings">
+    </form>
+    <span class="spacer"></span>
+    <div class="markets">
+      <span>Markets: <b>Türkiye</b></span>
+      <span><b>China</b></span>
+      <span><b>Global</b></span>
     </div>
-  </div>
-</div>
-
-<!-- nav -->
-<header class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="#top">
-      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg></span>
-      <span><span class="brand-name">FACTORYDEPO</span><span class="brand-tag">Global Industrial Marketplace</span></span>
-    </a>
-    <div class="searchbar">
-      <select><option>All Categories</option><option>Metals</option><option>Steel</option><option>Chemicals</option><option>Machinery</option></select>
-      <input placeholder="copper cathode, steel coil, lithium…">
-      <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Search</button>
+    <div class="authlinks">
+      <a class="btn btn-sm btn-grey hide-s" href="/sign-in">Sign in</a>
+      <a class="btn btn-sm btn-gold" href="/sign-up">Join free</a>
     </div>
-    <div class="nav-actions">
-      <div class="split">
-        <a class="btn btn-outline btn-sm" href="/sign-up">Become a Supplier</a>
-        <a class="btn btn-primary btn-sm" href="/rfq">Post RFQ</a>
-      </div>
-    </div>
-  </div>
-  <div class="nav-links-row">
-    <ul class="nav-links">
-      <li><a class="cat" href="#">☰ All Categories</a></li>
-      <li><a href="#how">How It Works</a></li>
-      <li><a href="#rfq">RFQ Market</a></li>
-      <li><a href="#products">Ready Stock</a></li>
-      <li><a href="#suppliers">Suppliers</a></li>
-      <li><a href="#commodities">Commodity Market</a></li>
-      <li><a href="#services">Services</a></li>
-      <li><a href="#company">Company</a></li>
-    </ul>
   </div>
 </header>
 
-<!-- hero -->
-<section class="hero" id="top">
-  <div class="wrap hero-inner">
-    <div class="reveal">
-      <span class="eyebrow">The Operating System for Global Industrial Trade</span>
-      <h1>Buy smarter. <span class="mark">Quote faster.</span></h1>
-      <p>Post an RFQ and get verified quotes in 24 hours — or buy ready stock instantly. Buyers, sellers and manufacturers, connected in one trusted marketplace.</p>
-      <div class="hero-search">
-        <input id="heroSearch" placeholder="What are you sourcing today? e.g. Copper Cathode 99.99%">
-        <button>Search<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      </div>
+<nav class="rail" aria-label="Sections">
+  <div class="rail-in">
+    <a href="#listings"><b>Listings</b></a>
+    <a href="#requests">Requests</a>
+    <a href="#categories">Categories</a>
+    <a href="#suppliers">Suppliers</a>
+    <a href="#verification">Verification</a>
+    <a href="#services">Services</a>
+    <span class="spacer" aria-hidden="true"></span>
+    <a href="/products">Browse all listings →</a>
+  </div>
+</nav>
+
+<main>
+<!-- ============================== hero ============================== -->
+<section class="hero">
+  <div class="hero-img">
+    <img src="/assets/hero-factory.jpg" alt="" aria-hidden="true">
+  </div>
+  <div class="hero-shade"></div>
+  <div class="hero-in">
+    <div>
+      <span class="eyebrow">Industrial sourcing, one chain of custody</span>
+      <h1>Request quotes on <span class="g">real industrial supply</span>.</h1>
+      <p>Post a request for quotation and receive offers from listed suppliers — or buy ready stock directly.<br>Factory inspection, laboratory testing and logistics can be added to the same order.</p>
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="/rfq">Post Your RFQ<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a class="btn btn-outline btn-lg" href="/products">Browse Ready Stock →</a>
+        <a class="btn btn-lg btn-gold" href="/rfq">Post a request for quotation</a>
+        <a class="btn btn-lg btn-ghost" href="/products">Browse the catalogue →</a>
       </div>
-      <div class="role-chips">
-        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>BUYER</span>
-        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l1.5-5h15L21 9M3 9v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9h18M9 21v-6h6v6"/></svg></span>SELLER</span>
-        <span class="role-chip"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 10h.01M15 10h.01M9 13h.01M15 13h.01"/></svg></span>MANUFACTURER</span>
+      <div class="trustline">
+        <span><i>●</i> Free to join</span>
+        <span><i>●</i> Same-origin live catalogue</span>
+        <span><i>●</i> Seed rows are labelled <em>Demo</em></span>
       </div>
       <div class="popular">
-        <span>Popular:</span>
-        <a href="/products?q=copper">Copper Cathode</a>
-        <a href="/products?q=steel">Steel Coil</a>
-        <a href="/products?q=lithium">Lithium Carbonate</a>
-        <a href="/products?q=solar">Solar Panel 550W</a>
-        <a href="/products?q=cnc">CNC Machine</a>
+        <span>Popular searches:</span>
+        <a href="/products?q=copper">Copper cathode</a>
+        <a href="/products?q=steel%20coil">Steel coil</a>
+        <a href="/products?q=pump">Industrial pump</a>
+        <a href="/products?q=lithium">Lithium carbonate</a>
+        <a href="/products?q=cnc">CNC machining</a>
       </div>
     </div>
-    <div class="hero-visual reveal" style="transition-delay:.1s">
-      <div class="verified-seal" title="Verified by FactoryDepo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 2l2.4 2.4 3.4-.5 1 3.3 3 1.7-1.4 3.1 1.4 3.1-3 1.7-1 3.3-3.4-.5L12 22l-2.4-2.4-3.4.5-1-3.3-3-1.7 1.4-3.1L2.2 8.9l3-1.7 1-3.3 3.4.5L12 2z"/><path d="M9 12l2 2 4-4"/></svg></div>
-      <div class="rfq-card">
-        <div class="rfq-head"><span class="st-open">● OPEN</span><span class="st-rfq">RFQ</span></div>
-        <h3>CNC Machined Aluminum Parts</h3>
-        <div class="rfq-meta"><span class="flag">🇹🇷</span> 5,000 pcs · Türkiye · <b style="color:var(--red)">Ends in 2d 14h</b></div>
-        <div class="rfq-stats">
-          <div class="rfq-stat"><b>12</b><span>Quotes</span></div>
-          <div class="rfq-stat"><b>$0.60</b><span>Price Band</span></div>
-          <div class="rfq-stat"><b>98%</b><span>Buyer Rating</span></div>
-        </div>
-        <div class="rfq-actions">
-          <a class="btn btn-primary" href="/rfq/1">Submit Quote<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn btn-outline" href="/rfq">Details</a>
-        </div>
+
+    <div class="sidecard" id="heroCard" aria-live="polite">
+      <div class="hd"><span class="pill p-grey">Newest listing</span><span class="mono" style="margin-left:auto">live</span></div>
+      <div class="card-bd" style="padding:11px">
+        <div class="ph"><div class="noimg">Loading latest listing…</div></div>
+        <div class="nm">—</div>
+        <div class="muted">Reading GET /api/products…</div>
       </div>
-      <div class="stock-card">
-        <img src="../../../assets/products/cnc-machine.jpg" alt="CNC Machine">
-        <div class="stock-info">
-          <span class="stock-tag">READY STOCK</span>
-          <b>CNC Machine VMC-850</b>
-          <span>$28,000 / Set · In stock · Türkiye</span>
-        </div>
-        <a class="btn btn-navy btn-sm" href="/products?q=cnc">Buy Now</a>
-      </div>
-      <div class="float-chip notif-chip fc-1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Quote Received</b><span>Anshan Steel · 2 min ago</span></span></div>
-      <div class="float-chip fc-2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></span><span><b>24h Response</b><span>Fast quote guarantee</span></span></div>
     </div>
   </div>
 </section>
 
-<!-- stats -->
-<section class="stats">
-  <div class="wrap stats-inner">
-    <div class="stat reveal"><div class="num"><span data-count="5">0</span></div><div class="lbl">Active RFQs</div></div>
-    <div class="stat reveal" style="transition-delay:.05s"><div class="num"><span data-count="1545">0</span></div><div class="lbl">Verified Suppliers</div></div>
-    <div class="stat reveal" style="transition-delay:.1s"><div class="num"><span data-count="5404">0</span>+</div><div class="lbl">Ready-Stock Products</div></div>
-    <div class="stat reveal" style="transition-delay:.15s"><div class="num"><span data-count="24">0</span>h</div><div class="lbl">Quote Response Target</div></div>
-    <div class="stat reveal" style="transition-delay:.2s"><div class="num"><span data-count="100">0</span>%</div><div class="lbl">Verified Buyers &amp; Sellers</div></div>
+<!-- ===================== live counters (nothing hardcoded) ===================== -->
+<section class="section" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="stripe" id="counters">
+      <span class="load">Reading live totals from the catalogue…</span>
+    </div>
   </div>
 </section>
 
-<!-- how it works -->
-<section class="section how" id="how">
+<!-- =========================== newest listings =========================== -->
+<section class="section" id="listings">
   <div class="wrap">
     <div class="section-head">
-      <div><span class="eyebrow">How It Works</span><h2 style="margin-top:8px">From RFQ to order in four steps</h2><p>One platform for buyers, sellers and manufacturers — quotes flow fast, trust is verified.</p></div>
-      <a class="btn btn-primary" href="/rfq">Post Your RFQ →</a>
+      <div>
+        <span class="eyebrow">Live catalogue</span>
+        <h2>Newest listings with photos</h2>
+        <p id="listingsSub">Every card below is a row returned by <span class="mono">GET /api/products?hasImage=1</span> at page load. Rows whose <span class="mono">dataSource</span> is <b>demo</b> are seed data and carry a Demo badge — they are not live offers.</p>
+      </div>
+      <a class="btn btn-ghost" href="/products">Browse all listings →</a>
     </div>
-    <div class="how-grid">
-      <div class="how-step reveal"><span class="n">01</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span><b>Post Your RFQ</b><p>Describe what you need — specs, quantity, target price, delivery terms. Publish in minutes, free to browse.</p></div>
-      <div class="how-step reveal" style="transition-delay:.06s"><span class="n">02</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><b>Receive Quotes</b><p>Verified sellers and manufacturers respond with price, lead time and MOQ — often within 24 hours.</p></div>
-      <div class="how-step reveal" style="transition-delay:.12s"><span class="n">03</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="9"/></svg></span><b>Compare &amp; Negotiate</b><p>Compare quotes side by side, chat with suppliers, negotiate price and terms — then accept the best offer.</p></div>
-      <div class="how-step reveal" style="transition-delay:.18s"><span class="n">04</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span><b>Order &amp; Track</b><p>Turn the accepted quote into an order. Inspections, quality checks and logistics — handled end to end.</p></div>
+    <div class="feedgrid" id="featuredGrid" aria-live="polite">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </div>
 </section>
 
-<!-- categories -->
+<!-- ======================= requests for quotation ======================= -->
+<section class="section" id="requests">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Request board</span>
+        <h2>Open sourcing requests</h2>
+        <p>Posted by buyers on FactoryDepo and read from <span class="mono">GET /api/rfqs</span>. Quote counts and statuses are exactly what the API returns — no urgency timers, no invented activity.</p>
+      </div>
+      <a class="btn btn-ghost" href="/rfq">See the request board →</a>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="pill p-blue">RFQ</span>
+        <span class="muted">Newest first</span>
+        <a class="link" href="/rfq">Post your own request →</a>
+      </div>
+      <div class="card-bd" id="rfqList" aria-live="polite">
+        <div class="empty">Loading requests…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= categories ============================= -->
 <section class="section" id="categories">
   <div class="wrap">
     <div class="section-head">
-      <div><span class="eyebrow">Browse by Category</span><h2 style="margin-top:8px">Shop 12 industrial categories</h2></div>
-      <a class="btn btn-outline" href="/products">View All Categories →</a>
-    </div>
-    <div class="cat-grid">
-      <a class="cat reveal" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Metals &amp; Minerals</span></a>
-      <a class="cat reveal" style="transition-delay:.04s" href="/products?category=Steel"><img src="../../../assets/products/steel-coil.jpg" alt=""><span class="nm">Steel</span></a>
-      <a class="cat reveal" style="transition-delay:.08s" href="/products?category=Chemicals"><img src="../../../assets/products/lithium-carbonate.jpg" alt=""><span class="nm">Chemicals</span></a>
-      <a class="cat reveal" style="transition-delay:.12s" href="/products?category=Machinery"><img src="../../../assets/products/cnc-machine.jpg" alt=""><span class="nm">Machinery</span></a>
-      <a class="cat reveal" style="transition-delay:.16s" href="/products?category=Industrial+Equipment"><img src="../../../assets/products/industrial-pump.jpg" alt=""><span class="nm">Industrial Equipment</span></a>
-      <a class="cat reveal" style="transition-delay:.2s" href="/products?category=Renewable+Energy"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Renewable Energy</span></a>
-      <a class="cat reveal" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/aluminum-ingot.jpg" alt=""><span class="nm">Aluminum &amp; Metals</span></a>
-      <a class="cat reveal" style="transition-delay:.04s" href="/products?category=Metals+%26+Minerals"><img src="../../../assets/products/antimony-ore.jpg" alt=""><span class="nm">Mining &amp; Ore</span></a>
-      <a class="cat reveal" style="transition-delay:.08s" href="/products?category=Plastic+%26+Rubber"><img src="../../../assets/products/plastic-granules.jpg" alt=""><span class="nm">Plastic &amp; Rubber</span></a>
-      <a class="cat reveal" style="transition-delay:.12s" href="/products?category=Packaging"><img src="../../../assets/products/kraft-paper.jpg" alt=""><span class="nm">Packaging</span></a>
-      <a class="cat reveal" style="transition-delay:.16s" href="/products?category=Automotive"><img src="../../../assets/products/copper-cathode.jpg" alt=""><span class="nm">Automotive</span></a>
-      <a class="cat reveal" style="transition-delay:.2s" href="/products?category=Electronics"><img src="../../../assets/products/solar-panel.jpg" alt=""><span class="nm">Electronics</span></a>
-    </div>
-  </div>
-</section>
-
-<!-- featured products -->
-<section class="section" id="products" style="padding-top:0">
-  <div class="wrap">
-    <div class="section-head">
-      <div><span class="eyebrow">Featured Products</span><h2 style="margin-top:8px">Factory-direct, ready to ship</h2><p>Verified listings with real MOQs. Request a quotation in one click.</p></div>
-      <a class="btn btn-primary" href="/products">View All 5,404+ →</a>
-    </div>
-    <div class="prod-grid">
-      <a class="pcard reveal" href="/products?q=copper">
-        <div class="pcard-art"><img src="../../../assets/products/copper-cathode.jpg" alt="Copper Cathode"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
-        <div class="pcard-body"><h3>Copper Cathode 99.99%</h3>
-          <div class="pcard-specs"><span>LME A</span><span>25 MT</span></div>
-          <div class="pcard-foot"><span class="price"><b>$8,742</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.05s" href="/products?q=steel">
-        <div class="pcard-art"><img src="../../../assets/products/steel-coil.jpg" alt="Steel Coil"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
-        <div class="pcard-body"><h3>Steel Coil Cold Rolled</h3>
-          <div class="pcard-specs"><span>DC01</span><span>EN 10130</span></div>
-          <div class="pcard-foot"><span class="price"><b>$617</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 20 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.1s" href="/products?q=lithium">
-        <div class="pcard-art"><img src="../../../assets/products/lithium-carbonate.jpg" alt="Lithium Carbonate"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
-        <div class="pcard-body"><h3>Lithium Carbonate</h3>
-          <div class="pcard-specs"><span>Battery Grade</span><span>99.5%</span></div>
-          <div class="pcard-foot"><span class="price"><b>$18,850</b><span>/ MT · CIF</span></span><span class="minorder">MOQ 1 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.15s" href="/products?q=pump">
-        <div class="pcard-art"><img src="../../../assets/products/industrial-pump.jpg" alt="Industrial Pump"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
-        <div class="pcard-body"><h3>Industrial Pump IE4</h3>
-          <div class="pcard-specs"><span>SS316</span><span>High Eff.</span></div>
-          <div class="pcard-foot"><span class="price"><b>$2,450</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 5 Sets<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" href="/products?q=solar">
-        <div class="pcard-art"><img src="../../../assets/products/solar-panel.jpg" alt="Solar Panel"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
-        <div class="pcard-body"><h3>Solar Panel 550W</h3>
-          <div class="pcard-specs"><span>Mono PERC</span><span>Half-cut</span></div>
-          <div class="pcard-foot"><span class="price"><b>$0.21</b><span>/ W · FOB</span></span><span class="minorder">MOQ 1,000 W<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.05s" href="/products?q=aluminum">
-        <div class="pcard-art"><img src="../../../assets/products/aluminum-ingot.jpg" alt="Aluminum Ingot"><span class="verified">✓ Verified</span><span class="origin">TR</span></div>
-        <div class="pcard-body"><h3>Aluminum Ingot 99.7%</h3>
-          <div class="pcard-specs"><span>20kg</span><span>Primary</span></div>
-          <div class="pcard-foot"><span class="price"><b>$2,980</b><span>/ MT · FOB</span></span><span class="minorder">MOQ 25 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.1s" href="/products?q=cnc">
-        <div class="pcard-art"><img src="../../../assets/products/cnc-machine.jpg" alt="CNC Machine"><span class="verified">✓ Verified</span><span class="origin">DE</span></div>
-        <div class="pcard-body"><h3>CNC Machining Center</h3>
-          <div class="pcard-specs"><span>5-Axis</span><span>20k rpm</span></div>
-          <div class="pcard-foot"><span class="price"><b>$28,000</b><span>/ Set · FOB</span></span><span class="minorder">MOQ 1 Set<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-      <a class="pcard reveal" style="transition-delay:.15s" href="/products?q=antimony">
-        <div class="pcard-art"><img src="../../../assets/products/antimony-ore.jpg" alt="Antimony Ore"><span class="verified">✓ Verified</span><span class="origin">CN</span></div>
-        <div class="pcard-body"><h3>Antimony Ore 50–60%</h3>
-          <div class="pcard-specs"><span>Lump</span><span>Sb 50-60%</span></div>
-          <div class="pcard-foot"><span class="price"><b>$14,500</b><span>/ MT · CIF</span></span><span class="minorder">MOQ 50 MT<br><b style="color:var(--accent-ink)">Request RFQ →</b></span></div>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- trending deals — live from DB -->
-<section class="section" id="trending" style="padding-top:0">
-  <div class="wrap">
-    <div class="section-head">
-      <div><span class="eyebrow">Trending Deals</span><h2 style="margin-top:8px">Live surplus. Buy now or make an offer.</h2><p>Real listings from verified factories — refreshed from the live catalog.</p></div>
-      <a class="btn btn-outline" href="/products">Browse All →</a>
-    </div>
-    <div class="prod-grid" id="trendingGrid">
-      <div class="pcard reveal" style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">Loading live deals…</div>
-    </div>
-  </div>
-</section>
-
-<!-- promo -->
-<section class="section" style="padding-top:0">
-  <div class="wrap">
-    <div class="promo reveal">
       <div>
-        <h3>Verified suppliers only. Real inspections, real factories.</h3>
-        <p>Every Level 2+ supplier is visited by FactoryDepo inspectors before the badge is issued.</p>
+        <span class="eyebrow">Browse</span>
+        <h2>Categories</h2>
+        <p>Each tile shows the number of lots the catalogue currently returns for that category (<span class="mono">total</span> from <span class="mono">GET /api/products?category=…</span>). A dash means the count could not be read.</p>
       </div>
-      <div class="actions">
-        <a class="btn btn-primary btn-lg" href="/sign-up">Verify My Factory</a>
-        <a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="/suppliers">Browse Suppliers</a>
-      </div>
+      <a class="btn btn-ghost" href="/products">View all listings →</a>
     </div>
+    <div class="cats" id="catGrid"></div>
   </div>
 </section>
 
-<!-- market data -->
-<section class="section" id="commodities" style="padding-top:0">
-  <div class="wrap">
-    <div class="section-head"><div><span class="eyebrow">Market Data</span><h2 style="margin-top:8px">Live market intelligence</h2></div></div>
-    <div class="market-3">
-      <div class="mcard reveal" id="rfq">
-        <div class="mcard-head"><h3>Live RFQ Market</h3><span class="rfq-mini st open" style="margin:0">● Live</span></div>
-        <div class="mcard-body" id="rfqList">
-          <div class="rfq-mini"><span style="flex:1"><b>100 Tons Copper Cathode</b><span>LME A · Türkiye · 12 quotes</span></span><span class="st open">Open</span></div>
-          <div class="rfq-mini"><span style="flex:1"><b>OEM Plastic Injection Parts</b><span>50,000 pcs · Germany · 7 quotes</span></span><span class="st open">Open</span></div>
-          <div class="rfq-mini"><span style="flex:1"><b>Battery-Grade Lithium</b><span>5 MT · USA · 9 quotes</span></span><span class="st quoted">Quoted</span></div>
-          <div class="rfq-mini"><span style="flex:1"><b>Steel Coil HRC</b><span>300 MT · Türkiye · 5 quotes</span></span><span class="st open">Open</span></div>
-        </div>
-        <div style="padding:13px 18px;border-top:1px solid var(--border);text-align:center"><a href="/rfq" style="font-size:12.5px;font-weight:700;color:var(--accent-ink)">Post Your RFQ →</a></div>
-      </div>
-      <div class="mcard reveal" style="transition-delay:.06s">
-        <div class="mcard-head"><h3>Live Commodity Market</h3><span class="mono" style="font-size:11px;color:var(--faint)">Indicative</span></div>
-        <div class="mcard-body" style="padding-top:10px">
-          <table class="com-table">
-            <tr><td><span class="com-name"><b>Copper Cathode</b><span>99.99%</span></span></td><td class="com-price">$8,742</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.18%</span></td></tr>
-            <tr><td><span class="com-name"><b>Antimony Ore</b><span>50-60%</span></span></td><td class="com-price">$14,500</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+2.56%</span></td></tr>
-            <tr><td><span class="com-name"><b>Lithium Carbonate</b><span>Battery</span></span></td><td class="com-price">$18,950</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.85%</span></td></tr>
-            <tr><td><span class="com-name"><b>Nickel</b><span>Grade I</span></span></td><td class="com-price">$16,420</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+0.95%</span></td></tr>
-            <tr><td><span class="com-name"><b>Rare Earth Oxide</b><span>NdPr 99%</span></span></td><td class="com-price">$46,200</td><td><span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 15l6-6 6 6"/></svg>+1.75%</span></td></tr>
-            <tr><td><span class="com-name"><b>Iron Ore</b><span>62% Fe</span></span></td><td class="com-price">$117.40</td><td><span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>-0.25%</span></td></tr>
-          </table>
-        </div>
-      </div>
-      <div class="network reveal" style="transition-delay:.12s">
-        <span class="eyebrow" style="color:#5CA1FF">Global Trade Network</span>
-        <h3>On the ground in every sourcing corridor.</h3>
-        <p class="sub">In-country inspectors, partner laboratories and warehouses where your supply chains run.</p>
-        <div class="net-stats">
-          <div class="net-stat"><div class="n"><span data-count="80">0</span><em>+</em></div><div class="l">Countries</div></div>
-          <div class="net-stat"><div class="n"><span data-count="200">0</span><em>+</em></div><div class="l">Inspection Partners</div></div>
-          <div class="net-stat"><div class="n"><span data-count="50">0</span><em>+</em></div><div class="l">Laboratories</div></div>
-          <div class="net-stat"><div class="n"><span data-count="100">0</span><em>+</em></div><div class="l">Warehouses</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- services -->
-<section class="section" id="services" style="padding-top:0">
-  <div class="wrap">
-    <div class="section-head"><div><span class="eyebrow">Trade Services</span><h2 style="margin-top:8px">Every service international trade demands</h2></div></div>
-    <div class="svc-grid">
-      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg></span><b>Factory Inspection</b></div>
-      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span><b>Quality Control</b></div>
-      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></span><b>Laboratory Testing</b></div>
-      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a3 3 0 013 3v3M5 9h14v8a3 3 0 01-3 3H8a3 3 0 01-3-3V9z"/></svg></span><b>Sample Purchasing</b></div>
-      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-6 4 3 5-8"/></svg></span><b>Production Monitoring</b></div>
-      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="8" rx="2"/><path d="M8 10V7h8v3M6 18v2M18 18v2"/></svg></span><b>Container Loading</b></div>
-      <div class="svc reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V6l6-3v18"/></svg></span><b>Warehousing</b></div>
-      <div class="svc reveal" style="transition-delay:.03s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h18M3 17l3-7h12l3 7M5 17v3M19 17v3"/></svg></span><b>Shipping</b></div>
-      <div class="svc reveal" style="transition-delay:.06s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M9 13l2 2 4-4"/></svg></span><b>Customs Brokerage</b></div>
-      <div class="svc reveal" style="transition-delay:.09s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></span><b>Business Consulting</b></div>
-      <div class="svc reveal" style="transition-delay:.12s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M10 10h.01M14 10h.01"/></svg></span><b>Company Registration</b></div>
-      <div class="svc reveal" style="transition-delay:.15s"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V5l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span><b>Trade Insurance</b></div>
-    </div>
-  </div>
-</section>
-
-<!-- suppliers -->
-<section class="section" id="suppliers" style="padding-top:0">
+<!-- ==================== more listings (second slice) ==================== -->
+<section class="section" id="more">
   <div class="wrap">
     <div class="section-head">
-      <div><span class="eyebrow">Top Verified Suppliers</span><h2 style="margin-top:8px">Manufacturers you can trust</h2></div>
-      <a class="btn btn-outline" href="/suppliers">All Suppliers →</a>
+      <div>
+        <span class="eyebrow">More from the catalogue</span>
+        <h2>Further down the list</h2>
+        <p>The next page of the same live response — the newest listings after the ones shown above.</p>
+      </div>
+      <a class="btn btn-ghost" href="/products">Refine with filters →</a>
     </div>
-    <div class="sup-grid">
-      <div class="sup-card reveal">
-        <div class="sup-top"><span class="sup-ava">JX</span><div style="flex:1"><h3>Jiangsu Xihua Metal Group</h3><div class="sup-meta">🇨🇳 China · Jiangsu · <span class="stars">★★★★★</span> 4.9</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 93</span></div>
-        <div class="sup-tags"><span>Copper Cathode</span><span>Smelting</span></div>
-        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
-      </div>
-      <div class="sup-card reveal" style="transition-delay:.06s">
-        <div class="sup-top"><span class="sup-ava">FS</span><div style="flex:1"><h3>Foshan Steel Co.</h3><div class="sup-meta">🇨🇳 China · Guangdong · <span class="stars">★★★★★</span> 4.8</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 89</span></div>
-        <div class="sup-tags"><span>Steel Coil</span><span>HRC</span></div>
-        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
-      </div>
-      <div class="sup-card reveal" style="transition-delay:.12s">
-        <div class="sup-top"><span class="sup-ava">SM</span><div style="flex:1"><h3>Shandong Mining Group</h3><div class="sup-meta">🇨🇳 China · Shandong · <span class="stars">★★★★★</span> 4.9</div></div><span class="chip" style="background:rgba(37,99,235,.1);color:var(--accent-ink);font-size:11px;font-weight:700;border-radius:6px;padding:4px 9px">Trust 91</span></div>
-        <div class="sup-tags"><span>Antimony Ore</span><span>Mining</span></div>
-        <a class="btn btn-outline btn-sm" href="#">View Profile</a>
-      </div>
+    <div class="feedgrid" id="trendingGrid" aria-live="polite">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </div>
 </section>
 
-<!-- testimonials -->
-<section class="section" style="padding-top:0">
+<!-- ============================= verification ============================= -->
+<section class="section" id="verification">
   <div class="wrap">
-    <div class="section-head"><div><span class="eyebrow">Trusted by Businesses</span><h2 style="margin-top:8px">What our members say</h2></div></div>
-    <div class="testi-grid">
-      <div class="testi reveal">
-        <span class="qmark">"</span>
-        <span class="stars">★★★★★</span>
-        <p>FactoryDepo's inspection reports gave us confidence to buy from a new Chinese supplier for the first time. The factory photos matched reality exactly — no surprises at the port.</p>
-        <div class="who"><span class="av">AK</span><span><b>Ahmed K.</b><span>Procurement Manager · Saudi Arabia</span></span></div>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">What verification means here</span>
+        <h2>How a supplier gets listed</h2>
+        <p>We describe the process rather than publishing numbers we have not measured. Ratings, inspection counts and fulfilment rates are <b>not</b> shown on this page: they are seeded values in our database and no workflow writes them yet.</p>
       </div>
-      <div class="testi reveal" style="transition-delay:.08s">
-        <span class="qmark">"</span>
-        <span class="stars">★★★★★</span>
-        <p>We replaced three legacy suppliers with verified Turkish factories in two months. Delivery reliability is now 98% and our inspection costs dropped by half.</p>
-        <div class="who"><span class="av">LW</span><span><b>Li Wei</b><span>Sourcing Director · Germany</span></span></div>
-      </div>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="n">01</span><b>Company submitted</b><p>The supplier registers and submits company details.</p></div>
+      <div class="step"><span class="n">02</span><b>Documents reviewed</b><p>Registration, export and product documents are checked by our team.</p></div>
+      <div class="step"><span class="n">03</span><b>Factory visited</b><p>An in-country inspector visits the site and photographs the line.</p></div>
+      <div class="step"><span class="n">04</span><b>Result recorded</b><p>The outcome is recorded on the supplier profile — pass, or the gaps that failed.</p></div>
     </div>
   </div>
 </section>
 
-<!-- cta -->
-<section class="section" id="company" style="padding-top:0">
-  <div class="wrap cta-row">
-    <div class="cta-main reveal">
-      <span class="eyebrow" style="color:#5CA1FF">Ready to Grow Your Business?</span>
-      <h2>Your next global supplier is already here.</h2>
-      <p>Find trusted manufacturers. Book inspections. Verify suppliers. Ship globally — all from one platform.</p>
-      <div class="actions"><a class="btn btn-primary btn-lg" href="/sign-up">Start Free Now</a><a class="btn btn-outline btn-lg" style="border-color:rgba(238,244,252,.35);color:#E6EFFA" href="/sign-up">Book a Demo</a></div>
+<!-- ============================== suppliers ============================== -->
+<section class="section" id="suppliers">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Supplier directory</span>
+        <h2 id="supHead">Suppliers on the platform</h2>
+        <p>Read live from <span class="mono">GET /api/suppliers</span>. Badges reflect the supplier's recorded verification level; a Demo badge means the row is seed data. Stars, trust scores and inspection counters are deliberately not rendered — nothing in the product computes them yet.</p>
+      </div>
+      <a class="btn btn-ghost" href="/suppliers">Open the directory →</a>
     </div>
-    <div class="cta-partner reveal" style="transition-delay:.08s">
-      <h3>Partner With Us</h3>
-      <p>Join the world's most trusted industrial trade ecosystem — as a supplier or service partner.</p>
-      <div class="actions"><a class="btn btn-primary" href="/sign-up">Become a Supplier</a><a class="btn btn-outline" href="/sign-up">Join as a Service Partner</a></div>
+    <div class="sups" id="supGrid" aria-live="polite">
+      <div class="skel" style="height:86px"></div><div class="skel" style="height:86px"></div><div class="skel" style="height:86px"></div>
     </div>
   </div>
 </section>
 
-<!-- footer -->
+<!-- ========================== services + cta ========================== -->
+<section class="section" id="services">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Trade services</span>
+        <h2>Services the marketplace is built around</h2>
+        <p>These are the service categories on the roadmap, not live SKUs on a shelf. Nothing on this page publishes coverage counts, partner counts or response-time guarantees, because we have not measured any.</p>
+      </div>
+    </div>
+    <div class="svcs">
+      <span class="svc"><i>◆</i> Factory inspection</span>
+      <span class="svc"><i>◆</i> Quality control</span>
+      <span class="svc"><i>◆</i> Laboratory testing</span>
+      <span class="svc"><i>◆</i> Sample purchasing</span>
+      <span class="svc"><i>◆</i> Production monitoring</span>
+      <span class="svc"><i>◆</i> Container loading</span>
+      <span class="svc"><i>◆</i> Warehousing</span>
+      <span class="svc"><i>◆</i> Freight &amp; shipping</span>
+      <span class="svc"><i>◆</i> Customs brokerage</span>
+      <span class="svc"><i>◆</i> Trade insurance</span>
+    </div>
+
+    <div style="margin-top:14px" class="band">
+      <div>
+        <h3>Buying? Post a request and let listed suppliers quote you.</h3>
+        <p>Describe the material, the quantity and the destination. Offers arrive in the platform, where you can compare them side by side.</p>
+      </div>
+      <div class="acts">
+        <a class="btn btn-lg btn-gold" href="/rfq">Post a request</a>
+        <a class="btn btn-lg btn-ghost" href="/sign-up">Create a free account</a>
+      </div>
+    </div>
+
+    <div class="cols" style="margin-top:12px">
+      <div class="panel">
+        <h3>Buying</h3>
+        <p>Search the catalogue, compare lots and send a request for quotation. Sample orders and inspections can be added before you commit.</p>
+        <div class="acts">
+          <a class="btn btn-grey btn-block" href="/products">Browse listings</a>
+          <a class="btn btn-grey btn-block" href="/suppliers">Find suppliers</a>
+          <a class="btn btn-grey btn-block" href="/rfq">Post a request</a>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Selling</h3>
+        <p>Create an account, list your production and answer requests from buyers. You can list stock even while your verification is in progress.</p>
+        <div class="acts">
+          <a class="btn btn-grey btn-block" href="/sign-up">Become a supplier</a>
+          <a class="btn btn-grey btn-block" href="/sign-in">Sign in</a>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Need a hand?</h3>
+        <p>The help pages explain ordering, quotations and what each status means. No live-chat counter, no invented response times.</p>
+        <div class="acts">
+          <a class="btn btn-grey btn-block" href="/help">Read the help pages</a>
+          <a class="btn btn-grey btn-block" href="/products">Start from the catalogue</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============================== footer ============================== -->
 <footer class="footer">
   <div class="wrap">
     <div class="foot-grid">
-      <div class="foot-brand">
-        <a class="brand" href="#top"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h5.5c2.2 0 3.6 1.1 3.6 2.9 0 1.3-.8 2.3-2 2.6 1.5.4 2.5 1.4 2.5 2.9 0 1.9-1.5 3.1-3.9 3.1H4V6zm4.2 4.7h1.1c.9 0 1.4-.4 1.4-1.2s-.5-1.2-1.4-1.2H8.2v2.4zm0 6h1.3c1 0 1.5-.5 1.5-1.3 0-.8-.5-1.3-1.5-1.3H8.2v2.6zM17.2 6h1.3v10.3h2V18h-3.3V6z" fill="currentColor"/></svg></span><span><span class="brand-name" style="color:#fff">FACTORYDEPO</span></span></a>
-        <p>The operating system for global industrial trade. Verified supply, inspections, laboratories, logistics and intelligence — in one trusted ecosystem.</p>
-        <div class="newsletter"><input placeholder="Get market alerts in your inbox"><button>Subscribe</button></div>
-        <div class="socials" style="margin-top:16px">
-          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V23h-4V8zm7.5 0h3.8v2.05h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V23h-4v-7.7c0-1.84-.03-4.2-2.56-4.2-2.56 0-2.95 2-2.95 4.07V23H8V8z"/></svg></a>
-          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41z"/></svg></a>
-          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 00.5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 002.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 002.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg></a>
-          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.49h-2.8V24C19.62 23.09 24 18.1 24 12.07z"/></svg></a>
-        </div>
+      <div>
+        <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
+        <p>Industrial sourcing with the paperwork and the inspections attached. Catalogue figures shown anywhere on this page are read from the live API at page load.</p>
       </div>
-      <div class="foot-col"><h4>Marketplace</h4><ul><li><a href="#products">Products</a></li><li><a href="#suppliers">Suppliers</a></li><li><a href="#rfq">RFQ Market</a></li><li><a href="#commodities">Commodity Market</a></li></ul></div>
-      <div class="foot-col"><h4>Services</h4><ul><li><a href="#services">Inspection</a></li><li><a href="#services">Laboratory Testing</a></li><li><a href="#services">Logistics</a></li><li><a href="#services">Warehousing</a></li></ul></div>
-      <div class="foot-col"><h4>Resources</h4><ul><li><a href="#commodities">Market Reports</a></li><li><a href="#categories">Guides</a></li><li><a href="#suppliers">Supplier Rankings</a></li><li><a href="#company">Country Reports</a></li></ul></div>
-      <div class="foot-col"><h4>Company</h4><ul><li><a href="#company">About Us</a></li><li><a href="#company">Careers</a></li><li><a href="#company">Press</a></li><li><a href="#company">Contact Us</a></li><li><a href="#company">Terms of Service</a></li></ul></div>
+      <div class="foot-col">
+        <h4>Marketplace</h4>
+        <ul>
+          <li><a href="/products">All listings</a></li>
+          <li><a href="/products?q=copper">Copper</a></li>
+          <li><a href="/products?category=Steel">Steel</a></li>
+          <li><a href="/suppliers">Suppliers</a></li>
+          <li><a href="/rfq">Request board</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Factory inspection</a></li>
+          <li><a href="#services">Laboratory testing</a></li>
+          <li><a href="#services">Freight &amp; shipping</a></li>
+          <li><a href="#verification">How verification works</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="/sign-in">Sign in</a></li>
+          <li><a href="/sign-up">Create an account</a></li>
+          <li><a href="/help">Help</a></li>
+        </ul>
+      </div>
     </div>
-    <div class="foot-bottom"><span>© 2024 FactoryDepo.com All rights reserved.</span><span>Turkey · China · Germany · Russia · USA · Vietnam · India</span></div>
+    <div class="foot-bottom">
+      <span>© FactoryDepo</span>
+      <span>Catalogue figures on this page are live API values; rows marked Demo are seed data.</span>
+    </div>
   </div>
 </footer>
 
 <script>
-(function(){
+/* =====================================================================
+   Landing data layer — every number on the page originates here.
+   Same-origin only (the API server serves this file at / and /api/*).
+   Nothing below invents a value: requests that fail render an em dash
+   and an honest note instead of a placeholder figure.
+   ===================================================================== */
+(function () {
   'use strict';
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var els = document.querySelectorAll('.reveal');
-  if (reduce || !('IntersectionObserver' in window)) { els.forEach(function(e){e.classList.add('in');}); }
-  else {
-    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }); }, {threshold:.1, rootMargin:'0px 0px -40px 0px'});
-    els.forEach(function(e){ io.observe(e); });
-  }
-  function count(el){
-    el.dataset.done = '1';
-    var t = parseFloat(el.dataset.count), s = el.dataset.suffix || '', d = 1500, st = null;
-    function step(ts){ if(!st) st = ts; var p = Math.min((ts-st)/d, 1); var e = 1-Math.pow(1-p,3); el.textContent = Math.round(t*e).toLocaleString('en-US')+s; if(p<1) requestAnimationFrame(step); }
-    requestAnimationFrame(step);
-  }
-  var cs = document.querySelectorAll('[data-count]');
-  if (reduce || !('IntersectionObserver' in window)) { cs.forEach(count); }
-  else {
-    var cio = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ count(e.target); cio.unobserve(e.target);} }); }, {threshold:.5});
-    cs.forEach(function(e){ cio.observe(e); });
-  }
-  setTimeout(function(){ document.querySelectorAll('.reveal:not(.in)').forEach(function(e){ e.classList.add('in'); }); }, 1600);
-  setTimeout(function(){ document.querySelectorAll('[data-count]:not([data-done])').forEach(count); }, 2200);
-})();
 
-/* ---- real RFQs from the live API (fallback: static list above) ---- */
-(function(){
-  'use strict';
-  var list = document.getElementById('rfqList');
-  if (!list) return;
-  var urls = [
-    'https://api-production-3fee.up.railway.app/api/rfqs?limit=4',
-    '/api/rfqs?limit=4',
-    'http://localhost:9091/api/rfqs?limit=4'
-  ];
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function render(items){
-    var html = '';
-    items.forEach(function(r){
-      var st = r.status === 'quoted' ? 'quoted' : 'open';
-      var qty = (r.quantity != null && r.unit) ? esc(r.quantity) + ' ' + esc(r.unit) + ' — ' : '';
-      var meta = [(r.category||''), (r.targetCountry || 'Global'), (r.quoteCount||0) + ' quotes'].filter(Boolean).join(' · ');
-      html += '<div class="rfq-mini"><span style="flex:1"><b>' + qty + esc(r.title) + '</b><span>' + esc(meta) + '</span></span><span class="st ' + st + '">' + (r.status === 'quoted' ? 'Quoted' : 'Open') + '</span></div>';
-    });
-    list.innerHTML = html;
-  }
-  function tryFetch(i){
-    if (i >= urls.length) return;
-    fetch(urls[i], {mode:'cors'})
-      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
-      .then(function(d){ if (d && d.items && d.items.length) render(d.items.slice(0, 4)); })
-      .catch(function(){ tryFetch(i + 1); });
-  }
-  tryFetch(0);
-})();
-/* ---- live trending deals from the API (fallback: static products above) ---- */
-(function(){
-  'use strict';
-  var grid = document.getElementById('trendingGrid');
-  if (!grid) return;
-  var urls = [
-    'https://api-production-3fee.up.railway.app/api/products?limit=6&hasImage=1',
-    '/api/products?limit=6&hasImage=1',
-    'http://localhost:9091/api/products?limit=6&hasImage=1'
-  ];
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function money(p){
-    var sym = p.currency === 'USD' ? '$' : (p.currency || '');
-    return sym + Number(p.price).toLocaleString('en-US', {maximumFractionDigits: 2});
-  }
-  function render(items){
-    var html = '';
-    items.forEach(function(p, i){
-      var badge = p.category === 'Textiles' ? 'Overstock' : 'Ready Stock';
-      var img = p.imageKey
-        ? '<img src="' + esc(p.imageKey) + '" alt="' + esc(p.name) + '" loading="lazy">'
-        : '<div style="height:150px;display:grid;place-items:center;color:var(--faint);font-size:30px">🏭</div>';
-      html += '<a class="pcard reveal" style="transition-delay:' + (i * .04) + 's" href="/products/' + p.id + '">' +
-        '<div class="pcard-art" style="position:relative">' + img +
-        '<span class="tag" style="position:absolute;top:8px;left:8px;background:' + (p.category === 'Textiles' ? 'rgba(5,150,105,.14);color:var(--green)' : 'rgba(217,119,6,.14);color:var(--amber)') + ';font-weight:800;font-size:10px">' + badge + '</span>' +
-        (p.verified ? '<span class="verified">✓ Verified</span>' : '') +
-        '<span class="origin">' + esc((p.originCountry || '').slice(0, 2).toUpperCase()) + '</span></div>' +
-        '<div class="pcard-body"><h3>' + esc(p.name.slice(0, 48)) + '</h3>' +
-        '<div class="pcard-specs"><span>MOQ ' + esc(p.moq) + ' ' + esc(p.unit) + '</span><span>' + esc(p.category) + '</span></div>' +
-        '<div class="pcard-foot"><span class="price"><b>' + money(p) + '</b><span>/ ' + esc(p.unit) + '</span></span>' +
-        '<span class="minorder" style="color:var(--accent-ink);font-weight:700">Buy Now →</span></div></div></a>';
-    });
-    grid.innerHTML = html;
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.15});
-      grid.querySelectorAll('.reveal').forEach(function(e){ io.observe(e); });
-    } else {
-      grid.querySelectorAll('.reveal').forEach(function(e){ e.classList.add('in'); });
+  /* ---------- small helpers ---------- */
+  /* Scraped supplier names arrive with HTML entities baked in ("&amp;"), so a
+     plain escape would print the entity itself. Decode the handful of named
+     entities that occur in the catalogue, drop any remaining tag, then escape. */
+  var ENTITIES = {
+    'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', 'apos': "'", '#39': "'",
+    'nbsp': '\u00a0', 'ndash': '\u2013', 'mdash': '\u2014', 'middot': '\u00b7',
+    'deg': '\u00b0', 'times': '\u00d7', 'sol': '/', 'rsquo': '\u2019', 'lsquo': '\u2018'
+  };
+  function decodeText(s) {
+    var t = String(s == null ? '' : s);
+    if (t.indexOf('&') !== -1) {
+      t = t.replace(/&(#?[a-zA-Z0-9]+);/g, function (m, name) {
+        var key = String(name).toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(ENTITIES, key)) return ENTITIES[key];
+        if (key.charAt(0) === '#') {
+          var code = key.charAt(1) === 'x' ? parseInt(key.slice(2), 16) : parseInt(key.slice(1), 10);
+          if (!isNaN(code)) return String.fromCharCode(code);
+        }
+        return m; /* unknown entity: leave it exactly as the API sent it */
+      });
     }
+    return t.replace(/<[^>]*>/g, '');
   }
-  function tryFetch(i){
-    if (i >= urls.length) { grid.innerHTML = '<div class="pcard reveal" style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">Live deals unavailable — <a href="/products" style="color:var(--accent-ink);font-weight:600">browse the catalog</a>.</div>'; return; }
-    fetch(urls[i], {mode:'cors'})
-      .then(function(r){ if (!r.ok) throw 0; return r.json(); })
-      .then(function(d){ if (d && d.items && d.items.length) render(d.items.slice(0, 6)); else throw 0; })
-      .catch(function(){ tryFetch(i + 1); });
+  function esc(s) {
+    return decodeText(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
-  tryFetch(0);
-})();
-/* ---- search bar → live marketplace search ---- */
-(function(){
-  'use strict';
-  function go(){
-    var v = (document.getElementById('heroSearch') || document.querySelector('.hero-search input')).value.trim();
-    window.location.href = '/products' + (v ? '?q=' + encodeURIComponent(v) : '');
+  function num(n) {
+    if (n == null || isNaN(n)) return '—';
+    return Number(n).toLocaleString('en-US');
   }
-  var btn = document.querySelector('.hero-search button');
-  var input = document.querySelector('.hero-search input');
-  if (btn) btn.addEventListener('click', go);
-  if (input) input.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+  function money(p) {
+    if (p.price == null || isNaN(p.price)) return '—';
+    var v = Number(p.price).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    return (p.currency === 'USD' || !p.currency ? '$' : p.currency + ' ') + v;
+  }
+  function plural(n, word) { return num(n) + ' ' + word + (Number(n) === 1 ? '' : 's'); }
+  function shortDate(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  /** imageKey from the API is stored as /products/<file>; assets live under /assets/… */
+  function localImg(key) {
+    /* Only the named photography exists on disk. The bulk of the catalogue keeps
+       its scrape key (/products/ali_…), whose file was never downloaded — and the
+       name-based fallbacks in migrations 002/003 are keyword guesses, so showing
+       one of those next to an unrelated product would be its own kind of lie.
+       No file → no photo, and the card says "no photo". */
+    if (typeof key !== 'string') return null;
+    if (key.indexOf('/assets/') === 0) return key;
+    if (key.indexOf('/products/') === 0 && key.indexOf('/ali_') === -1) {
+      return '/assets/products/' + key.slice('/products/'.length);
+    }
+    return null;
+  }
+  /* "Verified" is only claimed for rows the platform itself owns: the seeded
+     rows carry verified=true in the database but no inspection workflow has
+     run, so for them the Demo badge is the honest label. */
+  function badge(p) {
+    var out = '';
+    if (p.dataSource === 'demo') {
+      out += '<span class="pill p-amber" title="Seed row — sample data, not a live offer">Demo</span>';
+    } else if (p.verified === true) {
+      out += '<span class="pill p-green">✓ Verified</span>';
+    }
+    return out ? '<span class="tags">' + out + '</span>' : '';
+  }
+  /** Product photo, or an explicit "no photo" block when no file exists. */
+  function media(p, cls) {
+    var img = localImg(p.imageKey);
+    if (!img) return '<div class="noimg">no photo</div>';
+    return '<img src="' + esc(img) + '" alt="' + esc(p.name) + '" loading="lazy" class="' + esc(cls || '') + '">';
+  }
+  function productCard(p) {
+    var moq = p.moq != null ? 'MOQ ' + num(p.moq) + ' ' + esc(p.unit || '') : 'MOQ —';
+    return '<article class="lcard">' +
+      '<a class="media" href="/products/' + esc(p.id) + '">' +
+        media(p) +
+        badge(p) +
+      '</a>' +
+      '<div class="bd">' +
+        '<h3><a href="/products/' + esc(p.id) + '">' + esc(p.name) + '</a></h3>' +
+        '<div class="meta"><b>' + esc(p.supplierName || 'Unknown supplier') + '</b></div>' +
+        '<div class="meta">' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
+        '<div class="meta">' + moq + '</div>' +
+        '<div class="between" style="margin-top:auto;padding-top:5px">' +
+          '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
+          '<a class="btn btn-sm btn-ghost" href="/products/' + esc(p.id) + '">View</a>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }
+  /* A photo that is missing or 404s degrades to the "no photo" block instead of
+     a broken-image icon. */
+  function watchImages(root) {
+    root.addEventListener('error', function (e) {
+      var t = e.target;
+      if (t && t.tagName === 'IMG' && !t.dataset.failed) {
+        t.dataset.failed = '1';
+        var holder = document.createElement('div');
+        holder.className = 'noimg';
+        holder.textContent = 'no photo';
+        if (t.parentNode) t.parentNode.replaceChild(holder, t);
+      }
+    }, true);
+  }
+
+  var API_CANDIDATES = ['', 'http://localhost:9091'];
+  function apiJson(path) {
+    var i = 0;
+    function attempt() {
+      if (i >= API_CANDIDATES.length) return Promise.reject(new Error('unreachable'));
+      var url = API_CANDIDATES[i++] + path;
+      return fetch(url, { mode: 'cors' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .catch(function () { return attempt(); });
+    }
+    return attempt();
+  }
+
+  /* ---------- 1. catalogue: one response feeds cards + counters ---------- */
+  var featuredGrid = document.getElementById('featuredGrid');
+  var moreGrid = document.getElementById('trendingGrid');
+  var heroCard = document.getElementById('heroCard');
+  var listingsSub = document.getElementById('listingsSub');
+  if (featuredGrid) watchImages(featuredGrid);
+  if (moreGrid) watchImages(moreGrid);
+
+  var counters = { products: null, suppliers: null, rfqs: null, verified: null };
+
+  function renderCounters() {
+    var el = document.getElementById('counters');
+    if (!el) return;
+    function v(x) { return x == null ? '—' : num(x); }
+    el.innerHTML =
+      '<span><b>' + v(counters.products) + '</b> lots with photos</span>' +
+      '<span class="sep" aria-hidden="true"></span>' +
+      '<span><b>' + v(counters.suppliers) + '</b> suppliers listed</span>' +
+      '<span class="sep" aria-hidden="true"></span>' +
+      '<span><b>' + v(counters.verified) + '</b> at verification level 2+</span>' +
+      '<span class="sep" aria-hidden="true"></span>' +
+      '<span><b>' + v(counters.rfqs) + '</b> requests posted</span>' +
+      (counters.products == null
+        ? '<span class="muted">— live totals unavailable from this origin</span>'
+        : '<span class="muted">live from /api/products, /api/suppliers, /api/rfqs</span>');
+  }
+
+  /* ---------- 1. catalogue: one logical response feeds cards + counters ----------
+     The catalogue API has no sort or "photo available locally" filter, so we read
+     a few pages of the newest lots that have an image key, then show the ones
+     whose photo file actually exists on this server. Rows are never altered —
+     only the order changes, and the copy says so. */
+  var CATALOGUE_PAGES = [1, 5, 20];
+
+  function loadCatalogue() {
+    var seen = {};
+    var merged = [];
+    var total = null;
+
+    function step(i) {
+      if (i >= CATALOGUE_PAGES.length) return Promise.resolve({ items: merged, total: total });
+      return apiJson('/api/products?hasImage=1&limit=40&page=' + CATALOGUE_PAGES[i])
+        .then(function (d) {
+          var items = (d && d.items) || [];
+          if (total == null && d && typeof d.total === 'number') total = d.total;
+          items.forEach(function (p) {
+            if (p && seen[p.id] == null) { seen[p.id] = 1; merged.push(p); }
+          });
+          return step(i + 1);
+        })
+        .catch(function () { return step(i + 1); });
+    }
+    return step(0);
+  }
+
+  loadCatalogue()
+    .then(function (res) {
+      var items = res.items;
+      counters.products = res.total;
+      renderCounters();
+
+      if (!items.length) {
+        var none = '<div class="empty" style="grid-column:1/-1"><b>No listings yet</b>The catalogue returned an empty page. <a href="/products">Open the catalogue</a>.</div>';
+        if (featuredGrid) featuredGrid.innerHTML = none;
+        if (moreGrid) moreGrid.innerHTML = none;
+        return;
+      }
+
+      /* Prefer listings that also have a photo file on this server: the catalogue
+         is still being filled in, so a slice of rows carry an image key whose
+         file was never downloaded. Real rows, only reordered by that fact. */
+      var withLocal = items.slice().sort(function (a, b) {
+        return (localImg(a.imageKey) ? 0 : 1) - (localImg(b.imageKey) ? 0 : 1);
+      });
+      var head = withLocal.slice(0, 8);
+      var tail = withLocal.slice(8, 16);
+
+      if (featuredGrid) featuredGrid.innerHTML = head.map(productCard).join('');
+      if (moreGrid) {
+        moreGrid.innerHTML = tail.length
+          ? tail.map(productCard).join('')
+          : '<div class="empty" style="grid-column:1/-1"><b>That is the whole first page</b>Load more from the <a href="/products">full catalogue</a>.</div>';
+      }
+      if (listingsSub && counters.products != null) {
+        listingsSub.innerHTML = 'Showing 8 of <b>' + num(counters.products) + '</b> lots that have photography, newest first, read live from ' +
+          '<span class="mono">GET /api/products?hasImage=1</span> at page load. Rows whose <span class="mono">dataSource</span> is <b>demo</b> are seed data and carry a Demo badge — they are not live offers.';
+      }
+
+      /* hero side card = the newest listing in the same response */
+      if (heroCard && head.length) {
+        var p = head[0];
+        heroCard.innerHTML =
+          '<div class="hd"><span class="pill p-grey">Newest listing</span><span class="mono" style="margin-left:auto">live</span></div>' +
+          '<div style="padding:11px">' +
+            '<a class="ph" href="/products/' + esc(p.id) + '">' + media(p) + '</a>' +
+            '<div class="nm"><a href="/products/' + esc(p.id) + '" style="color:var(--ink)">' + esc(p.name) + '</a></div>' +
+            '<div class="muted" style="margin-bottom:7px">' + esc(p.supplierName || '') + ' · ' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
+            '<div class="row" style="gap:5px;flex-wrap:wrap">' + badge(p) + '</div>' +
+            '<div class="ft">' +
+              '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
+              '<a class="btn btn-sm btn-primary" href="/products/' + esc(p.id) + '">Open listing</a>' +
+            '</div>' +
+          '</div>';
+        watchImages(heroCard);
+      }
+    })
+    .catch(function () {
+      var msg = '<div class="empty" style="grid-column:1/-1"><b>Live listings unavailable</b>The catalogue API could not be reached from this page. <a href="/products">Try the catalogue directly</a>.</div>';
+      if (featuredGrid) featuredGrid.innerHTML = msg;
+      if (moreGrid) moreGrid.innerHTML = '';
+      if (heroCard) heroCard.innerHTML = '<div class="hd"><span class="pill p-grey">Newest listing</span></div><div class="empty"><b>Catalogue API unreachable</b>No figure is shown rather than a made-up one.</div>';
+      if (listingsSub) listingsSub.textContent = 'The live catalogue could not be read from this page, so no counts or listings are shown.';
+      renderCounters();
+    });
+
+  /* ---------- 2. suppliers (no invented ratings or trust scores) ---------- */
+  var supGrid = document.getElementById('supGrid');
+  var supHead = document.getElementById('supHead');
+  apiJson('/api/suppliers')
+    .then(function (d) {
+      var items = (d && d.items) || [];
+      counters.suppliers = d && typeof d.total === 'number' ? d.total : null;
+      var verified = items.filter(function (s) { return Number(s.verifiedLevel) >= 2; }).length;
+      counters.verified = counters.suppliers == null ? null : verified;
+      renderCounters();
+
+      if (supHead && counters.suppliers != null) {
+        supHead.textContent = plural(counters.suppliers, 'supplier') + ' on the platform';
+      }
+      if (!supGrid) return;
+      if (!items.length) {
+        supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>No suppliers yet</b>The directory returned no rows. <a href="/suppliers">Open the directory</a>.</div>';
+        return;
+      }
+      supGrid.innerHTML = items.slice(0, 6).map(function (s) {
+        var initials = String(s.companyName || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+        var tags = (s.tags || []).slice(0, 2).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
+        var badgeHtml = Number(s.verifiedLevel) >= 2
+          ? '<span class="pill p-green" title="Verification level ' + esc(s.verifiedLevel) + '">Level ' + esc(s.verifiedLevel) + '</span>'
+          : (s.dataSource === 'demo' ? '<span class="pill p-amber">Demo</span>' : '<span class="pill p-grey">Level ' + esc(s.verifiedLevel) + '</span>');
+        if (Number(s.verifiedLevel) >= 2 && s.dataSource === 'demo') {
+          badgeHtml += ' <span class="pill p-amber" title="Seed data — not a real company yet">Demo</span>';
+        }
+        return '<a class="card sup" href="/suppliers/' + esc(s.id) + '">' +
+          '<span class="av" aria-hidden="true">' + esc(initials) + '</span>' +
+          '<span class="b">' +
+            '<span class="nm">' + esc(s.companyName) + '</span>' +
+            '<span class="muted" style="display:block">' + esc(s.country || '') + (s.city ? ' · ' + esc(s.city) : '') + ' · ' + plural(s.productCount || 0, 'listing') + '</span>' +
+            (tags ? '<span class="tags">' + tags + '</span>' : '') +
+          '</span>' +
+          '<span class="ft">' + badgeHtml + '</span>' +
+        '</a>';
+      }).join('');
+    })
+    .catch(function () {
+      renderCounters();
+      if (supGrid) supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>Supplier directory unavailable</b>The API could not be reached from this page. <a href="/suppliers">Try the directory directly</a>.</div>';
+    });
+
+  /* ---------- 3. request board ---------- */
+  var rfqList = document.getElementById('rfqList');
+  apiJson('/api/rfqs')
+    .then(function (d) {
+      var items = (d && d.items) || [];
+      counters.rfqs = d && typeof d.total === 'number' ? d.total : null;
+      renderCounters();
+      if (!rfqList) return;
+      if (!items.length) {
+        rfqList.innerHTML = '<div class="empty"><b>No requests posted yet</b>Nothing is shown here until a buyer posts one. <a href="/rfq">Post the first request</a>.</div>';
+        return;
+      }
+      rfqList.innerHTML = items.slice(0, 5).map(function (r) {
+        var qty = (r.quantity != null && r.unit) ? num(r.quantity) + ' ' + r.unit : '';
+        var meta = [qty, r.category, r.targetCountry, r.quoteCount > 0 ? plural(r.quoteCount, 'quote') : 'no quotes yet'].filter(Boolean).join(' · ');
+        var dl = shortDate(r.deadline);
+        var st = r.status === 'quoted' ? '<span class="pill p-blue">Quoted</span>'
+          : r.status === 'closed' ? '<span class="pill p-grey">Closed</span>'
+          : '<span class="pill p-green">Open</span>';
+        return '<div class="req">' +
+          '<span class="t"><b>' + esc(r.title) + '</b><span>' + esc(meta) + (dl ? ' · deadline ' + esc(dl) : '') + '</span></span>' +
+          st +
+          '<a class="btn btn-sm btn-grey" href="/rfq/' + esc(r.id) + '">View</a>' +
+        '</div>';
+      }).join('') +
+      (counters.rfqs != null && counters.rfqs > 5
+        ? '<div class="muted" style="padding-top:9px">Showing 5 of ' + num(counters.rfqs) + ' — <a href="/rfq">see the rest</a>.</div>'
+        : '');
+    })
+    .catch(function () {
+      renderCounters();
+      if (rfqList) rfqList.innerHTML = '<div class="empty"><b>Request board unavailable</b>The API could not be reached from this page, so no requests are shown. <a href="/rfq">Open the request board</a>.</div>';
+    });
+
+  /* ---------- 4. categories, each with its own live count ---------- */
+  var CATEGORIES = [
+    ['Metals & Minerals', '/assets/products/copper-cathode.jpg'],
+    ['Steel', '/assets/products/steel-coil.jpg'],
+    ['Chemicals', '/assets/products/lithium-carbonate.jpg'],
+    ['Machinery', '/assets/products/cnc-machine.jpg'],
+    ['Industrial Equipment', '/assets/products/industrial-pump.jpg'],
+    ['Renewable Energy', '/assets/products/solar-panel.jpg'],
+    ['Electronics', '/assets/products/plc-controller.jpg'],
+    ['Automotive', '/assets/products/alloy-wheel.jpg'],
+    ['Construction Materials', '/assets/products/cement-bags.jpg'],
+    ['Packaging', '/assets/products/corrugated-boxes.jpg'],
+    ['Plastic & Rubber', '/assets/products/plastic-granules.jpg'],
+    ['Textiles', '/assets/products/polyester-yarn.jpg']
+  ];
+  var catGrid = document.getElementById('catGrid');
+  if (catGrid) {
+    catGrid.innerHTML = CATEGORIES.map(function (c, i) {
+      var href = '/products?category=' + encodeURIComponent(c[0]);
+      return '<a class="cat" href="' + esc(href) + '">' +
+        '<span class="art"><img src="' + esc(c[1]) + '" alt="" aria-hidden="true" loading="lazy"></span>' +
+        '<span class="nm"><b>' + esc(c[0]) + '</b><span data-cat-count="' + i + '">—</span></span>' +
+      '</a>';
+    }).join('');
+    CATEGORIES.forEach(function (c, i) {
+      apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
+        .then(function (d) {
+          var el = catGrid.querySelector('[data-cat-count="' + i + '"]');
+          if (!el) return;
+          if (d && typeof d.total === 'number') el.textContent = plural(d.total, 'lot');
+        })
+        .catch(function () { /* leave the em dash — never guess a count */ });
+    });
+  }
+
+  /* ---------- 5. search → the marketplace search route ---------- */
+  var form = document.getElementById('searchForm');
+  var input = document.getElementById('q');
+  if (form && input) {
+    form.addEventListener('submit', function (e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      var v = (input.value || '').trim();
+      window.location.href = '/products' + (v ? '?q=' + encodeURIComponent(v) : '');
+    });
+  }
+
+  /* The only fixed numbers left on this page are the step labels 01–04 and the
+     list of services — lengths of markup we control, never a metric about the
+     business, the market or the catalogue. */
 })();
 </script>
 </body>

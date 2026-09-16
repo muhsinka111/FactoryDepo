@@ -5,7 +5,7 @@
  * Full dev dataset lives in lib/db/scripts/seed.ts.
  */
 import { hashSync } from 'bcryptjs';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db, users, suppliers, products, rfqs, quotes } from './db.js';
 
 const PW = 'factorydepo';
@@ -23,8 +23,12 @@ export async function bootstrapSeedIfEmpty(): Promise<boolean> {
   console.log('[seed] empty database detected — bootstrapping demo dataset…');
 
   // ---- users (all share password `factorydepo`) ----
-  const userSeeds = [
-    { email: 'demo@factorydepo.com', name: 'Demo Admin', role: 'admin', company: 'FactoryDepo HQ', country: 'Türkiye', trust: '0' },
+  // The seeded demo admin uses a password published in this repo, so it must
+  // never be created in production. Production gets its owner admin from
+  // ADMIN_EMAIL / ADMIN_PASSWORD instead — see ensureOwnerAdmin() below.
+  const demoAdmin = { email: 'demo@factorydepo.com', name: 'Demo Admin', role: 'admin', company: 'FactoryDepo HQ', country: 'Türkiye', trust: '0' };
+  const userSeeds: { email: string; name: string; role: string; company: string; country: string; trust: string }[] = [
+    ...(process.env.NODE_ENV === 'production' ? [] : [demoAdmin]),
     { email: 'buyer@factorydepo.com', name: 'Ahmed K.', role: 'buyer', company: 'Gulf Trading Co', country: 'Saudi Arabia', trust: '0' },
     { email: 'supplier@factorydepo.com', name: 'Mehmet Demir', role: 'supplier', company: 'Anatolian Machinery A.Ş.', country: 'Türkiye', trust: '88' },
     { email: 'jiangsu@xihua.cn', name: 'Zhang Wei', role: 'supplier', company: 'Jiangsu Xihua Metal Group', country: 'China', trust: '93' },
@@ -34,7 +38,7 @@ export async function bootstrapSeedIfEmpty(): Promise<boolean> {
     { email: 'vietnam@minerals.vn', name: 'Nguyen Van Hieu', role: 'supplier', company: 'Vietnam Minerals JSC', country: 'Vietnam', trust: '87' },
     { email: 'berlin@praezision.de', name: 'Kai Müller', role: 'supplier', company: 'Berlin Präzision GmbH', country: 'Germany', trust: '92' },
     { email: 'bursa@aluminum.com.tr', name: 'Ali Yılmaz', role: 'supplier', company: 'Bursa Aluminum A.Ş.', country: 'Türkiye', trust: '86' },
-  ] as const;
+  ];
 
   const insertedUsers = await db
     .insert(users)
@@ -109,4 +113,55 @@ export async function bootstrapSeedIfEmpty(): Promise<boolean> {
 
   console.log('[seed] bootstrap complete: users, suppliers, products, RFQs, quotes.');
   return true;
+}
+
+/**
+ * Owner admin — created from ADMIN_EMAIL / ADMIN_PASSWORD on every boot.
+ *
+ * Runs unconditionally (not only on an empty database) so a production deploy
+ * can create the owner account without needing a shell on the box. It is
+ * idempotent: an existing account is never overwritten — it is only promoted to
+ * `admin` if its role has drifted.
+ *
+ * Configure on Railway with:
+ *   railway variables --set "ADMIN_EMAIL=muhsinka@hotmail.com"
+ *   railway variables --set "ADMIN_PASSWORD=<a long random password>"
+ */
+export async function ensureOwnerAdmin(): Promise<void> {
+  const email = (process.env.ADMIN_EMAIL ?? '').trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD ?? '';
+
+  if (!email || !password) return; // not configured — nothing to do
+
+  // Refuse a weak secret: this account has full marketplace access.
+  if (password.length < 12) {
+    console.warn('[admin] ADMIN_PASSWORD is shorter than 12 characters — refusing to create the owner admin.');
+    return;
+  }
+
+  const [existing] = await db
+    .select({ id: users.id, role: users.role })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  if (existing) {
+    if (existing.role !== 'admin') {
+      await db.update(users).set({ role: 'admin' }).where(eq(users.id, existing.id));
+      console.log(`[admin] promoted ${email} to admin`);
+    }
+    return;
+  }
+
+  await db.insert(users).values({
+    email,
+    passwordHash: hashSync(password, 10),
+    name: process.env.ADMIN_NAME ?? 'Owner',
+    role: 'admin',
+    company: 'FactoryDepo',
+    country: 'Türkiye',
+    lang: 'en',
+    emailVerified: true,
+  });
+  console.log(`[admin] owner admin created: ${email}`);
 }

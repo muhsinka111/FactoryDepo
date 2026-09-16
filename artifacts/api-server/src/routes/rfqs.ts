@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { desc, eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import * as c from '@workspace/api-zod';
 import { db, quotes, rfqs, suppliers, users } from '../db.js';
 import { requireAuth, requireRole } from '../auth.js';
 import { HttpError, mapQuote, mapRfq, parseId, respond, toNum } from '../http.js';
+import { authenticate } from '../helpers.js';
 
 export const rfqsRouter = Router();
 
@@ -33,15 +35,40 @@ const rfqCols = {
   createdAt: rfqs.createdAt,
 };
 
-/** GET /api/rfqs — all RFQs, newest first. */
-rfqsRouter.get('/', async (_req, res) => {
-  const rows = await db
+/**
+ * GET /api/rfqs — all RFQs, newest first.
+ *
+ * `?mine=1` (numeric-boolean, same convention as hasImage/mine on products)
+ * scopes the list to RFQs the caller posted, so a buyer dashboard can honestly
+ * label the view "My RFQs". It requires a token (401 without one); without the
+ * flag the route stays public and unscoped because the static marketing landing
+ * reads it anonymously.
+ */
+rfqsRouter.get('/', async (req, res) => {
+  // Parsed inline: the contract for this route (zRfqList) is unchanged, so the
+  // flag is deliberately not added to the shared query schema.
+  const mine = z.coerce.number().int().min(0).max(1).optional().safeParse(req.query?.['mine']);
+  const ownOnly = mine.success && mine.data === 1;
+
+  let uid: number | null = null;
+  if (ownOnly) {
+    await authenticate(req, res);
+    uid = req.userId ?? null;
+    if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+  }
+
+  const where = ownOnly && uid != null ? eq(rfqs.buyerId, uid) : undefined;
+
+  const base = db
     .select({ ...rfqCols })
     .from(rfqs)
-    .leftJoin(quoteCounts, eq(rfqs.id, quoteCounts.rfqId))
-    .orderBy(desc(rfqs.id));
+    .leftJoin(quoteCounts, eq(rfqs.id, quoteCounts.rfqId));
 
-  const [totalRow] = await db.select({ total: sql<number>`count(*)` }).from(rfqs);
+  const rows = await (where ? base.where(where) : base).orderBy(desc(rfqs.id));
+
+  const [totalRow] = where
+    ? await db.select({ total: sql<number>`count(*)` }).from(rfqs).where(where)
+    : await db.select({ total: sql<number>`count(*)` }).from(rfqs);
 
   respond(res, c.zRfqList, {
     items: rows.map(mapRfq),
