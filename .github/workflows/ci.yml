@@ -125,8 +125,15 @@ jobs:
           curl -sf http://localhost:9090/api/me -H "Authorization: Bearer $TOKEN" -o /tmp/me.json
           grep -q "$EMAIL" /tmp/me.json
 
+      - name: Integration + unit tests
+        env:
+          TEST_BASE_URL: http://localhost:9090
+        run: pnpm --filter @workspace/api-server run test
+
       - name: Smoke — login rate limiting engages
         run: |
+          # Runs AFTER the test suite on purpose: this exhausts the login bucket
+          # for the runner's IP, so it would poison the suite's login test.
           # 14 rapid bad logins should be throttled well before the end
           SAW429=0
           for i in $(seq 1 14); do

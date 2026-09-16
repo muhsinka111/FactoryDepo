@@ -5,6 +5,7 @@ import {
 } from '@workspace/api-client-react';
 import type { ApiError } from '@workspace/api-client-react';
 import { View, Empty, StatusChip, DemoTag, Verified, Stars, requireAuthGate } from '../components';
+import { useI18n } from '../i18n';
 
 /** Price with its currency symbol, keeping the raw currency for anything non-USD. */
 function money(amount: number, currency: string): string {
@@ -17,20 +18,6 @@ function metric(value: number | null | undefined): string {
   return value === null || value === undefined || value <= 0 ? '—' : String(value);
 }
 
-/**
- * Honest loading state. `<Spinner />` is still used by the shared chrome, but it
- * carries no styling in the current sheet, so these pages say what they wait for.
- */
-function Loading({ what }: { what: string }) {
-  return (
-    <View title="Loading…" sub={`Fetching ${what}`}>
-      <div className="card">
-        <div className="empty">Fetching {what}…</div>
-      </div>
-    </View>
-  );
-}
-
 type ProductData = NonNullable<ReturnType<typeof useProduct>['data']>;
 
 /**
@@ -38,6 +25,7 @@ type ProductData = NonNullable<ReturnType<typeof useProduct>['data']>;
  * buyer can never order more than `quantityAvailable`.
  */
 function CheckoutModal({ product, onClose }: { product: ProductData; onClose: () => void }) {
+  const { t, locale } = useI18n();
   const { data: user } = useMe();
   const createOrder = useCreateOrder();
   const stock = product.quantityAvailable;
@@ -65,7 +53,7 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
       const order = await createOrder.mutateAsync({ productId: product.id, quantity: qty, ...form });
       setDone(order.id);
     } catch (e) {
-      setErr((e as ApiError).message || 'The order could not be placed.');
+      setErr((e as ApiError).message || t('checkout.errPlace'));
     }
   };
 
@@ -77,19 +65,19 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{done != null ? 'Order placed' : 'Buy now — checkout'}</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{done != null ? t('checkout.placedTitle') : t('checkout.title')}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           {done != null ? (
             <>
-              <p className="strong" style={{ marginTop: 0 }}>Order #{done} confirmed</p>
+              <p className="strong" style={{ marginTop: 0 }}>{t('checkout.confirmed', { id: done })}</p>
               <p className="muted" style={{ marginTop: 6 }}>
-                The supplier has been notified. Track the order from your orders page.
+                {t('checkout.notified')}
               </p>
               <div className="row" style={{ gap: 8, marginTop: 14 }}>
-                <Link href="/orders" className="btn btn-primary">View orders</Link>
-                <button className="btn btn-grey" onClick={onClose}>Keep browsing</button>
+                <Link href="/orders" className="btn btn-primary">{t('checkout.viewOrders')}</Link>
+                <button className="btn btn-grey" onClick={onClose}>{t('checkout.keepBrowsing')}</button>
               </div>
             </>
           ) : (
@@ -100,25 +88,25 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
                 <div className="card stat">
                   <div>
                     <div className="v">{money(product.price, product.currency)}</div>
-                    <div className="l">Price / {product.unit}</div>
+                    <div className="l">{t('checkout.pricePer', { unit: product.unit })}</div>
                   </div>
                 </div>
                 <div className="card stat">
                   <div>
-                    <div className="v">{product.moq.toLocaleString()} {product.unit}</div>
-                    <div className="l">Minimum order</div>
+                    <div className="v">{product.moq.toLocaleString(locale)} {product.unit}</div>
+                    <div className="l">{t('checkout.minimumOrder')}</div>
                   </div>
                 </div>
                 <div className="card stat">
                   <div>
-                    <div className="v">{stock.toLocaleString()} {product.unit}</div>
-                    <div className="l">Available now</div>
+                    <div className="v">{stock.toLocaleString(locale)} {product.unit}</div>
+                    <div className="l">{t('checkout.availableNow')}</div>
                   </div>
                 </div>
               </div>
 
               <div className="field">
-                <label htmlFor="qty">Quantity ({product.unit})</label>
+                <label htmlFor="qty">{t('checkout.quantity', { unit: product.unit })}</label>
                 <input
                   id="qty"
                   className="in"
@@ -129,13 +117,19 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
                   value={qty}
                   onChange={(e) => setQty(clamp(Number(e.target.value) || product.moq))}
                 />
-                <div className="hint">Between {product.moq.toLocaleString()} and {stock.toLocaleString()} {product.unit} in stock.</div>
+                <div className="hint">
+                  {t('checkout.qtyHint', {
+                    moq: product.moq.toLocaleString(locale),
+                    stock: stock.toLocaleString(locale),
+                    unit: product.unit,
+                  })}
+                </div>
                 <div className="row" style={{ gap: 6, marginTop: 7 }}>
                   {[product.moq, product.moq * 5, product.moq * 10]
                     .filter((q, i, a) => a.indexOf(q) === i)
                     .map((q) => (
                       <button key={q} className="btn btn-sm btn-grey" onClick={() => setQty(clamp(q))}>
-                        {q.toLocaleString()} {product.unit}
+                        {q.toLocaleString(locale)} {product.unit}
                       </button>
                     ))}
                 </div>
@@ -143,29 +137,29 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
 
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="ship-name">Full name <i>*</i></label>
+                  <label htmlFor="ship-name">{t('checkout.fullName')} <i>*</i></label>
                   <input id="ship-name" className="in" value={form.shippingName} onChange={set('shippingName')} />
                 </div>
                 <div className="field">
-                  <label htmlFor="ship-country">Country <i>*</i></label>
+                  <label htmlFor="ship-country">{t('checkout.country')} <i>*</i></label>
                   <input id="ship-country" className="in" value={form.shippingCountry} onChange={set('shippingCountry')} />
                 </div>
                 <div className="field">
-                  <label htmlFor="ship-address">Street address <i>*</i></label>
+                  <label htmlFor="ship-address">{t('checkout.address')} <i>*</i></label>
                   <input id="ship-address" className="in" value={form.shippingAddress} onChange={set('shippingAddress')} />
                 </div>
                 <div className="field">
-                  <label htmlFor="ship-city">City <i>*</i></label>
+                  <label htmlFor="ship-city">{t('checkout.city')} <i>*</i></label>
                   <input id="ship-city" className="in" value={form.shippingCity} onChange={set('shippingCity')} />
                 </div>
                 <div className="field">
-                  <label htmlFor="ship-phone">Phone</label>
+                  <label htmlFor="ship-phone">{t('checkout.phone')}</label>
                   <input id="ship-phone" className="in" type="tel" value={form.shippingPhone} onChange={set('shippingPhone')} />
                 </div>
               </div>
 
               <div className="field">
-                <label htmlFor="ship-notes">Notes for the supplier</label>
+                <label htmlFor="ship-notes">{t('checkout.notes')}</label>
                 <textarea id="ship-notes" className="in" rows={2} value={form.notes} onChange={set('notes')} />
               </div>
 
@@ -176,11 +170,11 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
         {done == null && (
           <div className="mf">
             <span className="muted" style={{ marginRight: 'auto', alignSelf: 'center' }}>
-              Total {money(total, product.currency)}
+              {t('checkout.total', { total: money(total, product.currency) })}
             </span>
-            <button className="btn btn-grey" onClick={onClose}>Cancel</button>
+            <button className="btn btn-grey" onClick={onClose}>{t('action.cancel')}</button>
             <button className="btn btn-gold" disabled={!canSubmit} onClick={submit}>
-              {createOrder.isPending ? 'Placing order…' : `Place order · ${money(total, product.currency)}`}
+              {createOrder.isPending ? t('checkout.placing') : t('checkout.placeOrder', { total: money(total, product.currency) })}
             </button>
           </div>
         )}
@@ -194,6 +188,7 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
  * unit, so the buyer states them here rather than us guessing on their behalf.
  */
 function RfqModal({ product, onClose }: { product: ProductData; onClose: () => void }) {
+  const { t, locale } = useI18n();
   const createRfq = useCreateRfq();
   const [quantity, setQuantity] = useState(String(Math.max(product.moq, 1)));
   const [unit, setUnit] = useState(product.unit);
@@ -205,7 +200,9 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
     setErr(null);
     try {
       await createRfq.mutateAsync({
-        title: `${product.name} — quotation request`,
+        // The requirement title is user data derived from the listing name; the
+        // trailing phrase is interface text and is translated.
+        title: `${product.name} — ${t('rfqModal.titleSuffix')}`,
         category: product.category,
         description: notes || undefined,
         quantity: Number(quantity),
@@ -214,7 +211,7 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
       });
       setDone(true);
     } catch (e) {
-      setErr((e as ApiError).message || 'The request could not be posted.');
+      setErr((e as ApiError).message || t('rfqModal.errPost'));
     }
   };
 
@@ -222,32 +219,34 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{done ? 'Request posted' : 'Request a quotation'}</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{done ? t('rfqModal.postedTitle') : t('rfqModal.title')}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           {done ? (
             <>
-              <p className="strong" style={{ marginTop: 0 }}>Your requirement is live in the RFQ exchange</p>
-              <p className="muted" style={{ marginTop: 6 }}>Verified suppliers can now quote price and lead time.</p>
+              <p className="strong" style={{ marginTop: 0 }}>{t('rfqModal.live')}</p>
+              <p className="muted" style={{ marginTop: 6 }}>{t('rfqModal.canQuote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 14 }}>
-                <Link href="/rfqs" className="btn btn-primary">View my RFQs</Link>
-                <button className="btn btn-grey" onClick={onClose}>Close</button>
+                <Link href="/rfqs" className="btn btn-primary">{t('rfqModal.viewMine')}</Link>
+                <button className="btn btn-grey" onClick={onClose}>{t('action.close')}</button>
               </div>
             </>
           ) : (
             <>
-              <p className="muted" style={{ margin: '0 0 12px' }}>{product.name} · listed by {product.supplierName}</p>
+              <p className="muted" style={{ margin: '0 0 12px' }}>
+                {t('rfqModal.listedBy', { product: product.name, supplier: product.supplierName })}
+              </p>
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="rfq-qty">Quantity <i>*</i></label>
+                  <label htmlFor="rfq-qty">{t('rfqModal.quantity')} <i>*</i></label>
                   <input
                     id="rfq-qty" className="in" inputMode="numeric"
                     value={quantity} onChange={(e) => setQuantity(e.target.value)}
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="rfq-unit">Unit <i>*</i></label>
+                  <label htmlFor="rfq-unit">{t('rfqModal.unit')} <i>*</i></label>
                   <input
                     id="rfq-unit" className="in"
                     value={unit} onChange={(e) => setUnit(e.target.value)}
@@ -255,12 +254,14 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="rfq-notes">Specs, certifications, delivery terms</label>
+                <label htmlFor="rfq-notes">{t('rfqModal.specs')}</label>
                 <textarea
                   id="rfq-notes" className="in" rows={3}
                   value={notes} onChange={(e) => setNotes(e.target.value)}
                 />
-                <div className="hint">The listing MOQ is {product.moq.toLocaleString()} {product.unit}.</div>
+                <div className="hint">
+                  {t('rfqModal.moqHint', { moq: product.moq.toLocaleString(locale), unit: product.unit })}
+                </div>
               </div>
               {err && <p className="errtext">{err}</p>}
             </>
@@ -268,13 +269,13 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
         </div>
         {!done && (
           <div className="mf">
-            <button className="btn btn-grey" onClick={onClose}>Cancel</button>
+            <button className="btn btn-grey" onClick={onClose}>{t('action.cancel')}</button>
             <button
               className="btn btn-primary"
               disabled={createRfq.isPending || !quantity || Number(quantity) <= 0 || !unit.trim()}
               onClick={submit}
             >
-              {createRfq.isPending ? 'Posting…' : 'Post request'}
+              {createRfq.isPending ? t('rfqModal.posting') : t('rfqModal.post')}
             </button>
           </div>
         )}
@@ -289,6 +290,7 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
  * is missing we print an em dash instead of a plausible-looking number.
  */
 export default function ProductDetail({ params }: { params?: { id?: string } }) {
+  const { t, locale } = useI18n();
   // wouter also passes `params` as a prop, but reading the route here keeps the
   // page working when it is mounted directly (tests, storybook, deep links).
   const [matched, routeParams] = useRoute<{ id: string }>('/products/:id');
@@ -299,11 +301,20 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
   const [checkout, setCheckout] = useState(false);
   const [rfq, setRfq] = useState(false);
 
-  if (isLoading) return <Loading what="this listing" />;
+  if (isLoading) {
+    const what = t('product.loadingThis');
+    return (
+      <View title={t('product.loadingTitle')} sub={t('product.fetching', { what })}>
+        <div className="card">
+          <div className="empty">{t('product.fetching', { what })}</div>
+        </div>
+      </View>
+    );
+  }
   if (error || !p) {
     return (
-      <Empty title="Product not found">
-        <Link href="/explore" className="btn btn-sm btn-grey" style={{ marginTop: 10 }}>Back to explore</Link>
+      <Empty title={t('product.notFound')}>
+        <Link href="/explore" className="btn btn-sm btn-grey" style={{ marginTop: 10 }}>{t('product.backToExplore')}</Link>
       </Empty>
     );
   }
@@ -319,7 +330,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
           <span>{p.category}</span>
           <span>·</span>
           <span>{p.originCountry}</span>
-          <Link href="/explore" style={{ fontSize: 12.5 }}>← Back to explore</Link>
+          <Link href="/explore" style={{ fontSize: 12.5 }}>← {t('product.backToExplore')}</Link>
         </span>
       }
       actions={
@@ -341,7 +352,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
             {p.imageKey ? (
               <img src={p.imageKey} alt={p.name} />
             ) : (
-              <div className="empty" style={{ paddingTop: 90 }}>No photo supplied for this lot</div>
+              <div className="empty" style={{ paddingTop: 90 }}>{t('product.noPhoto')}</div>
             )}
           </div>
           {p.imageKey && (
@@ -354,25 +365,25 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
             <div className="card stat">
               <div>
                 <div className="v">{money(p.price, p.currency)}</div>
-                <div className="l">Price / {p.unit}</div>
+                <div className="l">{t('product.pricePer', { unit: p.unit })}</div>
               </div>
             </div>
             <div className="card stat">
               <div>
-                <div className="v">{p.moq.toLocaleString()} {p.unit}</div>
-                <div className="l">Minimum order</div>
+                <div className="v">{p.moq.toLocaleString(locale)} {p.unit}</div>
+                <div className="l">{t('product.minOrder')}</div>
               </div>
             </div>
             <div className="card stat">
               <div>
-                <div className="v">{p.quantityAvailable.toLocaleString()} {p.unit}</div>
-                <div className="l">Available now</div>
+                <div className="v">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</div>
+                <div className="l">{t('product.availableNow')}</div>
               </div>
             </div>
             <div className="card stat">
               <div>
                 <div className="v">{p.originCountry}</div>
-                <div className="l">Country of origin</div>
+                <div className="l">{t('product.origin')}</div>
               </div>
             </div>
           </div>
@@ -382,35 +393,39 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
         <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
           <div className="card">
             <div className="hd">
-              <h2>{outOfStock ? 'Currently unavailable' : 'Buy now — ready stock'}</h2>
+              <h2>{outOfStock ? t('product.unavailable') : t('product.buyNowHeading')}</h2>
             </div>
             <div className="bd">
               <p className="muted" style={{ margin: '0 0 10px' }}>
                 {outOfStock
                   ? p.status === 'sold_out'
-                    ? 'This lot is marked sold out. Ask the supplier for the next available batch.'
-                    : 'No units are available at the moment. Ask the supplier for the next available batch.'
-                  : `Purchase at the listed price of ${money(p.price, p.currency)} per ${p.unit}, minimum ${p.moq.toLocaleString()} ${p.unit}.`}
+                    ? t('product.soldOutBody')
+                    : t('product.noUnitsBody')
+                  : t('product.purchaseTerms', {
+                      price: money(p.price, p.currency),
+                      unit: p.unit,
+                      moq: p.moq.toLocaleString(locale),
+                    })}
               </p>
 
               {!outOfStock && (
                 <>
                   <div className="between" style={{ marginBottom: 10 }}>
-                    <span className="muted">Stock on hand</span>
-                    <span className="strong">{p.quantityAvailable.toLocaleString()} {p.unit}</span>
+                    <span className="muted">{t('product.stockOnHand')}</span>
+                    <span className="strong">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</span>
                   </div>
                   <button
                     className="btn btn-gold"
                     style={{ width: '100%' }}
                     onClick={() => { if (!me) requireAuthGate(); else setCheckout(true); }}
                   >
-                    Buy now · {money(p.price, p.currency)}/{p.unit}
+                    {t('product.buyNowPrice', { price: money(p.price, p.currency), unit: p.unit })}
                   </button>
                 </>
               )}
               {outOfStock && (
                 <button className="btn btn-grey" style={{ width: '100%' }} disabled>
-                  Buy now — out of stock
+                  {t('product.outOfStock')}
                 </button>
               )}
 
@@ -419,10 +434,10 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                 style={{ width: '100%', marginTop: 7 }}
                 onClick={() => { if (!me) requireAuthGate(); else setRfq(true); }}
               >
-                Request a quotation
+                {t('product.requestQuote')}
               </button>
               <p className="hint" style={{ textAlign: 'center' }}>
-                {me ? 'Ships from ' + p.originCountry : 'Sign in to order or request a quotation.'}
+                {me ? t('product.shipsFrom', { country: p.originCountry }) : t('product.signInToOrder')}
               </p>
             </div>
           </div>
@@ -430,12 +445,12 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
           {/* ---------- supplier ---------- */}
           <div className="card">
             <div className="hd">
-              <h2>Supplier</h2>
-              {s && <Link href={`/suppliers/${s.id}`} className="link">View profile</Link>}
+              <h2>{t('product.supplier')}</h2>
+              {s && <Link href={`/suppliers/${s.id}`} className="link">{t('product.viewProfile')}</Link>}
             </div>
             <div className="bd">
               {supplier.isLoading ? (
-                <span className="muted">Loading supplier…</span>
+                <span className="muted">{t('product.loadingSupplier')}</span>
               ) : s ? (
                 <>
                   <div className="row" style={{ alignItems: 'flex-start', gap: 10 }}>
@@ -454,35 +469,37 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                   <table style={{ marginTop: 10 }}>
                     <tbody>
                       <tr>
-                        <td className="muted">Rating</td>
+                        <td className="muted">{t('product.rating')}</td>
                         <td style={{ textAlign: 'right' }}>
                           {s.rating > 0 ? <><Stars rating={s.rating} /> <span className="muted">{s.rating.toFixed(1)}</span></> : '—'}
                         </td>
                       </tr>
                       <tr>
-                        <td className="muted">Inspections</td>
+                        <td className="muted">{t('product.inspections')}</td>
                         <td style={{ textAlign: 'right' }}>{metric(s.inspectionsCount)}</td>
                       </tr>
                       <tr>
-                        <td className="muted">On-time fulfilment</td>
+                        <td className="muted">{t('product.fulfilment')}</td>
                         <td style={{ textAlign: 'right' }}>
                           {s.fulfillmentRate > 0 ? `${s.fulfillmentRate.toFixed(1)}%` : '—'}
                         </td>
                       </tr>
                       <tr>
-                        <td className="muted">Verified level</td>
-                        <td style={{ textAlign: 'right' }}>{s.verifiedLevel > 0 ? `Level ${s.verifiedLevel}` : '—'}</td>
+                        <td className="muted">{t('product.verifiedLevel')}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          {s.verifiedLevel > 0 ? t('product.levelN', { n: s.verifiedLevel }) : '—'}
+                        </td>
                       </tr>
                       <tr>
-                        <td className="muted">Trading since</td>
+                        <td className="muted">{t('product.tradingSince')}</td>
                         <td style={{ textAlign: 'right' }}>{s.since ?? '—'}</td>
                       </tr>
                     </tbody>
                   </table>
-                  <p className="hint">Figures are marketplace-wide for this supplier, not just for this lot.</p>
+                  <p className="hint">{t('product.supplierFiguresHint')}</p>
                 </>
               ) : (
-                <span className="muted">Supplier details are not available.</span>
+                <span className="muted">{t('product.supplierUnavailable')}</span>
               )}
             </div>
           </div>
@@ -492,26 +509,28 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
       {/* ---------- description & specification ---------- */}
       <div className="cols" style={{ marginTop: 12 }}>
         <div className="card">
-          <div className="hd"><h2>Description</h2></div>
+          <div className="hd"><h2>{t('product.description')}</h2></div>
           <div className="bd">
             <p style={{ margin: 0 }}>
-              {p.description ?? 'The supplier has not added a description. Request a quotation for specifications, lead time and delivery terms.'}
+              {p.description ?? t('product.noDescription')}
             </p>
           </div>
         </div>
 
         <div className="card">
-          <div className="hd"><h2>Specification</h2></div>
+          <div className="hd"><h2>{t('product.specification')}</h2></div>
           {p.spec.length === 0 ? (
-            <div className="empty">No specification recorded for this lot.</div>
+            <div className="empty">{t('product.noSpec')}</div>
           ) : (
             <table>
               <thead>
-                <tr><th>Attribute</th><th>Value</th></tr>
+                <tr><th>{t('product.col.attribute')}</th><th>{t('product.col.value')}</th></tr>
               </thead>
               <tbody>
                 {p.spec.map((line) => {
                   const at = line.indexOf(':');
+                  // Specification lines are supplier-authored data: only the
+                  // structural labels below are translated, never the values.
                   const label = at > 0 ? line.slice(0, at).trim() : line;
                   const value = at > 0 ? line.slice(at + 1).trim() : '—';
                   return (
@@ -521,9 +540,9 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                     </tr>
                   );
                 })}
-                <tr><td>Category</td><td className="strong">{p.category}</td></tr>
-                <tr><td>Unit</td><td className="strong">{p.unit}</td></tr>
-                <tr><td>Purity / grade</td><td className="strong">{p.purityGrade ?? '—'}</td></tr>
+                <tr><td>{t('product.spec.category')}</td><td className="strong">{p.category}</td></tr>
+                <tr><td>{t('product.spec.unit')}</td><td className="strong">{p.unit}</td></tr>
+                <tr><td>{t('product.spec.purity')}</td><td className="strong">{p.purityGrade ?? '—'}</td></tr>
               </tbody>
             </table>
           )}

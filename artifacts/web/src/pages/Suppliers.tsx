@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSuppliers } from '@workspace/api-client-react';
 import { View, SupplierCard, Empty, DemoTag } from '../components';
+import { useI18n } from '../i18n';
 
 /** A figure we may only show when the API actually supplies it. */
 function metric(value: number | null | undefined): string {
@@ -11,19 +12,9 @@ function rate(value: number | null | undefined): string {
   return value === null || value === undefined || value <= 0 ? '—' : `${value.toFixed(1)}%`;
 }
 
-/** Honest loading state — the shared `<Spinner />` has no styling in the sheet. */
-function Loading() {
-  return (
-    <View title="Loading…" sub="Fetching the supplier directory">
-      <div className="card">
-        <div className="empty">Fetching the supplier directory…</div>
-      </div>
-    </View>
-  );
-}
-
 /** Directory-wide totals, computed from the rows we actually received. */
 function Totals({ items }: { items: { verifiedLevel: number; rating: number; inspectionsCount: number; fulfillmentRate: number }[] }) {
+  const { t, locale } = useI18n();
   const verified = items.filter((s) => s.verifiedLevel >= 2).length;
   const rated = items.filter((s) => s.rating > 0);
   const measured = items.filter((s) => s.fulfillmentRate > 0);
@@ -40,26 +31,34 @@ function Totals({ items }: { items: { verifiedLevel: number; rating: number; ins
     <div className="stats grid">
       <div className="card stat">
         <div>
-          <div className="v">{items.length.toLocaleString()}</div>
-          <div className="l">Suppliers listed</div>
+          <div className="v">{items.length.toLocaleString(locale)}</div>
+          <div className="l">{t('suppliers.totalListed')}</div>
         </div>
       </div>
       <div className="card stat">
         <div>
-          <div className="v">{verified.toLocaleString()}</div>
-          <div className="l">Verified level 2+</div>
+          <div className="v">{verified.toLocaleString(locale)}</div>
+          <div className="l">{t('suppliers.totalVerified')}</div>
         </div>
       </div>
       <div className="card stat">
         <div>
           <div className="v">{avgRating}</div>
-          <div className="l">Average rating {rated.length < items.length ? `(${rated.length} rated)` : ''}</div>
+          <div className="l">
+            {rated.length < items.length
+              ? t('suppliers.avgRatingRated', { n: rated.length.toLocaleString(locale) })
+              : t('suppliers.avgRating')}
+          </div>
         </div>
       </div>
       <div className="card stat">
         <div>
           <div className="v">{avgFulfilment}</div>
-          <div className="l">On-time fulfilment {measured.length < items.length ? `(${measured.length} measured)` : ''}</div>
+          <div className="l">
+            {measured.length < items.length
+              ? t('suppliers.avgFulfilmentMeasured', { n: measured.length.toLocaleString(locale) })
+              : t('suppliers.avgFulfilment')}
+          </div>
         </div>
       </div>
     </div>
@@ -72,6 +71,7 @@ function Totals({ items }: { items: { verifiedLevel: number; rating: number; ins
  * a supplier with no inspections yet shows an em dash, not a zero.
  */
 export default function Suppliers() {
+  const { t, locale } = useI18n();
   const res = useSuppliers();
   const [q, setQ] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -94,23 +94,27 @@ export default function Suppliers() {
 
   return (
     <View
-      title="Supplier directory"
-      sub="Factories and trading houses on FactoryDepo. Verification tiers come from on-site audits and document checks."
+      title={t('suppliers.title')}
+      sub={t('suppliers.sub')}
       actions={
         items.some((s) => s.dataSource === 'demo')
-          ? <span className="row" style={{ gap: 6 }}><DemoTag /><span className="muted">rows marked demo are seed data</span></span>
+          ? <span className="row" style={{ gap: 6 }}><DemoTag /><span className="muted">{t('suppliers.demoNote')}</span></span>
           : undefined
       }
     >
       {res.isLoading ? (
-        <Loading />
+        <View title={t('common.loading')} sub={t('suppliers.loadingSub')}>
+          <div className="card">
+            <div className="empty">{t('suppliers.loadingBody')}</div>
+          </div>
+        </View>
       ) : res.error ? (
-        <Empty title="The directory could not be loaded">
-          The supplier service did not respond. Try again in a moment.
+        <Empty title={t('suppliers.loadErrorTitle')}>
+          {t('suppliers.loadErrorBody')}
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No suppliers listed yet">
-          Supplier profiles appear here once they are onboarded and verified.
+        <Empty title={t('suppliers.emptyTitle')}>
+          {t('suppliers.emptyBody')}
         </Empty>
       ) : (
         <>
@@ -120,31 +124,34 @@ export default function Suppliers() {
             <input
               className="in"
               style={{ width: 240 }}
-              placeholder="Company, country, city, capability…"
+              placeholder={t('suppliers.searchPlaceholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              aria-label="Search suppliers"
+              aria-label={t('suppliers.searchAria')}
             />
             <button
               className={`chip ${verifiedOnly ? 'on' : ''}`}
               onClick={() => setVerifiedOnly((v) => !v)}
               aria-pressed={verifiedOnly}
             >
-              Verified only
+              {t('suppliers.verifiedOnly')}
             </button>
             {(q || verifiedOnly) && (
               <button className="btn btn-sm btn-grey" onClick={() => { setQ(''); setVerifiedOnly(false); }}>
-                Clear
+                {t('action.clear')}
               </button>
             )}
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              Showing {filtered.length.toLocaleString()} of {items.length.toLocaleString()}
+              {t('suppliers.showing', {
+                shown: filtered.length.toLocaleString(locale),
+                total: items.length.toLocaleString(locale),
+              })}
             </span>
           </div>
 
           {filtered.length === 0 ? (
-            <Empty title="No suppliers match that search">
-              Try a shorter company name or clear the verified filter.
+            <Empty title={t('suppliers.noMatchTitle')}>
+              {t('suppliers.noMatchBody')}
             </Empty>
           ) : (
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))' }}>
@@ -152,9 +159,9 @@ export default function Suppliers() {
                 <div key={s.id}>
                   <SupplierCard s={s} />
                   <div className="row" style={{ gap: 10, padding: '5px 12px 0', flexWrap: 'wrap' }}>
-                    <span className="muted">Rating {s.rating > 0 ? s.rating.toFixed(1) : '—'}</span>
-                    <span className="muted">Inspections {metric(s.inspectionsCount)}</span>
-                    <span className="muted">Fulfilment {rate(s.fulfillmentRate)}</span>
+                    <span className="muted">{t('suppliers.rating')} {s.rating > 0 ? s.rating.toFixed(1) : '—'}</span>
+                    <span className="muted">{t('suppliers.inspections')} {metric(s.inspectionsCount)}</span>
+                    <span className="muted">{t('suppliers.fulfilment')} {rate(s.fulfillmentRate)}</span>
                   </div>
                 </div>
               ))}

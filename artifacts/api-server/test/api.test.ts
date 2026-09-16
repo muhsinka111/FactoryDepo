@@ -1,0 +1,239 @@
+/**
+ * Integration tests — run against a BOOTED api-server.
+ *
+ *   TEST_BASE_URL=http://localhost:9090 node --import tsx --test test/api.test.ts
+ *
+ * They are skipped when TEST_BASE_URL is unset, so a developer with no server
+ * running gets a clean skip instead of a wall of connection errors. CI boots the
+ * built server against a throwaway Postgres and sets the variable.
+ *
+ * The suite covers the failures this project has actually shipped: forgeable
+ * tokens, an unscoped catalogue, a supplier editing someone else's listing, and
+ * two buyers overselling the same stock.
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+const BASE = process.env.TEST_BASE_URL;
+const skip = BASE ? false : 'TEST_BASE_URL not set — skipping integration tests';
+
+const uniq = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
+interface Res {
+  status: number;
+  body: unknown;
+  text: string;
+}
+
+async function call(method: string, path: string, body?: unknown, token?: string): Promise<Res> {
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await res.text();
+  let parsed: unknown = null;
+  try {
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    /* non-JSON (e.g. the printable proforma) — keep the raw text */
+  }
+  return { status: res.status, body: parsed, text };
+}
+
+interface Auth {
+  token: string;
+  id: number;
+}
+
+async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> {
+  const email = `it-${role}-${tag}@factorydepo.test`;
+  const r = await call('POST', '/api/auth/register', {
+    name: `IT ${role} ${tag}`,
+    email,
+    password: 'integration-test-password',
+    role,
+    company: `IT ${tag} Ltd`,
+    country: 'Türkiye',
+  });
+  assert.equal(r.status, 201, `register ${role} failed: ${r.status} ${r.text}`);
+  const b = r.body as { token: string; user: { id: number } };
+  return { token: b.token, id: b.user.id };
+}
+
+test('healthz reports the database is up', { skip }, async () => {
+  const r = await call('GET', '/api/healthz');
+  assert.equal(r.status, 200);
+  const b = r.body as { status: string; db: string };
+  assert.equal(b.status, 'ok');
+  assert.equal(b.db, 'up');
+});
+
+test('the public catalogue stays anonymous and CORS-open', { skip }, async () => {
+  const res = await fetch(`${BASE}/api/products?limit=1`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('access-control-allow-origin'), '*');
+  const b = (await res.json()) as { items: unknown[]; total: number };
+  assert.ok(Array.isArray(b.items));
+  assert.ok(b.total > 0, 'expected a non-empty catalogue');
+});
+
+test('every protected route rejects an anonymous caller with 401', { skip }, async () => {
+  const paths = [
+    '/api/me', '/api/offers', '/api/saved', '/api/threads', '/api/shipments',
+    '/api/notifications', '/api/supplier/docs', '/api/payments', '/api/admin/overview',
+  ];
+  for (const p of paths) {
+    const r = await call('GET', p);
+    assert.equal(r.status, 401, `${p} should be 401 anonymously, got ${r.status}`);
+  }
+});
+
+test('a forged bearer token is rejected', { skip }, async () => {
+  const r = await call('GET', '/api/me', undefined, 'not.a.real.token');
+  assert.equal(r.status, 401);
+});
+
+test('register -> login -> me round-trips the account', { skip }, async () => {
+  const tag = uniq();
+  const email = `it-roundtrip-${tag}@factorydepo.test`;
+  const reg = await call('POST', '/api/auth/register', {
+    name: 'Round Trip', email, password: 'integration-test-password', role: 'buyer',
+  });
+  assert.equal(reg.status, 201, reg.text);
+
+  const login = await call('POST', '/api/auth/login', { email, password: 'integration-test-password' });
+  assert.equal(login.status, 200, login.text);
+  const token = (login.body as { token: string }).token;
+
+  const me = await call('GET', '/api/me', undefined, token);
+  assert.equal(me.status, 200);
+  assert.equal((me.body as { email: string }).email, email);
+});
+
+test('a duplicate email is refused with 409', { skip }, async () => {
+  const tag = uniq();
+  const email = `it-dupe-${tag}@factorydepo.test`;
+  const payload = { name: 'Dupe', email, password: 'integration-test-password', role: 'buyer' };
+  assert.equal((await call('POST', '/api/auth/register', payload)).status, 201);
+  assert.equal((await call('POST', '/api/auth/register', payload)).status, 409);
+});
+
+test('a buyer cannot reach the admin console', { skip }, async () => {
+  const buyer = await register('buyer', uniq());
+  const r = await call('GET', '/api/admin/overview', undefined, buyer.token);
+  assert.equal(r.status, 403, `expected 403 for a buyer, got ${r.status}`);
+});
+
+test('?mine=1 scopes listings and requires a token', { skip }, async () => {
+  assert.equal((await call('GET', '/api/products?mine=1')).status, 401);
+
+  const supplier = await register('supplier', uniq());
+  const mine = await call('GET', '/api/products?mine=1', undefined, supplier.token);
+  assert.equal(mine.status, 200);
+  assert.equal((mine.body as { total: number }).total, 0, 'a brand-new supplier owns no listings');
+
+  const buyer = await register('buyer', uniq());
+  const asBuyer = await call('GET', '/api/products?mine=1', undefined, buyer.token);
+  assert.equal(asBuyer.status, 200);
+  assert.equal((asBuyer.body as { total: number }).total, 0, 'a buyer must not see the catalogue under "mine"');
+});
+
+test('a supplier cannot edit or delete another supplier\'s listing', { skip }, async () => {
+  const a = await register('supplier', `a${uniq()}`);
+  const b = await register('supplier', `b${uniq()}`);
+
+  const created = await call('POST', '/api/products', {
+    name: `IT ownership probe ${uniq()}`,
+    category: 'Machinery',
+    description: 'created by integration test',
+    price: 100,
+    currency: 'USD',
+    unit: 'Set',
+    moq: 1,
+    quantityAvailable: 10,
+    originCountry: 'Türkiye',
+  }, a.token);
+  assert.equal(created.status, 201, `product create failed: ${created.status} ${created.text}`);
+  const productId = (created.body as { id: number }).id;
+
+  const patchByB = await call('PATCH', `/api/products/${productId}`, { price: 999 }, b.token);
+  assert.ok(
+    patchByB.status === 403 || patchByB.status === 404,
+    `supplier B must not edit supplier A's listing (got ${patchByB.status})`,
+  );
+
+  const deleteByB = await call('DELETE', `/api/products/${productId}`, undefined, b.token);
+  assert.ok(
+    deleteByB.status === 403 || deleteByB.status === 404,
+    `supplier B must not delete supplier A's listing (got ${deleteByB.status})`,
+  );
+
+  // The owner can still edit it, which proves the check is ownership and not a blanket denial.
+  const patchByA = await call('PATCH', `/api/products/${productId}`, { price: 123 }, a.token);
+  assert.equal(patchByA.status, 200, `owner should be able to edit: ${patchByA.status} ${patchByA.text}`);
+
+  // Clean up so repeated local runs do not accumulate probe listings.
+  const cleanup = await call('DELETE', `/api/products/${productId}`, undefined, a.token);
+  assert.ok(cleanup.status === 204 || cleanup.status === 200, `cleanup failed: ${cleanup.status}`);
+});
+
+test('concurrent orders can never oversell the stock (the oversell test)', { skip }, async () => {
+  const supplier = await register('supplier', `s${uniq()}`);
+  const buyer = await register('buyer', `c${uniq()}`);
+
+  const STOCK = 100;
+  const PER_ORDER = 25;
+  const ATTEMPTS = 8; // 8 x 25 = 200 against 100 in stock -> exactly 4 may succeed
+
+  const created = await call('POST', '/api/products', {
+    name: `IT oversell probe ${uniq()}`,
+    category: 'Metals & Minerals',
+    description: 'created by integration test',
+    price: 10,
+    currency: 'USD',
+    unit: 'MT',
+    moq: 1,
+    quantityAvailable: STOCK,
+    originCountry: 'Türkiye',
+  }, supplier.token);
+  assert.equal(created.status, 201, `probe product failed: ${created.status} ${created.text}`);
+  const productId = (created.body as { id: number }).id;
+
+  const shipping = {
+    shippingName: 'IT Buyer',
+    shippingAddress: '1 Test Street',
+    shippingCity: 'Istanbul',
+    shippingCountry: 'Türkiye',
+  };
+
+  const results = await Promise.all(
+    Array.from({ length: ATTEMPTS }, () =>
+      call('POST', '/api/orders', { productId, quantity: PER_ORDER, ...shipping }, buyer.token),
+    ),
+  );
+
+  const ok = results.filter((r) => r.status === 201).length;
+  const conflict = results.filter((r) => r.status === 409).length;
+
+  assert.equal(ok, STOCK / PER_ORDER, `expected exactly ${STOCK / PER_ORDER} successful orders, got ${ok}`);
+  assert.equal(conflict, ATTEMPTS - ok, `expected ${ATTEMPTS - ok} conflicts, got ${conflict}`);
+
+  // The shelf must be empty and the listing marked sold out — never negative.
+  const after = await call('GET', `/api/products/${productId}`);
+  assert.equal(after.status, 200);
+  const p = after.body as { quantityAvailable: number; status: string };
+  assert.equal(p.quantityAvailable, 0, `stock should be exactly 0, got ${p.quantityAvailable}`);
+  assert.ok(p.quantityAvailable >= 0, 'stock must never go negative');
+  assert.equal(p.status, 'sold_out', `expected sold_out, got ${p.status}`);
+});
+
+test('the printable proforma is party-only', { skip }, async () => {
+  const outsider = await register('buyer', `o${uniq()}`);
+  // Order 1 exists in the seeded dataset; a stranger must not be able to open it.
+  const r = await call('GET', '/api/orders/1/proforma', undefined, outsider.token);
+  assert.ok(r.status === 403 || r.status === 404, `expected 403/404 for a non-party, got ${r.status}`);
+});

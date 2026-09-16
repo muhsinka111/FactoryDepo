@@ -1,6 +1,7 @@
 import { useRoute, useLocation, Link } from 'wouter';
 import { useSupplier, useProducts, useMe } from '@workspace/api-client-react';
 import { View, Empty, ProductCard, Verified, DemoTag, Stars, requireAuthGate } from '../components';
+import { useI18n } from '../i18n';
 
 /** Metrics we can only show when the API actually computes them. */
 function metric(value: number | null | undefined): string {
@@ -11,17 +12,6 @@ function rate(value: number | null | undefined): string {
   return value === null || value === undefined || value <= 0 ? '—' : `${value.toFixed(1)}%`;
 }
 
-/** Honest loading state — the shared `<Spinner />` has no styling in the sheet. */
-function Loading({ what }: { what: string }) {
-  return (
-    <View title="Loading…" sub={`Fetching ${what}`}>
-      <div className="card">
-        <div className="empty">Fetching {what}…</div>
-      </div>
-    </View>
-  );
-}
-
 /**
  * Supplier profile — verification tier, the honest trading record, the
  * capability tags the supplier declared, and their live lots. A figure the
@@ -29,6 +19,7 @@ function Loading({ what }: { what: string }) {
  * would read as a real score.
  */
 export default function SupplierDetail({ params }: { params?: { id?: string } }) {
+  const { t, locale } = useI18n();
   const [matched, routeParams] = useRoute<{ id: string }>('/suppliers/:id');
   const id = Number(params?.id ?? (matched ? routeParams.id : NaN));
   const { data: s, isLoading, error } = useSupplier(Number.isFinite(id) ? id : undefined);
@@ -36,11 +27,20 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
   const { data: me } = useMe();
   const [, navigate] = useLocation();
 
-  if (isLoading) return <Loading what="this supplier profile" />;
+  if (isLoading) {
+    return (
+      <View title={t('common.loading')} sub={t('product.fetching', { what: t('supplierDetail.loadingThis') })}>
+        <div className="card">
+          <div className="empty">{t('product.fetching', { what: t('supplierDetail.loadingThis') })}</div>
+        </div>
+      </View>
+    );
+  }
+
   if (error || !s) {
     return (
-      <Empty title="Supplier not found">
-        <Link href="/suppliers" className="btn btn-sm btn-grey" style={{ marginTop: 10 }}>Back to directory</Link>
+      <Empty title={t('supplierDetail.notFound')}>
+        <Link href="/suppliers" className="btn btn-sm btn-grey" style={{ marginTop: 10 }}>{t('supplierDetail.backToDirectory')}</Link>
       </Empty>
     );
   }
@@ -52,14 +52,14 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
       title={s.companyName}
       sub={
         <span>
-          {s.country}{s.city ? ` · ${s.city}` : ''} · Trading since {s.since ?? '—'} ·{' '}
-          <Link href="/suppliers" style={{ fontSize: 12.5 }}>← Back to directory</Link>
+          {s.country}{s.city ? ` · ${s.city}` : ''} · {t('supplierDetail.tradingSince', { year: s.since ?? '—' })} ·{' '}
+          <Link href="/suppliers" style={{ fontSize: 12.5 }}>{t('supplierDetail.backShort')}</Link>
         </span>
       }
       actions={
         <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          {s.verifiedLevel >= 2 && <Verified label={s.verifiedLevel >= 3 ? 'Verified · level 3' : 'Verified'} />}
-          {s.verifiedLevel === 1 && <span className="pill p-grey">Registered</span>}
+          {s.verifiedLevel >= 2 && <Verified label={s.verifiedLevel >= 3 ? t('supplierDetail.verifiedL3') : undefined} />}
+          {s.verifiedLevel === 1 && <span className="pill p-grey">{t('supplierDetail.registered')}</span>}
           {s.dataSource === 'demo' && <DemoTag />}
         </span>
       }
@@ -68,53 +68,57 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
         <div className="card stat">
           <div>
             <div className="v">{s.rating > 0 ? <Stars rating={s.rating} /> : '—'}</div>
-            <div className="l">Buyer rating{s.rating > 0 ? ` ${s.rating.toFixed(1)} / 5` : ' — not rated yet'}</div>
+            <div className="l">
+              {s.rating > 0
+                ? `${t('supplierDetail.buyerRating')} ${s.rating.toFixed(1)} / 5`
+                : `${t('supplierDetail.buyerRating')} — ${t('supplierDetail.notRated')}`}
+            </div>
           </div>
         </div>
         <div className="card stat">
           <div>
             <div className="v">{metric(s.inspectionsCount)}</div>
-            <div className="l">On-site inspections</div>
+            <div className="l">{t('supplierDetail.inspections')}</div>
           </div>
         </div>
         <div className="card stat">
           <div>
             <div className="v">{rate(s.fulfillmentRate)}</div>
-            <div className="l">On-time fulfilment</div>
+            <div className="l">{t('supplierDetail.fulfilment')}</div>
           </div>
         </div>
         <div className="card stat">
           <div>
-            <div className="v">{s.productCount.toLocaleString()}</div>
-            <div className="l">Active listings</div>
+            <div className="v">{s.productCount.toLocaleString(locale)}</div>
+            <div className="l">{t('supplierDetail.activeListings')}</div>
           </div>
         </div>
         <div className="card stat">
           <div>
-            <div className="v">{s.verifiedLevel > 0 ? `Level ${s.verifiedLevel}` : '—'}</div>
-            <div className="l">Verification tier</div>
+            <div className="v">{s.verifiedLevel > 0 ? t('product.levelN', { n: s.verifiedLevel }) : '—'}</div>
+            <div className="l">{t('supplierDetail.tier')}</div>
           </div>
         </div>
         <div className="card stat">
           <div>
             <div className="v">{s.trustScore > 0 ? Math.round(s.trustScore) : '—'}</div>
-            <div className="l">Trust score (0–100)</div>
+            <div className="l">{t('supplierDetail.trustScore')}</div>
           </div>
         </div>
       </div>
 
       <div className="cols3">
         <div className="card">
-          <div className="hd"><h2>About {s.companyName}</h2></div>
+          <div className="hd"><h2>{t('supplierDetail.about', { company: s.companyName })}</h2></div>
           <div className="bd">
             <p style={{ margin: 0 }}>
-              {s.description ?? 'This supplier has not published a company description yet.'}
+              {s.description ?? t('supplierDetail.noDescription')}
             </p>
             {s.tags.length > 0 && (
               <>
-                <div className="muted" style={{ margin: '12px 0 5px' }}>Declared capabilities</div>
+                <div className="muted" style={{ margin: '12px 0 5px' }}>{t('supplierDetail.capabilities')}</div>
                 <div className="row" style={{ gap: 5, flexWrap: 'wrap' }}>
-                  {s.tags.map((t) => <span key={t} className="pill p-grey">{t}</span>)}
+                  {s.tags.map((tag) => <span key={tag} className="pill p-grey">{tag}</span>)}
                 </div>
               </>
             )}
@@ -122,32 +126,32 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
         </div>
 
         <div className="card">
-          <div className="hd"><h2>Verification &amp; record</h2></div>
+          <div className="hd"><h2>{t('supplierDetail.record')}</h2></div>
           <table>
             <tbody>
               <tr>
-                <td className="muted">Verification tier</td>
-                <td style={{ textAlign: 'right' }}>{s.verifiedLevel > 0 ? `Level ${s.verifiedLevel}` : '—'}</td>
+                <td className="muted">{t('supplierDetail.tier')}</td>
+                <td style={{ textAlign: 'right' }}>{s.verifiedLevel > 0 ? t('product.levelN', { n: s.verifiedLevel }) : '—'}</td>
               </tr>
               <tr>
-                <td className="muted">Buyer rating</td>
+                <td className="muted">{t('supplierDetail.ratingLabel')}</td>
                 <td style={{ textAlign: 'right' }}>{s.rating > 0 ? `${s.rating.toFixed(1)} / 5` : '—'}</td>
               </tr>
               <tr>
-                <td className="muted">Inspections completed</td>
+                <td className="muted">{t('supplierDetail.inspectionsDone')}</td>
                 <td style={{ textAlign: 'right' }}>{metric(s.inspectionsCount)}</td>
               </tr>
               <tr>
-                <td className="muted">On-time fulfilment</td>
+                <td className="muted">{t('supplierDetail.fulfilment')}</td>
                 <td style={{ textAlign: 'right' }}>{rate(s.fulfillmentRate)}</td>
               </tr>
               <tr>
-                <td className="muted">Trading since</td>
+                <td className="muted">{t('product.tradingSince')}</td>
                 <td style={{ textAlign: 'right' }}>{s.since ?? '—'}</td>
               </tr>
               <tr>
-                <td className="muted">Active listings</td>
-                <td style={{ textAlign: 'right' }}>{s.productCount.toLocaleString()}</td>
+                <td className="muted">{t('supplierDetail.activeListings')}</td>
+                <td style={{ textAlign: 'right' }}>{s.productCount.toLocaleString(locale)}</td>
               </tr>
             </tbody>
           </table>
@@ -155,10 +159,10 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
 
         <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
           <div className="card">
-            <div className="hd"><h2>Contact</h2></div>
+            <div className="hd"><h2>{t('supplierDetail.contact')}</h2></div>
             <div className="bd">
               <p className="muted" style={{ margin: '0 0 10px' }}>
-                Inspection reports and verification documents are shared with members after first contact.
+                {t('supplierDetail.contactBody')}
               </p>
               <button
                 className="btn btn-gold"
@@ -170,22 +174,22 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
                   navigate('/rfqs');
                 }}
               >
-                Contact supplier
+                {t('supplierDetail.contactSupplier')}
               </button>
               <p className="hint" style={{ textAlign: 'center' }}>
-                {me ? 'Opens the RFQ exchange — the quote thread lives there.' : 'Members only · free to join'}
+                {me ? t('supplierDetail.contactHintSignedIn') : t('supplierDetail.contactHintGuest')}
               </p>
             </div>
           </div>
 
           <div className="card">
-            <div className="hd"><h2>Trade services</h2></div>
+            <div className="hd"><h2>{t('supplierDetail.services')}</h2></div>
             <div className="bd grid" style={{ gridTemplateColumns: '1fr', gap: 6 }}>
               {[
-                'Factory inspection before payment',
-                'Laboratory testing and material analysis',
-                'Container loading supervision',
-                'Export documentation support',
+                t('supplierDetail.service1'),
+                t('supplierDetail.service2'),
+                t('supplierDetail.service3'),
+                t('supplierDetail.service4'),
               ].map((line) => (
                 <div key={line} className="row" style={{ gap: 7, alignItems: 'flex-start' }}>
                   <span className="pill p-green">✓</span>
@@ -199,19 +203,17 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
 
       <div className="card" style={{ marginTop: 12 }}>
         <div className="hd">
-          <h2>Stock from {s.companyName}</h2>
+          <h2>{t('supplierDetail.stockFrom', { company: s.companyName })}</h2>
           <span className="link muted">
-            {products.isLoading ? 'Loading…' : `${mine.length} shown`}
+            {products.isLoading ? t('common.loading') : t('supplierDetail.shown', { n: mine.length.toLocaleString(locale) })}
           </span>
         </div>
         {products.isLoading ? (
-          <div className="empty">Loading live lots…</div>
+          <div className="empty">{t('supplierDetail.loadingLots')}</div>
         ) : mine.length === 0 ? (
           <div className="empty">
-            <b>No active listings shown</b>
-            The API reports {s.productCount.toLocaleString()} listing{s.productCount === 1 ? '' : 's'} for this
-            supplier, but none came back in the current listing view. Post a request through the RFQ exchange
-            to ask about their catalogue.
+            <b>{t('supplierDetail.noneShown')}</b>
+            {t('supplierDetail.noneShownBody', { n: s.productCount.toLocaleString(locale) })}
           </div>
         ) : (
           <div className="bd">

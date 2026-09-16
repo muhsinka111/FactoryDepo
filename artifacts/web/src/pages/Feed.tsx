@@ -162,7 +162,7 @@ export default function Feed() {
               <button className="btn btn-sm btn-grey" onClick={clear}>{t('action.clearFilters')}</button>
             )}
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              {products.isLoading ? '—' : t('listings.count', { n: total.toLocaleString(locale) })}
+              {products.isLoading ? '—' : t('feed.lotsCount', { n: total.toLocaleString(locale) })}
             </span>
           </div>
         </div>

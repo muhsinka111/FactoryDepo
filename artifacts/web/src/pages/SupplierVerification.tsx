@@ -16,6 +16,7 @@ import {
   Verified,
   requireAuthGate,
 } from '../components';
+import { useI18n, type DictKey } from '../i18n';
 
 /**
  * Supplier verification — the supplier's own side of the verification desk.
@@ -34,6 +35,9 @@ import {
  *
  * Counts in the stats row are plain counts of the rows this API returned, and are
  * '—' while loading — never a placeholder number.
+ *
+ * Every document type below keeps its canonical English value (that is what the
+ * API stores and returns); only the label shown to the user is translated.
  */
 
 const DOC_TYPES = [
@@ -44,42 +48,20 @@ const DOC_TYPES = [
   'Export Licence',
 ] as const;
 
-const HELP: { status: string; title: string; state: string }[] = [
-  {
-    status: 'missing',
-    title: 'Not filed',
-    state: 'Nothing filed yet, or the document was never submitted.',
-  },
-  {
-    status: 'submitted',
-    title: 'Awaiting review',
-    state: 'Filed and waiting in the review queue. No badge is shown to buyers yet.',
-  },
-  {
-    status: 'approved',
-    title: 'Approved',
-    state: 'A reviewer checked it against the document itself. This is what buyers see.',
-  },
-  {
-    status: 'rejected',
-    title: 'Sent back',
-    state: 'Rejected with a note. Fix the document and submit it again.',
-  },
+const DOC_LABEL: Record<string, DictKey> = {
+  'Business Licence': 'verify.doc.businessLicence',
+  'Tax Certificate': 'verify.doc.taxCertificate',
+  'Factory Audit Report': 'verify.doc.factoryAudit',
+  'Product Certification': 'verify.doc.productCert',
+  'Export Licence': 'verify.doc.exportLicence',
+};
+
+const HELP: { status: string; title: DictKey; state: DictKey }[] = [
+  { status: 'missing', title: 'verify.help.missing.title', state: 'verify.help.missing.state' },
+  { status: 'submitted', title: 'verify.help.submitted.title', state: 'verify.help.submitted.state' },
+  { status: 'approved', title: 'verify.help.approved.title', state: 'verify.help.approved.state' },
+  { status: 'rejected', title: 'verify.help.rejected.title', state: 'verify.help.rejected.state' },
 ];
-
-function shortDate(iso: string | null): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function errorText(e: unknown, fallback: string): string {
-  const err = e as Partial<ApiError> | undefined;
-  if (err?.message) return err.message;
-  return fallback;
-}
 
 /** Which document a supplier should file next — derived, not guessed. */
 function nextGap(docs: SupplierDoc[]): string | null {
@@ -93,7 +75,14 @@ function nextGap(docs: SupplierDoc[]): string | null {
   return needsWork ?? null;
 }
 
+function errorText(e: unknown, fallback: string): string {
+  const err = e as Partial<ApiError> | undefined;
+  if (err?.message) return err.message;
+  return fallback;
+}
+
 export default function SupplierVerification() {
+  const { t, locale } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
   const isSupplier = user?.role === 'supplier';
@@ -107,9 +96,23 @@ export default function SupplierVerification() {
   const [err, setErr] = useState('');
   const [notice, setNotice] = useState('');
 
+  /** English canonical value → translated label (falls back to the value itself). */
+  const docLabel = (value: string): string => {
+    const key = DOC_LABEL[value];
+    return key ? t(key) : value;
+  };
+
+  const shortDate = (iso: string | null): string => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? '—'
+      : d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   if (meLoading) {
     return (
-      <View title="Verification">
+      <View title={t('verify.title')}>
         <Spinner />
       </View>
     );
@@ -117,20 +120,19 @@ export default function SupplierVerification() {
 
   if (!loggedIn || !user) {
     return (
-      <View title="Verification" sub="Documents buyers rely on before they commit money">
-        <Empty title="You are not signed in">
-          Verification documents belong to a supplier account and are never public in raw form.
-          Sign in to file or refresh yours.
+      <View title={t('verify.title')} sub={t('verify.signInSub')}>
+        <Empty title={t('verify.notSignedIn')}>
+          {t('verify.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <Link
               href="/sign-in?next=%2Fsupplier%2Fverification"
               className="btn btn-sm btn-primary"
               onClick={() => requireAuthGate()}
             >
-              Sign in
+              {t('action.signIn')}
             </Link>
             <Link href="/sign-up?next=%2Fsupplier%2Fverification" className="btn btn-sm btn-ghost">
-              Create a supplier account
+              {t('verify.createSupplierAccount')}
             </Link>
           </div>
         </Empty>
@@ -140,11 +142,11 @@ export default function SupplierVerification() {
 
   if (!isSupplier) {
     return (
-      <View title="Verification" sub="Documents buyers rely on before they commit money">
-        <Empty title="Supplier accounts only">
-          Your account is a {user.role} account, so there is no supplier checklist to complete.
+      <View title={t('verify.title')} sub={t('verify.signInSub')}>
+        <Empty title={t('verify.supplierOnly')}>
+          {t('verify.supplierOnlyBody', { role: user.role })}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/suppliers" className="btn btn-sm btn-ghost">See verified suppliers</Link>
+            <Link href="/suppliers" className="btn btn-sm btn-ghost">{t('verify.seeSuppliers')}</Link>
           </div>
         </Empty>
       </View>
@@ -155,7 +157,7 @@ export default function SupplierVerification() {
   const approved = items.filter((d) => d.status === 'approved');
   const waiting = items.filter((d) => d.status === 'submitted');
   const actionNeeded = items.filter((d) => d.status === 'missing' || d.status === 'rejected');
-  const allCoreApproved = DOC_TYPES.every((t) => items.some((d) => d.docType === t && d.status === 'approved'));
+  const allCoreApproved = DOC_TYPES.every((type) => items.some((d) => d.docType === type && d.status === 'approved'));
   const anyApproved = approved.length > 0;
   const gap = nextGap(items);
 
@@ -172,32 +174,30 @@ export default function SupplierVerification() {
       });
       setFileKey('');
       setNote('');
-      setNotice(
-        `${docType} filed. Status is now "submitted" and it is waiting in the review queue — a badge only appears for buyers once a reviewer approves it.`,
-      );
+      setNotice(t('verify.filedNotice', { doc: docLabel(docType) }));
     } catch (e) {
-      setErr(errorText(e, 'Could not file this document.'));
+      setErr(errorText(e, t('verify.errFile')));
     }
   };
 
   return (
     <View
-      title="Verification"
-      sub="File your documents, track the review decision, and see what buyers are told about it"
+      title={t('verify.title')}
+      sub={t('verify.sub')}
       actions={
         <button
           className="btn btn-sm btn-grey"
           onClick={() => docs.refetch()}
           disabled={docs.isFetching}
         >
-          {docs.isFetching ? 'Refreshing…' : 'Refresh'}
+          {docs.isFetching ? t('action.refreshing') : t('action.refresh')}
         </button>
       }
     >
       {notice && (
         <div className="stripe">
           <span>{notice}</span>
-          <button className="x" onClick={() => setNotice('')} aria-label="Dismiss">✕</button>
+          <button className="x" onClick={() => setNotice('')} aria-label={t('action.dismiss')}>✕</button>
         </div>
       )}
 
@@ -205,31 +205,31 @@ export default function SupplierVerification() {
         <div className="card stat">
           <span className="ic" aria-hidden="true">🛡️</span>
           <div>
-            <div className="v">{docs.isLoading ? '—' : approved.length}</div>
-            <div className="l">Documents approved</div>
+            <div className="v">{docs.isLoading ? '—' : approved.length.toLocaleString(locale)}</div>
+            <div className="l">{t('verify.approved')}</div>
           </div>
         </div>
         <div className="card stat">
           <span className="ic" aria-hidden="true">⏳</span>
           <div>
-            <div className="v">{docs.isLoading ? '—' : waiting.length}</div>
-            <div className="l">Waiting for a reviewer</div>
+            <div className="v">{docs.isLoading ? '—' : waiting.length.toLocaleString(locale)}</div>
+            <div className="l">{t('verify.waiting')}</div>
           </div>
         </div>
         <div className="card stat">
           <span className="ic" aria-hidden="true">📄</span>
           <div>
-            <div className="v">{docs.isLoading ? '—' : actionNeeded.length}</div>
-            <div className="l">Missing or sent back</div>
+            <div className="v">{docs.isLoading ? '—' : actionNeeded.length.toLocaleString(locale)}</div>
+            <div className="l">{t('verify.actionNeeded')}</div>
           </div>
         </div>
         <div className="card stat">
           <span className="ic" aria-hidden="true">🏅</span>
           <div>
             <div className="v">
-              {docs.isLoading ? '—' : items.length === 0 ? '—' : allCoreApproved ? 'Confirmed' : 'Pending'}
+              {docs.isLoading ? '—' : items.length === 0 ? '—' : allCoreApproved ? t('verify.confirmed') : t('verify.pending')}
             </div>
-            <div className="l">Core documents approved</div>
+            <div className="l">{t('verify.coreApproved')}</div>
           </div>
         </div>
       </div>
@@ -237,9 +237,9 @@ export default function SupplierVerification() {
       <div className="cols">
         <div className="card">
           <div className="hd">
-            <b>Your documents</b>
+            <b>{t('verify.yourDocs')}</b>
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              {docs.isLoading ? '—' : `${items.length} on file`}
+              {docs.isLoading ? '—' : t('verify.onFile', { n: items.length.toLocaleString(locale) })}
             </span>
           </div>
 
@@ -247,29 +247,27 @@ export default function SupplierVerification() {
             <Spinner />
           ) : docs.isError ? (
             <div className="bd">
-              <Empty title="Documents could not be loaded">
-                Could not load your verification documents — try again. If this keeps failing, your
-                account may not have a supplier profile yet.
+              <Empty title={t('verify.loadErrorTitle')}>
+                {t('verify.loadErrorBody')}
                 <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-                  <button className="btn btn-sm btn-grey" onClick={() => docs.refetch()}>Try again</button>
+                  <button className="btn btn-sm btn-grey" onClick={() => docs.refetch()}>{t('action.tryAgain')}</button>
                 </div>
               </Empty>
             </div>
           ) : items.length === 0 ? (
             <div className="empty">
-              <b>No documents on file</b>
-              Nothing has been filed yet, so no verification badge can be shown to buyers. Use the
-              form to file your first document — start with {DOC_TYPES[0]}.
+              <b>{t('verify.emptyTitle')}</b>
+              {t('verify.emptyBody', { first: docLabel(DOC_TYPES[0]) })}
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table>
                 <thead>
                   <tr>
-                    <th>Document</th>
-                    <th>Status</th>
-                    <th className="hidem">Reviewer note</th>
-                    <th className="hidem">Reviewed</th>
+                    <th>{t('verify.col.document')}</th>
+                    <th>{t('verify.col.status')}</th>
+                    <th className="hidem">{t('verify.col.note')}</th>
+                    <th className="hidem">{t('verify.col.reviewed')}</th>
                     <th />
                   </tr>
                 </thead>
@@ -277,10 +275,12 @@ export default function SupplierVerification() {
                   {items.map((d) => (
                     <tr key={d.id}>
                       <td>
-                        <b>{d.docType}</b>
+                        <b>{docLabel(d.docType)}</b>
                         <div className="muted">
-                          filed {shortDate(d.createdAt)}
-                          {d.fileKey ? ` · reference: ${d.fileKey}` : ' · no reference given'}
+                          {t('verify.filed', { date: shortDate(d.createdAt) })}
+                          {d.fileKey
+                            ? ` · ${t('verify.reference', { ref: d.fileKey })}`
+                            : ` · ${t('verify.noReference')}`}
                         </div>
                       </td>
                       <td><StatusChip status={d.status} /></td>
@@ -296,7 +296,7 @@ export default function SupplierVerification() {
                             setNote('');
                           }}
                         >
-                          {d.status === 'approved' ? 'Refresh' : 'Resubmit'}
+                          {d.status === 'approved' ? t('action.refresh') : t('verify.resubmit')}
                         </button>
                       </td>
                     </tr>
@@ -308,58 +308,56 @@ export default function SupplierVerification() {
 
           <div className="bd" style={{ borderTop: '1px solid var(--line-2)' }}>
             <div className="muted" style={{ fontSize: 11.5 }}>
-              Only the documents the API returns for your supplier profile are listed here. Missing
-              types simply have no row yet — filing one creates it.
+              {t('verify.tierFootnote')}
             </div>
           </div>
         </div>
 
         <div className="card">
-          <div className="hd"><b>File or refresh a document</b></div>
+          <div className="hd"><b>{t('verify.fileTitle')}</b></div>
           <div className="bd">
             {err && <div className="errtext" style={{ marginBottom: 10 }} role="alert">{err}</div>}
 
             <div className="field">
-              <label htmlFor="doc-type">Document type <i>*</i></label>
+              <label htmlFor="doc-type">{t('verify.docType')} <i>*</i></label>
               <select
                 id="doc-type"
                 className="in"
                 value={docType}
                 onChange={(e) => { setDocType(e.target.value); setNotice(''); setErr(''); }}
               >
-                {DOC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {DOC_TYPES.map((type) => <option key={type} value={type}>{docLabel(type)}</option>)}
               </select>
               {existing && (
                 <div className="hint">
-                  You already have a row for {docType} — status{' '}
-                  <StatusChip status={existing.status} />. Filing again overwrites it and clears the
-                  earlier decision, so an approved document would need re-approval.
+                  {t('verify.existingHintPre', { doc: docLabel(docType) })}{' '}
+                  <StatusChip status={existing.status} />
+                  {t('verify.existingHintPost')}
                 </div>
               )}
             </div>
 
             <div className="field">
-              <label htmlFor="doc-ref">Reference / link to the document</label>
+              <label htmlFor="doc-ref">{t('verify.refLabel')}</label>
               <input
                 id="doc-ref"
                 className="in"
-                placeholder="https://…/business-licence.pdf or your file reference"
+                placeholder={t('verify.refPlaceholder')}
                 value={fileKey}
                 onChange={(e) => setFileKey(e.target.value)}
               />
               <div className="hint">
-                <b>File upload is not built.</b> Paste a link to the document, or a reference the
-                review team can follow up on. It is stored as-is and is not shown publicly.
+                <b>{t('verify.refHintLead')}</b> {t('verify.refHintTail')}
               </div>
             </div>
 
             <div className="field">
-              <label htmlFor="doc-note">Note for the reviewer</label>
+              <label htmlFor="doc-note">{t('verify.noteLabel')}</label>
               <textarea
                 id="doc-note"
                 className="in"
                 rows={3}
-                placeholder="What changed, why it is being refreshed, anything the reviewer should know…"
+                placeholder={t('verify.notePlaceholder')}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
@@ -372,16 +370,15 @@ export default function SupplierVerification() {
               disabled={submit.isPending || !docType}
             >
               {submit.isPending
-                ? 'Filing…'
+                ? t('verify.filing')
                 : existing
-                  ? `Resubmit ${docType}`
-                  : `Submit ${docType}`}
+                  ? t('verify.resubmitDoc', { doc: docLabel(docType) })
+                  : t('verify.submitDoc', { doc: docLabel(docType) })}
             </button>
 
             <div className="stripe" style={{ marginTop: 12, marginBottom: 0 }}>
               <span>
-                Submitting only puts the document in the queue. <b>A badge appears for buyers when a
-                reviewer approves it</b> — never on submission, and never automatically.
+                {t('verify.queueNoteLead')} <b>{t('verify.queueNoteStrong')}</b> {t('verify.queueNoteTail')}
               </span>
             </div>
           </div>
@@ -390,7 +387,7 @@ export default function SupplierVerification() {
 
       <div className="cols" style={{ marginTop: 12 }}>
         <div className="card">
-          <div className="hd"><b>What each status means</b></div>
+          <div className="hd"><b>{t('verify.statusMeans')}</b></div>
           <div className="bd">
             <table>
               <tbody>
@@ -400,7 +397,7 @@ export default function SupplierVerification() {
                       <StatusChip status={h.status} />
                     </td>
                     <td className="muted">
-                      <b style={{ color: 'var(--ink)', fontWeight: 600 }}>{h.title}</b> — {h.state}
+                      <b style={{ color: 'var(--ink)', fontWeight: 600 }}>{t(h.title)}</b> — {t(h.state)}
                     </td>
                   </tr>
                 ))}
@@ -410,44 +407,40 @@ export default function SupplierVerification() {
         </div>
 
         <div className="card">
-          <div className="hd"><b>Verification tier</b></div>
+          <div className="hd"><b>{t('verify.tierTitle')}</b></div>
           <div className="bd">
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
               {allCoreApproved
-                ? <Verified label="Verified · every core document approved" />
+                ? <Verified label={t('verify.tierAll')} />
                 : anyApproved
-                  ? <Verified label="Verified · documents approved" />
-                  : <span className="pill p-grey">Not verified yet</span>}
+                  ? <Verified label={t('verify.tierSome')} />
+                  : <span className="pill p-grey">{t('verify.tierNone')}</span>}
             </div>
             <p className="muted" style={{ fontSize: 12.5, marginTop: 0 }}>
               {allCoreApproved
-                ? 'Every core document type on this page has been approved by a reviewer.'
+                ? t('verify.tierAllBody')
                 : anyApproved
-                  ? `At least one document is approved${approved.length > 1 ? ` (${approved.length})` : ''}; the remaining core types would strengthen the profile.`
-                  : 'No document has been approved yet, so buyers are shown no verification badge for your company.'}
+                  ? t('verify.tierSomeBody', { n: approved.length > 1 ? ` (${approved.length})` : '' })
+                  : t('verify.tierNoneBody')}
             </p>
             <p className="hint" style={{ marginTop: 0 }}>
-              The tier your account carries is set by the review team from the approved documents —
-              this screen reports the document statuses the API returns and does not compute a tier
-              number of its own. Buyers see a badge only for approved documents.
+              {t('verify.tierHint')}
             </p>
             {gap && !docs.isLoading && (
               <div className="stripe" style={{ marginBottom: 0 }}>
                 <span>
-                  Suggested next: <b>{gap}</b>{' '}
+                  {t('verify.suggested')} <b>{docLabel(gap)}</b>{' '}
                   <button
                     className="btn btn-sm btn-grey"
                     onClick={() => { setNotice(''); setDocType(gap); }}
                   >
-                    Select
+                    {t('verify.select')}
                   </button>
                 </span>
               </div>
             )}
             <p className="muted" style={{ fontSize: 11.5, marginBottom: 0, marginTop: 10 }}>
-              Buyers also see other suppliers&apos; ratings and inspection counts on their profiles.
-              Those figures are seeded marketplace data, not something this checklist produces — this
-              page deliberately shows none of them.
+              {t('verify.othersNote')}
             </p>
           </div>
         </div>

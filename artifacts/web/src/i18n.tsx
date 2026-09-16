@@ -156,6 +156,7 @@ export interface Dict {
   'action.createAccount': string;
   'action.creatingAccount': string;
   'action.backToExplore': string;
+  'action.open': string;
   'action.edit': string;
   'action.delete': string;
 
@@ -236,7 +237,9 @@ export interface Dict {
   'auth.seededLogin': string;
   'auth.fillIn': string;
   'auth.demoHintLead': string;
+  'auth.demoHintLead2': string;
   'auth.demoHintTail': string;
+  'auth.demoHintProduct': string;
   'auth.signInFailed': string;
   'auth.signUp.title': string;
   'auth.signUp.sub': string;
@@ -697,7 +700,8 @@ export interface Dict {
   'listings.col.posted': string;
   'listings.lotRef': string;
   'listings.noPhotoInline': string;
-  'listings.demoNote': string;
+  'listings.demoNoteLead': string;
+  'listings.demoNoteTail': string;
   'listings.updated': string;
   'listings.deleted': string;
   'listings.deleteTitle': string;
@@ -812,7 +816,8 @@ export interface Dict {
   'offers.reject': string;
   'offers.offerRef': string;
   'offers.answersOffer': string;
-  'offers.demoNote': string;
+  'offers.demoNoteLead': string;
+  'offers.demoNoteTail': string;
   'offers.counterTitle': string;
   'offers.counterBody': string;
   'offers.counterPrice': string;
@@ -846,6 +851,123 @@ export interface Dict {
   'offers.rejecting': string;
   'offers.rejectErr': string;
   'offers.rejectDone': string;
+
+  /* ---- buyer offers page (Offers.tsx) ---- */
+  'myoffers.titleSupplier': string;
+  'myoffers.titleAdmin': string;
+  'myoffers.titleBuyer': string;
+  'myoffers.subSupplier': string;
+  'myoffers.subAdmin': string;
+  'myoffers.subBuyer': string;
+  'myoffers.signInSub': string;
+  'myoffers.notSignedIn': string;
+  'myoffers.notSignedInBody': string;
+  'myoffers.loadErrorTitle': string;
+  'myoffers.loadErrorBody': string;
+  'myoffers.trying': string;
+  'myoffers.emptyTitle': string;
+  'myoffers.emptySupplier': string;
+  'myoffers.emptyAdmin': string;
+  'myoffers.emptyBuyer': string;
+  'myoffers.browseStock': string;
+  'myoffers.count': string;
+  'myoffers.stillOpen': string;
+  'myoffers.col.offer': string;
+  'myoffers.col.counterparty': string;
+  'myoffers.col.quantity': string;
+  'myoffers.col.unitPrice': string;
+  'myoffers.col.status': string;
+  'myoffers.col.date': string;
+  'myoffers.col.action': string;
+  'myoffers.counterTo': string;
+  'myoffers.seatSupplier': string;
+  'myoffers.seatBuyer': string;
+  'myoffers.noAction': string;
+  'myoffers.confirmReject': string;
+  'myoffers.counter': string;
+  'myoffers.accept': string;
+  'myoffers.reject': string;
+  'myoffers.counterTitle': string;
+  'myoffers.counterDoneTitle': string;
+  'myoffers.counterDoneBody': string;
+  'myoffers.backToOffers': string;
+  'myoffers.counterLead': string;
+  'myoffers.perUnit': string;
+  'myoffers.inCurrency': string;
+  'myoffers.originally': string;
+  'myoffers.messageLabel': string;
+  'myoffers.messagePlaceholder': string;
+  'myoffers.sendCounter': string;
+  'myoffers.sending': string;
+  'myoffers.errInvalid': string;
+  'myoffers.errCounter': string;
+  'myoffers.acceptTitle': string;
+  'myoffers.acceptLead': string;
+  'myoffers.acceptStripeLead': string;
+  'myoffers.acceptStripeStrong': string;
+  'myoffers.acceptStripeTail': string;
+  'myoffers.acceptHint': string;
+  'myoffers.acceptCta': string;
+  'myoffers.accepting': string;
+  'myoffers.errAccept': string;
+  'myoffers.accepted': string;
+  'myoffers.viewOrders': string;
+  'myoffers.errReject': string;
+
+  /* ---- shipments ---- */
+  'ship.title': string;
+  'ship.sub': string;
+  'ship.signInSub': string;
+  'ship.notSignedIn': string;
+  'ship.notSignedInBody': string;
+  'ship.loadErrorTitle': string;
+  'ship.loadErrorBody': string;
+  'ship.emptyTitle': string;
+  'ship.emptyBody': string;
+  'ship.statInTransit': string;
+  'ship.statDelivered': string;
+  'ship.statPending': string;
+  'ship.col.shipment': string;
+  'ship.col.order': string;
+  'ship.col.carrier': string;
+  'ship.col.mode': string;
+  'ship.col.status': string;
+  'ship.col.eta': string;
+  'ship.col.updated': string;
+  'ship.milestones': string;
+  'ship.tracking': string;
+  'ship.noTracking': string;
+  'ship.docs': string;
+  'ship.noDocs': string;
+
+  /* ---- saved ---- */
+  'saved.title': string;
+  'saved.sub': string;
+  'saved.signInSub': string;
+  'saved.notSignedIn': string;
+  'saved.notSignedInBody': string;
+  'saved.emptyTitle': string;
+  'saved.emptyBody': string;
+  'saved.browse': string;
+  'saved.remove': string;
+  'saved.removed': string;
+  'saved.loadErrorTitle': string;
+  'saved.count': string;
+
+  /* ---- notifications ---- */
+  'notes.title': string;
+  'notes.sub': string;
+  'notes.signInSub': string;
+  'notes.notSignedIn': string;
+  'notes.notSignedInBody': string;
+  'notes.emptyTitle': string;
+  'notes.emptyBody': string;
+  'notes.loadErrorTitle': string;
+  'notes.markAll': string;
+  'notes.markRead': string;
+  'notes.unread': string;
+  'notes.allRead': string;
+  'notes.count': string;
 
   /* ---- supplier verification ---- */
   'verify.title': string;
@@ -892,6 +1014,7 @@ export interface Dict {
   'verify.resubmitDoc': string;
   'verify.submitDoc': string;
   'verify.queueNoteLead': string;
+  'verify.queueNoteStrong': string;
   'verify.queueNoteTail': string;
   'verify.filedNotice': string;
   'verify.errFile': string;
@@ -969,6 +1092,7 @@ const en: Dict = {
   'action.createAccount': 'Create an account',
   'action.creatingAccount': 'Creating account…',
   'action.backToExplore': 'Back to explore',
+  'action.open': 'Open',
   'action.edit': 'Edit',
   'action.delete': 'Delete',
 
@@ -1048,8 +1172,10 @@ const en: Dict = {
   'auth.seededLogin': 'Seeded review login',
   'auth.fillIn': 'Fill in',
   'auth.demoHintLead': 'is a seeded',
+  'auth.demoHintLead2': 'demo',
   'auth.demoHintTail':
     'account for reviewing the admin console. It is not a real seller — do not enter real credentials.',
+  'auth.demoHintProduct': 'admin',
   'auth.signInFailed': 'Login failed',
   'auth.signUp.title': 'Create an account',
   'auth.signUp.sub': 'One account to buy, sell, or provide inspection and logistics services.',
@@ -1515,8 +1641,9 @@ const en: Dict = {
   'listings.col.posted': 'Posted',
   'listings.lotRef': 'lot #{id}',
   'listings.noPhotoInline': 'no photo',
-  'listings.demoNote':
-    'A lot marked Demo is seed data supplied by the marketplace, not stock posted by you. Deleting it removes it for everyone.',
+  'listings.demoNoteLead': 'A lot marked',
+  'listings.demoNoteTail':
+    'is seed data supplied by the marketplace, not stock posted by you. Deleting it removes it for everyone.',
   'listings.updated': 'Listing updated.',
   'listings.deleted': 'Listing deleted. It is no longer on the marketplace.',
   'listings.deleteTitle': 'Delete this listing?',
@@ -1637,8 +1764,9 @@ const en: Dict = {
   'offers.reject': 'Reject',
   'offers.offerRef': 'offer #{id}',
   'offers.answersOffer': 'answers offer #{id}',
-  'offers.demoNote':
-    'A row tagged Demo sits on a seeded lot, not stock you posted. Accepting it still creates a real order — check the lot before you commit.',
+  'offers.demoNoteLead': 'A row tagged',
+  'offers.demoNoteTail':
+    'sits on a seeded lot, not stock you posted. Accepting it still creates a real order — check the lot before you commit.',
   'offers.counterTitle': 'Counter offer #{id}',
   'offers.counterBody':
     '{buyer} offered {price} / {qty} on {product}. Your answer becomes a new linked offer; the buyer’s terms stay on the record.',
@@ -1727,8 +1855,8 @@ const en: Dict = {
   'verify.resubmitDoc': 'Resubmit {doc}',
   'verify.submitDoc': 'Submit {doc}',
   'verify.queueNoteLead': 'Submitting only puts the document in the queue.',
-  'verify.queueNoteTail':
-    'A badge appears for buyers when a reviewer approves it — never on submission, and never automatically.',
+  'verify.queueNoteStrong': 'A badge appears for buyers when a reviewer approves it',
+  'verify.queueNoteTail': '— never on submission, and never automatically.',
   'verify.filedNotice':
     '{doc} filed. Status is now "submitted" and it is waiting in the review queue — a badge only appears for buyers once a reviewer approves it.',
   'verify.errFile': 'Could not file this document.',
@@ -1809,6 +1937,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'action.createAccount': 'Hesap oluştur',
   'action.creatingAccount': 'Hesap oluşturuluyor…',
   'action.backToExplore': 'Keşfete dön',
+  'action.open': 'Aç',
   'action.edit': 'Düzenle',
   'action.delete': 'Sil',
 
@@ -1889,8 +2018,10 @@ const tr: Partial<Record<DictKey, string>> = {
   'auth.seededLogin': 'Örnek inceleme hesabı',
   'auth.fillIn': 'Doldur',
   'auth.demoHintLead': 'hazır bir',
+  'auth.demoHintLead2': 'demo',
   'auth.demoHintTail':
     'hesabıdır ve yönetim konsolunu incelemek içindir. Gerçek bir satıcı değildir — gerçek bilgilerinizi girmeyin.',
+  'auth.demoHintProduct': 'yönetici',
   'auth.signInFailed': 'Giriş başarısız',
   'auth.signUp.title': 'Hesap oluştur',
   'auth.signUp.sub': 'Satın almak, satmak veya denetim ve lojistik hizmeti vermek için tek hesap.',
@@ -1974,6 +2105,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'feed.sub': 'Doğrulanmış fabrikalardan hazır stok, artık ve fazla lotlar — en yeniler önce.',
   'feed.sellStock': 'Stok sat',
   'feed.postRequest': 'Talep yayınla',
+  'feed.lotsCount': '{n} lot',
   'feed.lotsMatch': 'lot filtrelerinizle eşleşiyor',
   'feed.verifiedSuppliers': 'doğrulanmış tedarikçi',
   'feed.openRequests': 'açık talep',
@@ -2353,8 +2485,9 @@ const tr: Partial<Record<DictKey, string>> = {
   'listings.col.posted': 'Yayınlandı',
   'listings.lotRef': 'lot #{id}',
   'listings.noPhotoInline': 'fotoğraf yok',
-  'listings.demoNote':
-    'Demo işaretli bir lot, sizin yayınladığınız stok değil pazar yerinin sağladığı örnek veridir. Silmek onu herkes için kaldırır.',
+  'listings.demoNoteLead': 'Demo işaretli bir lot,',
+  'listings.demoNoteTail':
+    'sizin yayınladığınız stok değil pazar yerinin sağladığı örnek veridir. Silmek onu herkes için kaldırır.',
   'listings.updated': 'İlan güncellendi.',
   'listings.deleted': 'İlan silindi. Artık pazar yerinde değil.',
   'listings.deleteTitle': 'Bu ilan silinsin mi?',
@@ -2475,8 +2608,9 @@ const tr: Partial<Record<DictKey, string>> = {
   'offers.reject': 'Reddet',
   'offers.offerRef': 'teklif #{id}',
   'offers.answersOffer': '#{id} numaralı teklifi yanıtlıyor',
-  'offers.demoNote':
-    'Demo etiketli satır, sizin yayınladığınız stok değil örnek bir lot üzerindedir. Kabul etmek yine gerçek bir sipariş oluşturur — bağlanmadan önce lotu kontrol edin.',
+  'offers.demoNoteLead': 'Demo etiketli satır,',
+  'offers.demoNoteTail':
+    'sizin yayınladığınız stok değil örnek bir lot üzerindedir. Kabul etmek yine gerçek bir sipariş oluşturur — bağlanmadan önce lotu kontrol edin.',
   'offers.counterTitle': 'Karşı teklif #{id}',
   'offers.counterBody':
     '{buyer}, {product} için {qty} adede {price} teklif etti. Yanıtınız yeni ve bağlantılı bir teklif olur; alıcının koşulları kayıtta kalır.',
@@ -2564,8 +2698,8 @@ const tr: Partial<Record<DictKey, string>> = {
   'verify.resubmitDoc': '{doc} belgesini yeniden gönder',
   'verify.submitDoc': '{doc} belgesini gönder',
   'verify.queueNoteLead': 'Göndermek belgeyi yalnızca kuyruğa alır.',
-  'verify.queueNoteTail':
-    'Alıcılara rozet, bir inceleyici onayladığında görünür — gönderimde asla ve hiçbir zaman otomatik olarak değil.',
+  'verify.queueNoteStrong': 'Alıcılara rozet, bir inceleyici onayladığında görünür',
+  'verify.queueNoteTail': '— gönderimde asla ve hiçbir zaman otomatik olarak değil.',
   'verify.filedNotice':
     '{doc} dosyalandı. Durum artık "gönderildi" ve inceleme kuyruğunda bekliyor — alıcılara rozet yalnızca bir inceleyici onayladığında görünür.',
   'verify.errFile': 'Bu belge dosyalanamadı.',
@@ -2641,6 +2775,7 @@ const ar: Partial<Record<DictKey, string>> = {
   'action.createAccount': 'إنشاء حساب',
   'action.creatingAccount': 'جارٍ إنشاء الحساب…',
   'action.backToExplore': 'العودة إلى الاستكشاف',
+  'action.open': 'فتح',
   'action.edit': 'تعديل',
   'action.delete': 'حذف',
 
@@ -2721,8 +2856,10 @@ const ar: Partial<Record<DictKey, string>> = {
   'auth.seededLogin': 'حساب مراجعة تجريبي',
   'auth.fillIn': 'تعبئة',
   'auth.demoHintLead': 'هو',
+  'auth.demoHintLead2': 'تجريبي',
   'auth.demoHintTail':
     'حساب تجريبي لمراجعة لوحة الإدارة. ليس بائعًا حقيقيًا — لا تُدخل بيانات اعتماد حقيقية.',
+  'auth.demoHintProduct': 'مدير',
   'auth.signInFailed': 'فشل تسجيل الدخول',
   'auth.signUp.title': 'إنشاء حساب',
   'auth.signUp.sub': 'حساب واحد للشراء أو البيع أو تقديم خدمات التفتيش والخدمات اللوجستية.',
@@ -2805,6 +2942,7 @@ const ar: Partial<Record<DictKey, string>> = {
   'feed.sub': 'مخزون جاهز ودفعات فائضة من مصانع موثّقة — الأحدث أولًا.',
   'feed.sellStock': 'بِع مخزونًا',
   'feed.postRequest': 'انشر طلبًا',
+  'feed.lotsCount': '{n} دفعة',
   'feed.lotsMatch': 'دفعة تطابق مرشحاتك',
   'feed.verifiedSuppliers': 'مورد موثّق',
   'feed.openRequests': 'طلب مفتوح',
@@ -3182,8 +3320,9 @@ const ar: Partial<Record<DictKey, string>> = {
   'listings.col.posted': 'تاريخ النشر',
   'listings.lotRef': 'دفعة #{id}',
   'listings.noPhotoInline': 'لا توجد صورة',
-  'listings.demoNote':
-    'الدفعة المعلّمة بـ «تجريبي» بيانات تجريبية من السوق، وليست مخزونًا نشرته أنت. حذفها يزيلها للجميع.',
+  'listings.demoNoteLead': 'الدفعة المعلّمة بـ',
+  'listings.demoNoteTail':
+    'بيانات تجريبية من السوق، وليست مخزونًا نشرته أنت. حذفها يزيلها للجميع.',
   'listings.updated': 'تم تحديث الإعلان.',
   'listings.deleted': 'تم حذف الإعلان. لم يعد موجودًا في السوق.',
   'listings.deleteTitle': 'حذف هذا الإعلان؟',
@@ -3304,8 +3443,9 @@ const ar: Partial<Record<DictKey, string>> = {
   'offers.reject': 'رفض',
   'offers.offerRef': 'عرض #{id}',
   'offers.answersOffer': 'يرد على العرض #{id}',
-  'offers.demoNote':
-    'الصف المعلّم بـ «تجريبي» يخص دفعة تجريبية لا مخزونًا نشرته أنت. قبوله يُنشئ طلبًا حقيقيًا مع ذلك — تحقق من الدفعة قبل الالتزام.',
+  'offers.demoNoteLead': 'الصف المعلّم بـ',
+  'offers.demoNoteTail':
+    'يخص دفعة تجريبية لا مخزونًا نشرته أنت. قبوله يُنشئ طلبًا حقيقيًا مع ذلك — تحقق من الدفعة قبل الالتزام.',
   'offers.counterTitle': 'عرض مضاد #{id}',
   'offers.counterBody':
     'قدّم {buyer} عرضًا بقيمة {price} مقابل {qty} على {product}. يصبح ردّك عرضًا جديدًا مرتبطًا؛ وتبقى شروط المشتري في السجل.',
@@ -3393,8 +3533,8 @@ const ar: Partial<Record<DictKey, string>> = {
   'verify.resubmitDoc': 'أعد إرسال {doc}',
   'verify.submitDoc': 'أرسل {doc}',
   'verify.queueNoteLead': 'الإرسال يضع المستند في قائمة الانتظار فقط.',
-  'verify.queueNoteTail':
-    'تظهر الشارة للمشترين عندما يعتمده مراجع — لا عند الإرسال أبدًا، ولا تلقائيًا.',
+  'verify.queueNoteStrong': 'تظهر الشارة للمشترين عندما يعتمده مراجع',
+  'verify.queueNoteTail': '— لا عند الإرسال أبدًا، ولا تلقائيًا.',
   'verify.filedNotice':
     'تم إيداع {doc}. الحالة الآن "مُرسل" وهو في قائمة المراجعة — ولا تظهر الشارة للمشترين إلا بعد اعتماد المراجع.',
   'verify.errFile': 'تعذّر إيداع هذا المستند.',
@@ -3469,6 +3609,7 @@ const ru: Partial<Record<DictKey, string>> = {
   'action.createAccount': 'Создать аккаунт',
   'action.creatingAccount': 'Создание аккаунта…',
   'action.backToExplore': 'Назад к каталогу',
+  'action.open': 'Открыть',
   'action.edit': 'Изменить',
   'action.delete': 'Удалить',
 
@@ -3549,8 +3690,10 @@ const ru: Partial<Record<DictKey, string>> = {
   'auth.seededLogin': 'Тестовый аккаунт для проверки',
   'auth.fillIn': 'Заполнить',
   'auth.demoHintLead': '— это тестовый',
+  'auth.demoHintLead2': 'демо',
   'auth.demoHintTail':
     'аккаунт для проверки админ-консоли. Это не настоящий продавец — не вводите реальные данные.',
+  'auth.demoHintProduct': 'администратора',
   'auth.signInFailed': 'Не удалось войти',
   'auth.signUp.title': 'Создать аккаунт',
   'auth.signUp.sub': 'Один аккаунт для закупок, продаж, инспекции и логистики.',
@@ -3634,6 +3777,7 @@ const ru: Partial<Record<DictKey, string>> = {
   'feed.sub': 'Готовый склад, излишки и сверхнормативные партии от проверенных заводов — сначала новые.',
   'feed.sellStock': 'Продать товар',
   'feed.postRequest': 'Разместить запрос',
+  'feed.lotsCount': '{n} партий',
   'feed.lotsMatch': 'партий по вашим фильтрам',
   'feed.verifiedSuppliers': 'проверенных поставщиков',
   'feed.openRequests': 'открытых запросов',
@@ -4012,8 +4156,9 @@ const ru: Partial<Record<DictKey, string>> = {
   'listings.col.posted': 'Размещено',
   'listings.lotRef': 'партия #{id}',
   'listings.noPhotoInline': 'нет фото',
-  'listings.demoNote':
-    'Партия с меткой «Демо» — демонстрационные данные площадки, а не размещённый вами товар. Удаление уберёт её для всех.',
+  'listings.demoNoteLead': 'Партия с меткой',
+  'listings.demoNoteTail':
+    '— демонстрационные данные площадки, а не размещённый вами товар. Удаление уберёт её для всех.',
   'listings.updated': 'Позиция обновлена.',
   'listings.deleted': 'Позиция удалена. Её больше нет на площадке.',
   'listings.deleteTitle': 'Удалить эту позицию?',
@@ -4134,8 +4279,9 @@ const ru: Partial<Record<DictKey, string>> = {
   'offers.reject': 'Отклонить',
   'offers.offerRef': 'предложение #{id}',
   'offers.answersOffer': 'ответ на предложение #{id}',
-  'offers.demoNote':
-    'Строка с меткой «Демо» относится к демонстрационной партии, а не к вашему товару. Принятие всё равно создаёт реальный заказ — проверьте партию перед решением.',
+  'offers.demoNoteLead': 'Строка с меткой',
+  'offers.demoNoteTail':
+    'относится к демонстрационной партии, а не к вашему товару. Принятие всё равно создаёт реальный заказ — проверьте партию перед решением.',
   'offers.counterTitle': 'Встречное предложение #{id}',
   'offers.counterBody':
     '{buyer} предложил {price} за {qty} по позиции {product}. Ваш ответ станет новым связанным предложением; условия покупателя остаются в истории.',
@@ -4223,8 +4369,8 @@ const ru: Partial<Record<DictKey, string>> = {
   'verify.resubmitDoc': 'Подать {doc} снова',
   'verify.submitDoc': 'Подать {doc}',
   'verify.queueNoteLead': 'Отправка лишь ставит документ в очередь.',
-  'verify.queueNoteTail':
-    'Знак появляется у покупателей, когда проверяющий его одобрит — никогда при отправке и никогда автоматически.',
+  'verify.queueNoteStrong': 'Знак появляется у покупателей, когда проверяющий его одобрит',
+  'verify.queueNoteTail': '— никогда при отправке и никогда автоматически.',
   'verify.filedNotice':
     '{doc} подан. Статус теперь «отправлен», документ ждёт в очереди проверки — знак появится у покупателей только после одобрения проверяющим.',
   'verify.errFile': 'Не удалось подать этот документ.',
@@ -4299,6 +4445,7 @@ const zh: Partial<Record<DictKey, string>> = {
   'action.createAccount': '创建账号',
   'action.creatingAccount': '正在创建账号…',
   'action.backToExplore': '返回浏览',
+  'action.open': '打开',
   'action.edit': '编辑',
   'action.delete': '删除',
 
@@ -4378,7 +4525,9 @@ const zh: Partial<Record<DictKey, string>> = {
   'auth.seededLogin': '预置审核账号',
   'auth.fillIn': '填入',
   'auth.demoHintLead': '是预置的',
+  'auth.demoHintLead2': '演示',
   'auth.demoHintTail': '账号，用于体验管理后台。它不是真实卖家 — 请勿输入真实凭据。',
+  'auth.demoHintProduct': '管理员',
   'auth.signInFailed': '登录失败',
   'auth.signUp.title': '创建账号',
   'auth.signUp.sub': '一个账号即可采购、销售，或提供检验与物流服务。',
@@ -4460,6 +4609,7 @@ const zh: Partial<Record<DictKey, string>> = {
   'feed.sub': '来自已认证工厂的现货、余料和超储货源 — 最新优先。',
   'feed.sellStock': '我要卖货',
   'feed.postRequest': '发布询价',
+  'feed.lotsCount': '{n} 条货源',
   'feed.lotsMatch': '条货源符合您的筛选',
   'feed.verifiedSuppliers': '家已认证供应商',
   'feed.openRequests': '条开放询价',
@@ -4830,7 +4980,8 @@ const zh: Partial<Record<DictKey, string>> = {
   'listings.col.posted': '发布日期',
   'listings.lotRef': '货源 #{id}',
   'listings.noPhotoInline': '暂无图片',
-  'listings.demoNote': '标注“演示”的货源是平台提供的演示数据，并非您发布的货源。删除会对所有人移除它。',
+  'listings.demoNoteLead': '标注',
+  'listings.demoNoteTail': '的货源是平台提供的演示数据，并非您发布的货源。删除会对所有人移除它。',
   'listings.updated': '货源已更新。',
   'listings.deleted': '货源已删除，平台上不再显示。',
   'listings.deleteTitle': '删除该货源？',
@@ -4945,7 +5096,8 @@ const zh: Partial<Record<DictKey, string>> = {
   'offers.reject': '拒绝',
   'offers.offerRef': '报价 #{id}',
   'offers.answersOffer': '回复报价 #{id}',
-  'offers.demoNote': '标注“演示”的行属于演示货源，并非您发布的货源。接受它仍会生成真实订单 — 请先核实货源。',
+  'offers.demoNoteLead': '标注',
+  'offers.demoNoteTail': '的行属于演示货源，并非您发布的货源。接受它仍会生成真实订单 — 请先核实货源。',
   'offers.counterTitle': '还盘 #{id}',
   'offers.counterBody': '{buyer} 对 {product} 出价 {price} / {qty}。您的回复将成为一条关联的新报价；买家的条款仍保留在记录中。',
   'offers.counterPrice': '您的单价',
@@ -5026,7 +5178,8 @@ const zh: Partial<Record<DictKey, string>> = {
   'verify.resubmitDoc': '重新提交{doc}',
   'verify.submitDoc': '提交{doc}',
   'verify.queueNoteLead': '提交只是把文件放入队列。',
-  'verify.queueNoteTail': '只有当审核员核准后，买家才会看到标识 — 提交时不会，也绝不会自动显示。',
+  'verify.queueNoteStrong': '只有当审核员核准后，买家才会看到标识',
+  'verify.queueNoteTail': '— 提交时不会，也绝不会自动显示。',
   'verify.filedNotice':
     '{doc}已提交。状态现为“已提交”，正在审核队列中等待 — 只有审核员核准后买家才会看到标识。',
   'verify.errFile': '无法提交该文件。',
@@ -5101,6 +5254,7 @@ const es: Partial<Record<DictKey, string>> = {
   'action.createAccount': 'Crear una cuenta',
   'action.creatingAccount': 'Creando la cuenta…',
   'action.backToExplore': 'Volver a explorar',
+  'action.open': 'Abrir',
   'action.edit': 'Editar',
   'action.delete': 'Eliminar',
 
@@ -5181,8 +5335,10 @@ const es: Partial<Record<DictKey, string>> = {
   'auth.seededLogin': 'Acceso de revisión precargado',
   'auth.fillIn': 'Rellenar',
   'auth.demoHintLead': 'es una',
+  'auth.demoHintLead2': 'demo',
   'auth.demoHintTail':
     'cuenta de demostración precargada para revisar el panel de administración. No es un vendedor real: no introduzcas credenciales reales.',
+  'auth.demoHintProduct': 'administrador',
   'auth.signInFailed': 'Error al iniciar sesión',
   'auth.signUp.title': 'Crear una cuenta',
   'auth.signUp.sub': 'Una cuenta para comprar, vender o prestar servicios de inspección y logística.',
@@ -5266,6 +5422,7 @@ const es: Partial<Record<DictKey, string>> = {
   'feed.sub': 'Stock disponible, excedentes y sobrestock de fábricas verificadas: lo más reciente primero.',
   'feed.sellStock': 'Vender stock',
   'feed.postRequest': 'Publicar una solicitud',
+  'feed.lotsCount': '{n} lotes',
   'feed.lotsMatch': 'lotes coinciden con tus filtros',
   'feed.verifiedSuppliers': 'proveedores verificados',
   'feed.openRequests': 'solicitudes abiertas',
@@ -5645,8 +5802,9 @@ const es: Partial<Record<DictKey, string>> = {
   'listings.col.posted': 'Publicado',
   'listings.lotRef': 'lote #{id}',
   'listings.noPhotoInline': 'sin foto',
-  'listings.demoNote':
-    'Un lote marcado como Demo son datos de ejemplo facilitados por el marketplace, no stock publicado por ti. Eliminarlo lo quita para todos.',
+  'listings.demoNoteLead': 'Un lote marcado como',
+  'listings.demoNoteTail':
+    'son datos de ejemplo facilitados por el marketplace, no stock publicado por ti. Eliminarlo lo quita para todos.',
   'listings.updated': 'Publicación actualizada.',
   'listings.deleted': 'Publicación eliminada. Ya no está en el marketplace.',
   'listings.deleteTitle': '¿Eliminar esta publicación?',
@@ -5767,8 +5925,9 @@ const es: Partial<Record<DictKey, string>> = {
   'offers.reject': 'Rechazar',
   'offers.offerRef': 'oferta #{id}',
   'offers.answersOffer': 'responde a la oferta #{id}',
-  'offers.demoNote':
-    'Una fila marcada como Demo corresponde a un lote de ejemplo, no a stock que hayas publicado. Aceptarla sigue creando un pedido real: revisa el lote antes de comprometerte.',
+  'offers.demoNoteLead': 'Una fila marcada como',
+  'offers.demoNoteTail':
+    'corresponde a un lote de ejemplo, no a stock que hayas publicado. Aceptarla sigue creando un pedido real: revisa el lote antes de comprometerte.',
   'offers.counterTitle': 'Contraoferta #{id}',
   'offers.counterBody':
     '{buyer} ofreció {price} / {qty} por {product}. Tu respuesta se convierte en una nueva oferta vinculada; las condiciones del comprador quedan en el registro.',
@@ -5856,8 +6015,8 @@ const es: Partial<Record<DictKey, string>> = {
   'verify.resubmitDoc': 'Volver a presentar {doc}',
   'verify.submitDoc': 'Presentar {doc}',
   'verify.queueNoteLead': 'Presentar solo pone el documento en la cola.',
-  'verify.queueNoteTail':
-    'La insignia aparece para los compradores cuando un revisor la aprueba: nunca al presentarla y nunca automáticamente.',
+  'verify.queueNoteStrong': 'La insignia aparece para los compradores cuando un revisor la aprueba',
+  'verify.queueNoteTail': ': nunca al presentarla y nunca automáticamente.',
   'verify.filedNotice':
     '{doc} presentado. El estado ahora es "enviado" y está esperando en la cola de revisión: la insignia solo aparece para los compradores cuando un revisor lo aprueba.',
   'verify.errFile': 'No se pudo presentar este documento.',

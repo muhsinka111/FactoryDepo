@@ -5,6 +5,7 @@ import { View, Empty, StatusChip, Spinner, requireAuthGate } from '../components
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
 import type { Rfq } from '@workspace/api-zod';
 import type { ApiError } from '@workspace/api-client-react';
+import { useI18n } from '../i18n';
 
 /**
  * RFQ exchange — one page, two roles.
@@ -36,34 +37,28 @@ interface RfqForm {
   targetCountry: string;
 }
 
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 /** One dense table row for a request. */
 function RequestRow({ r }: { r: Rfq }) {
+  const { t, locale } = useI18n();
   const [, navigate] = useLocation();
   return (
     <tr
       onClick={() => navigate(`/rfqs/${r.id}`)}
       style={{ cursor: 'pointer' }}
-      title={`Open RFQ #${r.id}`}
+      title={t('rfq.openAria', { id: r.id })}
     >
       <td>
         <b>{r.title}</b>
-        <div className="muted">{r.category} · request #{r.id}</div>
+        <div className="muted">{t('rfq.requestRef', { category: r.category, id: r.id })}</div>
       </td>
       <td className="strong">
-        {r.quantity.toLocaleString()} {r.unit}
+        {r.quantity.toLocaleString(locale)} {r.unit}
       </td>
       <td className="hidem">{r.targetCountry ?? '—'}</td>
       <td className="hidem">
-        {r.quoteCount} quote{r.quoteCount === 1 ? '' : 's'}
+        {t('rfq.quotesCount', { n: r.quoteCount.toLocaleString(locale) })}
       </td>
-      <td className="hidem">{shortDate(r.createdAt)}</td>
+      <td className="hidem">{new Date(r.createdAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}</td>
       <td>
         <StatusChip status={r.status} />
       </td>
@@ -75,7 +70,7 @@ function RequestRow({ r }: { r: Rfq }) {
             navigate(`/rfqs/${r.id}`);
           }}
         >
-          Open
+          {t('action.open')}
         </button>
       </td>
     </tr>
@@ -83,6 +78,7 @@ function RequestRow({ r }: { r: Rfq }) {
 }
 
 export default function RfqExchange() {
+  const { t, locale } = useI18n();
   const [, navigate] = useLocation();
   const res = useRfqs();
   const { data: user } = useMe();
@@ -119,12 +115,12 @@ export default function RfqExchange() {
   const submit = async () => {
     setErr('');
     if (form.title.trim().length < 5) {
-      setErr('Give the request a clear title — at least 5 characters.');
+      setErr(t('rfq.errTitle'));
       return;
     }
     const quantity = Number(form.quantity);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      setErr('Quantity must be a number greater than zero.');
+      setErr(t('rfq.errQuantity'));
       return;
     }
     try {
@@ -140,14 +136,12 @@ export default function RfqExchange() {
       closeForm();
       navigate(`/rfqs/${created.id}`);
     } catch (e) {
-      setErr((e as ApiError).message ?? 'Could not post this request.');
+      setErr((e as ApiError).message ?? t('rfq.errPost'));
     }
   };
 
-  const title = isSupplier ? 'RFQ opportunities' : 'Requests';
-  const sub = isSupplier
-    ? 'Open requirements posted by buyers. Respond with your price and lead time.'
-    : 'Requirements currently on the exchange, newest first. Open one to see the quotations it has received.';
+  const title = isSupplier ? t('rfq.titleSupplier') : t('rfq.titleBuyer');
+  const sub = isSupplier ? t('rfq.subSupplier') : t('rfq.subBuyer');
 
   return (
     <View
@@ -160,7 +154,7 @@ export default function RfqExchange() {
             onClick={() => res.refetch()}
             disabled={res.isFetching}
           >
-            {res.isFetching ? 'Refreshing…' : 'Refresh'}
+            {res.isFetching ? t('action.refreshing') : t('action.refresh')}
           </button>
           <button
             className="btn btn-gold"
@@ -170,10 +164,10 @@ export default function RfqExchange() {
               // of a form the API would reject.
               if (isBuyer) setShowForm(true);
               else if (!user) requireAuthGate();
-              else setNotice('Only buyer accounts can post a request. Sign in with a buyer profile to post one.');
+              else setNotice(t('rfq.buyerOnlyNotice'));
             }}
           >
-            + Post a request
+            {t('rfq.postRequest')}
           </button>
         </div>
       }
@@ -181,31 +175,31 @@ export default function RfqExchange() {
       {notice && (
         <div className="stripe">
           <span>{notice}</span>
-          <button className="x" onClick={() => setNotice('')} aria-label="Dismiss">✕</button>
+          <button className="x" onClick={() => setNotice('')} aria-label={t('action.dismiss')}>✕</button>
         </div>
       )}
 
       {/* honest headline counts, straight off the list response */}
       <div className="stripe">
         <span>
-          <b>{res.isLoading ? '—' : total.toLocaleString()}</b> requests total
+          <b>{res.isLoading ? '—' : total.toLocaleString(locale)}</b> {t('rfq.total')}
         </span>
         <span>
-          <b>{res.isLoading ? '—' : openCount}</b> open
+          <b>{res.isLoading ? '—' : openCount.toLocaleString(locale)}</b> {t('rfq.open')}
         </span>
         <span>
-          <b>{res.isLoading ? '—' : quotedCount}</b> quoted
+          <b>{res.isLoading ? '—' : quotedCount.toLocaleString(locale)}</b> {t('rfq.quoted')}
         </span>
         <span>
-          <b>{res.isLoading ? '—' : closedCount}</b> closed
+          <b>{res.isLoading ? '—' : closedCount.toLocaleString(locale)}</b> {t('rfq.closed')}
         </span>
       </div>
 
       <div className="card">
         <div className="hd">
-          <h2>{isSupplier ? 'Requests you can quote' : 'All requests'}</h2>
+          <h2>{isSupplier ? t('rfq.quoteable') : t('rfq.allRequests')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
-            {res.isLoading ? '—' : `${visible.length} shown`}
+            {res.isLoading ? '—' : t('rfq.shown', { n: visible.length.toLocaleString(locale) })}
           </span>
         </div>
 
@@ -215,21 +209,21 @@ export default function RfqExchange() {
               className={`chip ${status === 'all' ? 'on' : ''}`}
               onClick={() => setStatus('all')}
             >
-              All
+              {t('rfq.statusAll')}
             </button>
             <button
               className={`chip ${status === 'open' ? 'on' : ''}`}
               onClick={() => setStatus('open')}
             >
-              Open ({openCount})
+              {t('rfq.statusOpenCount', { n: openCount.toLocaleString(locale) })}
             </button>
             <button
               className={`chip ${status === 'quoted' ? 'on' : ''}`}
               onClick={() => setStatus('quoted')}
             >
-              Quoted ({quotedCount})
+              {t('rfq.statusQuotedCount', { n: quotedCount.toLocaleString(locale) })}
             </button>
-            <span className="muted">Quoting closes when the buyer accepts an offer.</span>
+            <span className="muted">{t('rfq.quotingCloses')}</span>
           </div>
         )}
 
@@ -237,23 +231,23 @@ export default function RfqExchange() {
           <Spinner />
         ) : visible.length === 0 ? (
           <div className="empty">
-            <b>{items.length === 0 ? 'No requests yet' : 'Nothing matches that filter'}</b>
+            <b>{items.length === 0 ? t('rfq.emptyNone') : t('rfq.emptyNoMatch')}</b>
             {items.length === 0
               ? isSupplier
-                ? 'No open requirements on the exchange right now.'
-                : 'Post your first requirement and verified factories will respond.'
-              : 'Try a different status filter.'}
+                ? t('rfq.emptyNoneSupplier')
+                : t('rfq.emptyNoneBuyer')
+              : t('rfq.emptyNoMatchHint')}
           </div>
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Requirement</th>
-                <th>Quantity</th>
-                <th className="hidem">Deliver to</th>
-                <th className="hidem">Quotes</th>
-                <th className="hidem">Posted</th>
-                <th>Status</th>
+                <th>{t('rfq.col.requirement')}</th>
+                <th>{t('rfq.col.quantity')}</th>
+                <th className="hidem">{t('rfq.col.deliverTo')}</th>
+                <th className="hidem">{t('rfq.col.quotes')}</th>
+                <th className="hidem">{t('rfq.col.posted')}</th>
+                <th>{t('rfq.col.status')}</th>
                 <th />
               </tr>
             </thead>
@@ -269,8 +263,8 @@ export default function RfqExchange() {
       {!isSupplier && (
         <div className="stripe" style={{ marginTop: 12 }}>
           <span>
-            Posting is a buyer action. Suppliers can{' '}
-            <Link href="/supplier/rfq-opportunities">quote open requirements</Link> instead.
+            {t('rfq.postingBuyerOnly')}{' '}
+            <Link href="/supplier/rfq-opportunities">{t('rfq.quoteOpen')}</Link>.
           </span>
         </div>
       )}
@@ -279,24 +273,24 @@ export default function RfqExchange() {
         <div className="overlay" onClick={closeForm}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="mh">
-              <h2>New request for quotation</h2>
-              <button className="x" onClick={closeForm} aria-label="Close">✕</button>
+              <h2>{t('rfq.newTitle')}</h2>
+              <button className="x" onClick={closeForm} aria-label={t('action.close')}>✕</button>
             </div>
             <div className="mb">
               {err && <div className="errtext" style={{ marginBottom: 10 }}>{err}</div>}
               <div className="field">
-                <label htmlFor="rfq-title">What do you need? <i>*</i></label>
+                <label htmlFor="rfq-title">{t('rfq.whatNeed')} <i>*</i></label>
                 <input
                   id="rfq-title"
                   className="in"
-                  placeholder="e.g. 100 MT copper cathode, grade A"
+                  placeholder={t('rfq.titlePlaceholder')}
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                 />
               </div>
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="rfq-category">Category</label>
+                  <label htmlFor="rfq-category">{t('rfq.category')}</label>
                   <select
                     id="rfq-category"
                     className="in"
@@ -307,21 +301,21 @@ export default function RfqExchange() {
                   </select>
                 </div>
                 <div className="field">
-                  <label htmlFor="rfq-country">Deliver to</label>
+                  <label htmlFor="rfq-country">{t('rfq.deliverTo')}</label>
                   <select
                     id="rfq-country"
                     className="in"
                     value={form.targetCountry}
                     onChange={(e) => setForm({ ...form, targetCountry: e.target.value })}
                   >
-                    <option value="">Any country</option>
+                    <option value="">{t('common.anyCountry')}</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="rfq-qty">Quantity <i>*</i></label>
+                  <label htmlFor="rfq-qty">{t('rfq.quantity')} <i>*</i></label>
                   <input
                     id="rfq-qty"
                     className="in"
@@ -332,7 +326,7 @@ export default function RfqExchange() {
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="rfq-unit">Unit</label>
+                  <label htmlFor="rfq-unit">{t('rfq.unit')}</label>
                   <input
                     id="rfq-unit"
                     className="in"
@@ -347,28 +341,28 @@ export default function RfqExchange() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="rfq-desc">Specification</label>
+                <label htmlFor="rfq-desc">{t('rfq.specification')}</label>
                 <textarea
                   id="rfq-desc"
                   className="in"
                   rows={3}
-                  placeholder="Grade, purity, certifications, Incoterms, packing…"
+                  placeholder={t('rfq.specPlaceholder')}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
                 <div className="hint">
-                  The clearer the specification, the faster verified factories can quote.
+                  {t('rfq.specHint')}
                 </div>
               </div>
             </div>
             <div className="mf">
-              <button className="btn btn-grey" onClick={closeForm}>Cancel</button>
+              <button className="btn btn-grey" onClick={closeForm}>{t('action.cancel')}</button>
               <button
                 className="btn btn-gold"
                 disabled={create.isPending || !form.title.trim() || !form.quantity}
                 onClick={submit}
               >
-                {create.isPending ? 'Posting…' : 'Post request'}
+                {create.isPending ? t('rfqModal.posting') : t('rfqModal.post')}
               </button>
             </div>
           </div>
@@ -383,6 +377,7 @@ export default function RfqExchange() {
  * Kept exported so existing imports of this module keep resolving.
  */
 export function RfqCardInline({ r }: { r: Rfq }) {
+  const { t, locale } = useI18n();
   return (
     <Link href={`/rfqs/${r.id}`} className="card">
       <div className="bd">
@@ -392,7 +387,7 @@ export function RfqCardInline({ r }: { r: Rfq }) {
         </div>
         <b style={{ display: 'block', fontSize: 13, margin: '5px 0 3px' }}>{r.title}</b>
         <div className="muted">
-          {r.quantity.toLocaleString()} {r.unit} · {r.quoteCount} quote{r.quoteCount === 1 ? '' : 's'}
+          {r.quantity.toLocaleString(locale)} {r.unit} · {t('rfq.quotesCount', { n: r.quoteCount.toLocaleString(locale) })}
         </div>
       </div>
     </Link>

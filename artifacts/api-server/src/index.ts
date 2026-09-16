@@ -15,7 +15,9 @@ import { sql } from 'drizzle-orm';
 import { ZodError } from 'zod';
 import { db } from './db.js';
 import { HttpError } from './http.js';
+import { extractToken, verifyToken } from './auth.js';
 import { bootstrapSeedIfEmpty, ensureOwnerAdmin } from './bootstrap-seed.js';
+import { startOutboxWorker } from './email.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, meRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
@@ -221,7 +223,7 @@ interface RateBucket {
   resetAt: number;
 }
 
-function makeRateLimiter(windowMs: number, max: number) {
+function makeRateLimiter(windowMs: number, max: number, keyFor?: (req: Request) => string) {
   const buckets = new Map<string, RateBucket>();
 
   // Periodic sweep so the map doesn't grow unbounded under many distinct IPs.
@@ -233,7 +235,7 @@ function makeRateLimiter(windowMs: number, max: number) {
   }, windowMs).unref();
 
   return function rateLimit(req: Request, res: Response, next: NextFunction): void {
-    const key = req.ip ?? 'unknown';
+    const key = keyFor ? keyFor(req) : (req.ip ?? 'unknown');
     const now = Date.now();
     let bucket = buckets.get(key);
     if (!bucket || bucket.resetAt <= now) {
@@ -250,9 +252,24 @@ function makeRateLimiter(windowMs: number, max: number) {
   };
 }
 
-const authLoginLimiter = makeRateLimiter(15 * 60 * 1000, 10); // 10 / 15min on login
-const apiLimiter = makeRateLimiter(60 * 1000, 300); // 300 / min on /api overall
-const writeLimiter = makeRateLimiter(60 * 1000, 30); // 30 / min on write methods
+/**
+ * Key for write limits: the authenticated USER, falling back to the IP.
+ *
+ * Keying writes purely on IP meant every account behind one office or NAT
+ * address shared a single 30-writes/minute bucket — one busy colleague could
+ * lock out their whole company, and a supplier bulk-posting would trip it alone.
+ * A valid token is verified here with a cheap HMAC (no DB round-trip), so this
+ * costs nothing on the hot path. Anonymous writes still share the IP bucket.
+ */
+function writeKey(req: Request): string {
+  const token = extractToken(req);
+  const payload = token ? verifyToken(token) : null;
+  return payload ? `user:${payload.sub}` : `ip:${req.ip ?? 'unknown'}`;
+}
+
+const authLoginLimiter = makeRateLimiter(15 * 60 * 1000, 10); // 10 / 15min on login (per IP)
+const apiLimiter = makeRateLimiter(60 * 1000, 300); // 300 / min on /api overall (per IP)
+const writeLimiter = makeRateLimiter(60 * 1000, 30, writeKey); // 30 / min per user on writes
 
 function isWriteMethod(req: Request): boolean {
   return req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE';
@@ -399,6 +416,9 @@ async function main(): Promise<void> {
   } catch (err) {
     console.warn('[admin] owner admin setup failed (continuing boot):', err instanceof Error ? err.message : String(err));
   }
+  // Drains queued mail through Resend. A no-op without RESEND_API_KEY, so rows
+  // simply accumulate as 'queued' until the provider is configured.
+  startOutboxWorker();
   app.listen(PORT, () => {
     console.log(`[api] FactoryDepo API listening on http://localhost:${PORT}`);
   });

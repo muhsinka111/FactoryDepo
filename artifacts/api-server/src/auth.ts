@@ -80,7 +80,9 @@ export function verifyToken(token: string): TokenPayload | null {
   }
 }
 
-function extractToken(req: Request): string | null {
+/** Read the caller's Bearer token from either supported header. Exported so the
+ *  rate limiter can key authenticated writes per user instead of per IP. */
+export function extractToken(req: Request): string | null {
   const auth = req.headers.authorization;
   if (typeof auth === 'string' && auth.startsWith('Bearer ')) {
     const t = auth.slice(7).trim();

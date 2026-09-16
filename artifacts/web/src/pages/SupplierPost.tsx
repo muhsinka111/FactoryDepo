@@ -11,6 +11,7 @@ import type { ApiError, CreateProductInput } from '@workspace/api-client-react';
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
 import type { Product } from '@workspace/api-zod';
 import { View, Spinner, Empty, requireAuthGate } from '../components';
+import { useI18n, type I18nValue } from '../i18n';
 
 /**
  * Post stock — create a new listing, or edit an existing one.
@@ -115,15 +116,15 @@ function toInput(f: FormState): CreateProductInput {
 }
 
 /** Client-side validation. Returns the first problem, or '' when the form is usable. */
-function firstProblem(f: FormState): string {
-  if (f.name.trim().length < 2) return 'Give the lot a name — at least 2 characters.';
-  if (!f.category) return 'Pick a category.';
-  if (f.unit.trim().length < 1) return 'State the unit you sell in (MT, KG, pcs…).';
+function firstProblem(f: FormState, t: I18nValue['t']): string {
+  if (f.name.trim().length < 2) return t('post.errName');
+  if (!f.category) return t('post.errCategory');
+  if (f.unit.trim().length < 1) return t('post.errUnit');
   const price = Number(f.price);
-  if (!Number.isFinite(price) || price <= 0) return 'Unit price must be a number greater than zero.';
-  if (f.moq.trim() && !(Number(f.moq) > 0)) return 'MOQ must be a number greater than zero.';
+  if (!Number.isFinite(price) || price <= 0) return t('post.errPrice');
+  if (f.moq.trim() && !(Number(f.moq) > 0)) return t('post.errMoq');
   if (f.quantityAvailable.trim() && Number(f.quantityAvailable) < 0) {
-    return 'Available quantity cannot be negative.';
+    return t('post.errQty');
   }
   return '';
 }
@@ -148,6 +149,7 @@ interface ListingFormProps {
  * Exported so a listings screen can render it inline if that is ever wanted.
  */
 export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
+  const { t } = useI18n();
   const create = useCreateProduct();
   const update = useUpdateProduct();
   const [form, setForm] = useState<FormState>(() => (product ? fromProduct(product) : { ...EMPTY_FORM }));
@@ -164,7 +166,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
 
   const submit = async () => {
     setErr('');
-    const problem = firstProblem(form);
+    const problem = firstProblem(form, t);
     if (problem) {
       setErr(problem);
       return;
@@ -176,7 +178,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
         : await create.mutateAsync(input);
       onSaved(saved);
     } catch (e) {
-      setErr(errorText(e, product ? 'Could not save this listing.' : 'Could not post this listing.'));
+      setErr(errorText(e, product ? t('post.errSave') : t('post.errCreate')));
     }
   };
 
@@ -189,11 +191,11 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
       )}
 
       <div className="field">
-        <label htmlFor="lot-name">Lot name <i>*</i></label>
+        <label htmlFor="lot-name">{t('post.lotName')} <i>*</i></label>
         <input
           id="lot-name"
           className="in"
-          placeholder="e.g. Copper cathode grade A, 99.99%"
+          placeholder={t('post.lotNamePlaceholder')}
           value={form.name}
           onChange={(e) => set('name', e.target.value)}
         />
@@ -201,7 +203,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
 
       <div className="f2">
         <div className="field">
-          <label htmlFor="lot-category">Category <i>*</i></label>
+          <label htmlFor="lot-category">{t('post.category')} <i>*</i></label>
           <select
             id="lot-category"
             className="in"
@@ -212,37 +214,37 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="lot-country">Origin country</label>
+          <label htmlFor="lot-country">{t('post.originCountry')}</label>
           <select
             id="lot-country"
             className="in"
             value={form.originCountry}
             onChange={(e) => set('originCountry', e.target.value)}
           >
-            <option value="">Not stated</option>
+            <option value="">{t('post.notStated')}</option>
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
       </div>
 
       <div className="field">
-        <label htmlFor="lot-description">Description</label>
+        <label htmlFor="lot-description">{t('post.description')}</label>
         <textarea
           id="lot-description"
           className="in"
           rows={3}
-          placeholder="Grade, packing, Incoterms, lead time, certificates…"
+          placeholder={t('post.descriptionPlaceholder')}
           value={form.description}
           onChange={(e) => set('description', e.target.value)}
         />
         <div className="hint">
-          Buyers decide from this text. Say what is in the lot and how it ships.
+          {t('post.descriptionHint')}
         </div>
       </div>
 
       <div className="f3">
         <div className="field">
-          <label htmlFor="lot-price">Unit price <i>*</i></label>
+          <label htmlFor="lot-price">{t('post.unitPrice')} <i>*</i></label>
           <input
             id="lot-price"
             className="in"
@@ -253,7 +255,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
           />
         </div>
         <div className="field">
-          <label htmlFor="lot-currency">Currency</label>
+          <label htmlFor="lot-currency">{t('post.currency')}</label>
           <select
             id="lot-currency"
             className="in"
@@ -264,7 +266,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="lot-unit">Unit <i>*</i></label>
+          <label htmlFor="lot-unit">{t('post.unit')} <i>*</i></label>
           <input
             id="lot-unit"
             className="in"
@@ -277,7 +279,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
 
       <div className="f3">
         <div className="field">
-          <label htmlFor="lot-moq">Minimum order (MOQ)</label>
+          <label htmlFor="lot-moq">{t('post.moq')}</label>
           <input
             id="lot-moq"
             className="in"
@@ -286,10 +288,10 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
             value={form.moq}
             onChange={(e) => set('moq', e.target.value)}
           />
-          <div className="hint">Defaults to 1.</div>
+          <div className="hint">{t('post.moqHint')}</div>
         </div>
         <div className="field">
-          <label htmlFor="lot-qty">Available now</label>
+          <label htmlFor="lot-qty">{t('post.available')}</label>
           <input
             id="lot-qty"
             className="in"
@@ -298,41 +300,40 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
             value={form.quantityAvailable}
             onChange={(e) => set('quantityAvailable', e.target.value)}
           />
-          <div className="hint">Defaults to 0 — the stock you can ship today.</div>
+          <div className="hint">{t('post.availableHint')}</div>
         </div>
         <div className="field">
-          <label htmlFor="lot-purity">Purity / grade</label>
+          <label htmlFor="lot-purity">{t('post.purity')}</label>
           <input
             id="lot-purity"
             className="in"
-            placeholder="99.99% / Grade A"
+            placeholder={t('post.purityPlaceholder')}
             value={form.purityGrade}
             onChange={(e) => set('purityGrade', e.target.value)}
           />
-          <div className="hint">Optional.</div>
+          <div className="hint">{t('post.optional')}</div>
         </div>
       </div>
 
       <div className="field">
-        <label htmlFor="lot-image">Photo URL</label>
+        <label htmlFor="lot-image">{t('post.photoUrl')}</label>
         <input
           id="lot-image"
           className="in"
-          placeholder="https://…/copper-cathode.jpg"
+          placeholder={t('post.photoPlaceholder')}
           value={form.imageKey}
           onChange={(e) => set('imageKey', e.target.value)}
         />
         <div className="hint">
-          <b>File upload is not built yet.</b> Paste a public link to the photo and it is stored
-          as this lot&apos;s image. Lots without a photo show a plain placeholder.
+          <b>{t('post.photoHintLead')}</b> {t('post.photoHintTail')}
         </div>
         {form.imageKey.trim() && (
           <div className="row" style={{ marginTop: 8, gap: 9 }}>
             <span className="thumb">
-              <img src={form.imageKey.trim()} alt="Listing photo preview" />
+              <img src={form.imageKey.trim()} alt="" />
             </span>
             <span className="muted" style={{ fontSize: 11.5 }}>
-              Preview — if nothing loads, the link is not a direct image.
+              {t('post.preview')}
             </span>
           </div>
         )}
@@ -341,7 +342,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
       <div className="row" style={{ justifyContent: 'flex-end', gap: 7, marginTop: 4 }}>
         {onCancel && (
           <button type="button" className="btn btn-grey" onClick={onCancel} disabled={pending}>
-            Cancel
+            {t('action.cancel')}
           </button>
         )}
         <button
@@ -350,7 +351,7 @@ export function ListingForm({ onSaved, onCancel, product }: ListingFormProps) {
           onClick={submit}
           disabled={pending || !form.name.trim() || !form.price || !form.unit.trim()}
         >
-          {pending ? 'Saving…' : product ? 'Save changes' : 'Post stock'}
+          {pending ? t('post.saving') : product ? t('post.save') : t('nav.postStock')}
         </button>
       </div>
     </>
@@ -365,6 +366,7 @@ function readId(): number | undefined {
 }
 
 export default function SupplierPost() {
+  const { t } = useI18n();
   const [, navigate] = useLocation();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
@@ -376,7 +378,7 @@ export default function SupplierPost() {
 
   if (meLoading) {
     return (
-      <View title="Post stock">
+      <View title={t('post.title')}>
         <Spinner />
       </View>
     );
@@ -384,19 +386,19 @@ export default function SupplierPost() {
 
   if (!loggedIn || !user) {
     return (
-      <View title="Post stock" sub="List ready stock so buyers can order or negotiate on it">
-        <Empty title="You are not signed in">
-          Posting stock is a supplier action. Sign in with a supplier account to publish a lot.
+      <View title={t('post.title')} sub={t('post.signInSub')}>
+        <Empty title={t('post.notSignedIn')}>
+          {t('post.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <Link
               href="/sign-in?next=%2Fsupplier%2Fpost"
               className="btn btn-sm btn-primary"
               onClick={() => requireAuthGate()}
             >
-              Sign in
+              {t('action.signIn')}
             </Link>
             <Link href="/sign-up?next=%2Fsupplier%2Fpost" className="btn btn-sm btn-ghost">
-              Create a supplier account
+              {t('post.createSupplierAccount')}
             </Link>
           </div>
         </Empty>
@@ -406,12 +408,11 @@ export default function SupplierPost() {
 
   if (!isSupplier) {
     return (
-      <View title="Post stock" sub="List ready stock so buyers can order or negotiate on it">
-        <Empty title="Supplier accounts only">
-          Your account is a {user.role} account, so the API will not accept a listing from it.
-          A supplier profile is required before stock can be posted.
+      <View title={t('post.title')} sub={t('post.signInSub')}>
+        <Empty title={t('post.supplierOnly')}>
+          {t('post.supplierOnlyBody', { role: user.role })}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">My listings</Link>
+            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>
           </div>
         </Empty>
       </View>
@@ -420,7 +421,7 @@ export default function SupplierPost() {
 
   if (editId !== undefined && existing.isLoading) {
     return (
-      <View title="Edit listing">
+      <View title={t('post.titleEdit')}>
         <Spinner />
       </View>
     );
@@ -428,12 +429,12 @@ export default function SupplierPost() {
 
   if (editId !== undefined && (existing.isError || !existing.data)) {
     return (
-      <View title="Edit listing">
-        <Empty title="Listing could not be loaded">
-          This lot could not be loaded — try again, or return to your listings.
+      <View title={t('post.titleEdit')}>
+        <Empty title={t('post.loadErrorTitle')}>
+          {t('post.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <button className="btn btn-sm btn-grey" onClick={() => existing.refetch()}>Try again</button>
-            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">My listings</Link>
+            <button className="btn btn-sm btn-grey" onClick={() => existing.refetch()}>{t('action.tryAgain')}</button>
+            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>
           </div>
         </Empty>
       </View>
@@ -444,21 +445,17 @@ export default function SupplierPost() {
 
   return (
     <View
-      title={editing ? 'Edit listing' : 'Post stock'}
-      sub={
-        editing
-          ? <>Changing lot #{editing.id} — saving overwrites the live listing</>
-          : 'One lot per listing: what it is, what it costs and how much you can ship today'
-      }
+      title={editing ? t('post.titleEdit') : t('post.title')}
+      sub={editing ? t('post.subEdit', { id: editing.id }) : t('post.sub')}
       actions={
-        <Link href="/supplier/listings" className="btn btn-sm btn-grey">My listings</Link>
+        <Link href="/supplier/listings" className="btn btn-sm btn-grey">{t('post.myListings')}</Link>
       }
     >
       <div className="cols">
         <div className="card">
           <div className="hd">
-            <b>{editing ? 'Listing details' : 'New listing'}</b>
-            <span className="muted" style={{ marginLeft: 'auto' }}>* required</span>
+            <b>{editing ? t('post.details') : t('post.newListing')}</b>
+            <span className="muted" style={{ marginLeft: 'auto' }}>{t('post.requiredMark')}</span>
           </div>
           <div className="bd">
             <ListingForm
@@ -470,33 +467,31 @@ export default function SupplierPost() {
         </div>
 
         <div className="card">
-          <div className="hd"><b>How this listing behaves</b></div>
+          <div className="hd"><b>{t('post.behaviour')}</b></div>
           <div className="bd">
             <p className="muted" style={{ marginTop: 0, fontSize: 12.5 }}>
-              A posted lot appears in Explore straight away and can be ordered by any signed-in
-              buyer. Buyers may also open an offer below your asking price; you answer those from
-              <Link href="/supplier/offers"> Offers</Link>.
+              {t('post.behaviourBody')}
+              <Link href="/supplier/offers"> {t('post.offersLink')}</Link>.
             </p>
             <table>
               <tbody>
                 <tr>
-                  <td className="muted">Provenance</td>
-                  <td style={{ textAlign: 'right' }}>Platform listing</td>
+                  <td className="muted">{t('post.provenance')}</td>
+                  <td style={{ textAlign: 'right' }}>{t('post.platformListing')}</td>
                 </tr>
                 <tr>
-                  <td className="muted">Photo</td>
-                  <td style={{ textAlign: 'right' }}>URL only — upload not built</td>
+                  <td className="muted">{t('post.photo')}</td>
+                  <td style={{ textAlign: 'right' }}>{t('post.urlOnly')}</td>
                 </tr>
                 <tr>
-                  <td className="muted">Buyer pays by</td>
-                  <td style={{ textAlign: 'right' }}>Bank transfer</td>
+                  <td className="muted">{t('post.buyerPaysBy')}</td>
+                  <td style={{ textAlign: 'right' }}>{t('post.bankTransfer')}</td>
                 </tr>
               </tbody>
             </table>
             <div className="stripe" style={{ marginTop: 12, marginBottom: 0 }}>
               <span>
-                Nothing on this page reports views, ratings or order counts — those figures are not
-                measured yet, so they are not shown.
+                {t('post.noMetrics')}
               </span>
             </div>
           </div>

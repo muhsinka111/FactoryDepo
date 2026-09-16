@@ -18,6 +18,7 @@ import {
   Spinner,
   requireAuthGate,
 } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * Offers on your stock — the supplier side of lot-by-lot negotiation.
@@ -46,11 +47,11 @@ function money(currency: string, amount: number): string {
   return `${currency === 'USD' ? '$' : `${currency} `}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
-function shortDate(iso: string): string {
+function shortDate(iso: string, locale: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? '—'
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    : d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function errorText(e: unknown, fallback: string): string {
@@ -69,6 +70,7 @@ function CounterModal({
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
+  const { t, locale } = useI18n();
   const counter = useCounterOffer();
   const [unitPrice, setUnitPrice] = useState(String(offer.unitPrice));
   const [quantity, setQuantity] = useState(String(offer.quantity));
@@ -79,12 +81,12 @@ function CounterModal({
     setErr('');
     const price = Number(unitPrice);
     if (!Number.isFinite(price) || price <= 0) {
-      setErr('Your counter price must be a number greater than zero.');
+      setErr(t('offers.counterErrPrice'));
       return;
     }
     const qty = Number(quantity);
     if (!Number.isFinite(qty) || qty <= 0) {
-      setErr('Quantity must be a number greater than zero.');
+      setErr(t('offers.counterErrQty'));
       return;
     }
     try {
@@ -95,9 +97,9 @@ function CounterModal({
         quantity: qty === offer.quantity ? undefined : qty,
         notes: notes.trim() || undefined,
       });
-      onDone('Counter sent. The original offer is marked countered and the buyer is notified.');
+      onDone(t('offers.counterDone'));
     } catch (e) {
-      setErr(errorText(e, 'Could not send this counter-offer.'));
+      setErr(errorText(e, t('offers.counterErr')));
     }
   };
 
@@ -105,19 +107,22 @@ function CounterModal({
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>Counter offer #{offer.id}</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{t('offers.counterTitle', { id: offer.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="muted" style={{ marginTop: 0, fontSize: 12.5 }}>
-            {offer.buyerName} offered <b>{money(offer.currency, offer.unitPrice)}</b> / {offer.quantity.toLocaleString()}{' '}
-            on <b>{offer.productName}</b>. Your answer becomes a new linked offer; the buyer&apos;s terms
-            stay on the record.
+            {t('offers.counterBody', {
+              buyer: offer.buyerName,
+              price: money(offer.currency, offer.unitPrice),
+              qty: offer.quantity.toLocaleString(locale),
+              product: offer.productName,
+            })}
           </p>
           {err && <div className="errtext" style={{ marginBottom: 10 }} role="alert">{err}</div>}
           <div className="f2">
             <div className="field">
-              <label htmlFor="counter-price">Your unit price <i>*</i></label>
+              <label htmlFor="counter-price">{t('offers.counterPrice')} <i>*</i></label>
               <input
                 id="counter-price"
                 className="in"
@@ -125,10 +130,10 @@ function CounterModal({
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(e.target.value)}
               />
-              <div className="hint">{offer.currency} per unit</div>
+              <div className="hint">{t('offers.perUnit', { currency: offer.currency })}</div>
             </div>
             <div className="field">
-              <label htmlFor="counter-qty">Quantity</label>
+              <label htmlFor="counter-qty">{t('offers.counterQty')}</label>
               <input
                 id="counter-qty"
                 className="in"
@@ -136,25 +141,25 @@ function CounterModal({
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
-              <div className="hint">Leave as-is to keep the buyer&apos;s quantity.</div>
+              <div className="hint">{t('offers.counterQtyHint')}</div>
             </div>
           </div>
           <div className="field">
-            <label htmlFor="counter-notes">Note to the buyer</label>
+            <label htmlFor="counter-notes">{t('offers.counterNotes')}</label>
             <textarea
               id="counter-notes"
               className="in"
               rows={3}
-              placeholder="Lead time, packing, Incoterms, validity of this price…"
+              placeholder={t('offers.counterNotesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onClose} disabled={counter.isPending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onClose} disabled={counter.isPending}>{t('action.cancel')}</button>
           <button className="btn btn-gold" onClick={submit} disabled={counter.isPending || !unitPrice}>
-            {counter.isPending ? 'Sending…' : 'Send counter'}
+            {counter.isPending ? t('offers.sending') : t('offers.sendCounter')}
           </button>
         </div>
       </div>
@@ -172,6 +177,7 @@ function AcceptModal({
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
+  const { t, locale } = useI18n();
   const accept = useAcceptOffer();
   const [err, setErr] = useState('');
   const total = offer.unitPrice * offer.quantity;
@@ -180,9 +186,9 @@ function AcceptModal({
     setErr('');
     try {
       await accept.mutateAsync({ id: offer.id });
-      onDone(`Offer #${offer.id} accepted. An order was created for ${offer.buyerName}.`);
+      onDone(t('offers.acceptDone', { id: offer.id, buyer: offer.buyerName }));
     } catch (e) {
-      setErr(errorText(e, 'Could not accept this offer.'));
+      setErr(errorText(e, t('offers.acceptErr')));
     }
   };
 
@@ -190,46 +196,44 @@ function AcceptModal({
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>Accept offer #{offer.id}?</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{t('offers.acceptTitle', { id: offer.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <table>
             <tbody>
               <tr>
-                <td className="muted">Listing</td>
+                <td className="muted">{t('offers.listing')}</td>
                 <td style={{ textAlign: 'right' }}>{offer.productName}</td>
               </tr>
               <tr>
-                <td className="muted">Buyer</td>
+                <td className="muted">{t('offers.buyer')}</td>
                 <td style={{ textAlign: 'right' }}>{offer.buyerName}</td>
               </tr>
               <tr>
-                <td className="muted">Quantity</td>
-                <td style={{ textAlign: 'right' }}>{offer.quantity.toLocaleString()}</td>
+                <td className="muted">{t('offers.quantity')}</td>
+                <td style={{ textAlign: 'right' }}>{offer.quantity.toLocaleString(locale)}</td>
               </tr>
               <tr>
-                <td className="muted">Unit price</td>
+                <td className="muted">{t('offers.unitPrice')}</td>
                 <td style={{ textAlign: 'right' }}>{money(offer.currency, offer.unitPrice)}</td>
               </tr>
               <tr>
-                <td className="muted">Offer value</td>
+                <td className="muted">{t('offers.offerValue')}</td>
                 <td style={{ textAlign: 'right' }} className="strong">{money(offer.currency, total)}</td>
               </tr>
             </tbody>
           </table>
           <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
-            <b>Accepting creates an order.</b> The buyer is committed to it and pays by{' '}
-            <b>bank transfer</b> — the platform does not take a card payment. You issue the proforma
-            and confirm the transfer when it lands; the order then moves to shipment.
-            This decision is final: an accepted offer cannot be re-decided.
+            <b>{t('offers.acceptBodyLead')}</b> {t('offers.acceptBodyBank')}{' '}
+            <b>{t('post.bankTransfer')}</b> {t('offers.acceptBodyTail')}
           </p>
           {err && <div className="errtext" role="alert">{err}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onClose} disabled={accept.isPending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onClose} disabled={accept.isPending}>{t('action.cancel')}</button>
           <button className="btn btn-green" onClick={confirm} disabled={accept.isPending}>
-            {accept.isPending ? 'Accepting…' : 'Accept and create order'}
+            {accept.isPending ? t('offers.accepting') : t('offers.acceptCta')}
           </button>
         </div>
       </div>
@@ -247,6 +251,7 @@ function RejectModal({
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
+  const { t } = useI18n();
   const reject = useRejectOffer();
   const [err, setErr] = useState('');
 
@@ -254,9 +259,9 @@ function RejectModal({
     setErr('');
     try {
       await reject.mutateAsync({ id: offer.id });
-      onDone(`Offer #${offer.id} rejected.`);
+      onDone(t('offers.rejectDone', { id: offer.id }));
     } catch (e) {
-      setErr(errorText(e, 'Could not reject this offer.'));
+      setErr(errorText(e, t('offers.rejectErr')));
     }
   };
 
@@ -264,21 +269,23 @@ function RejectModal({
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>Reject offer #{offer.id}?</h2>
-          <button className="x" onClick={onClose} aria-label="Close">✕</button>
+          <h2>{t('offers.rejectTitle', { id: offer.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="muted" style={{ marginTop: 0, fontSize: 12.5 }}>
-            {offer.buyerName}&apos;s offer of {money(offer.currency, offer.unitPrice)} on{' '}
-            <b>{offer.productName}</b> is closed. Rejecting is final — the buyer cannot revive this
-            offer, though they may open a new one.
+            {t('offers.rejectBody', {
+              buyer: offer.buyerName,
+              price: money(offer.currency, offer.unitPrice),
+              product: offer.productName,
+            })}
           </p>
           {err && <div className="errtext" role="alert">{err}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onClose} disabled={reject.isPending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onClose} disabled={reject.isPending}>{t('action.cancel')}</button>
           <button className="btn btn-red" onClick={confirm} disabled={reject.isPending}>
-            {reject.isPending ? 'Rejecting…' : 'Reject offer'}
+            {reject.isPending ? t('offers.rejecting') : t('offers.rejectCta')}
           </button>
         </div>
       </div>
@@ -287,6 +294,7 @@ function RejectModal({
 }
 
 export default function SupplierOffers() {
+  const { t, locale } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
   const isSupplier = user?.role === 'supplier';
@@ -300,7 +308,7 @@ export default function SupplierOffers() {
 
   if (meLoading) {
     return (
-      <View title="Offers on your stock">
+      <View title={t('offers.title')}>
         <Spinner />
       </View>
     );
@@ -308,19 +316,19 @@ export default function SupplierOffers() {
 
   if (!loggedIn || !user) {
     return (
-      <View title="Offers on your stock" sub="Buyers negotiating on your lots">
-        <Empty title="You are not signed in">
-          Offers are private to the buyer and the supplier on them. Sign in to answer them.
+      <View title={t('offers.title')} sub={t('offers.sub')}>
+        <Empty title={t('offers.notSignedIn')}>
+          {t('offers.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <Link
               href="/sign-in?next=%2Fsupplier%2Foffers"
               className="btn btn-sm btn-primary"
               onClick={() => requireAuthGate()}
             >
-              Sign in
+              {t('action.signIn')}
             </Link>
             <Link href="/sign-up?next=%2Fsupplier%2Foffers" className="btn btn-sm btn-ghost">
-              Create a supplier account
+              {t('offers.createSupplierAccount')}
             </Link>
           </div>
         </Empty>
@@ -330,12 +338,11 @@ export default function SupplierOffers() {
 
   if (!isSupplier) {
     return (
-      <View title="Offers on your stock" sub="Buyers negotiating on your lots">
-        <Empty title="Supplier accounts only">
-          Your account is a {user.role} account, so no stock is listed under it and no offers can
-          arrive. Offers you have made as a buyer live on the buyer side of the marketplace.
+      <View title={t('offers.title')} sub={t('offers.sub')}>
+        <Empty title={t('offers.supplierOnly')}>
+          {t('offers.supplierOnlyBody', { role: user.role })}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/explore" className="btn btn-sm btn-ghost">Browse ready stock</Link>
+            <Link href="/explore" className="btn btn-sm btn-ghost">{t('offers.browseStock')}</Link>
           </div>
         </Empty>
       </View>
@@ -352,11 +359,11 @@ export default function SupplierOffers() {
 
   return (
     <View
-      title="Offers on your stock"
+      title={t('offers.title')}
       sub={
         res.isLoading
-          ? 'Loading offers…'
-          : `${all.length.toLocaleString()} offer${all.length === 1 ? '' : 's'} on your listings`
+          ? t('offers.subLoading')
+          : t('offers.subCount', { n: all.length.toLocaleString(locale) })
       }
       actions={
         <div className="row">
@@ -365,29 +372,27 @@ export default function SupplierOffers() {
             onClick={() => res.refetch()}
             disabled={res.isFetching}
           >
-            {res.isFetching ? 'Refreshing…' : 'Refresh'}
+            {res.isFetching ? t('action.refreshing') : t('action.refresh')}
           </button>
-          <Link href="/supplier/listings" className="btn btn-sm btn-ghost">My listings</Link>
+          <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>
         </div>
       }
     >
       {notice && (
         <div className="stripe">
           <span>{notice}</span>
-          <button className="x" onClick={() => setNotice('')} aria-label="Dismiss">✕</button>
+          <button className="x" onClick={() => setNotice('')} aria-label={t('action.dismiss')}>✕</button>
         </div>
       )}
 
       <div className="stripe">
         <span>
-          <b>{res.isLoading ? '—' : open.length}</b> awaiting your answer
+          <b>{res.isLoading ? '—' : open.length.toLocaleString(locale)}</b> {t('offers.awaiting')}
         </span>
         <span>
-          <b>{res.isLoading ? '—' : decided.length}</b> decided
+          <b>{res.isLoading ? '—' : decided.length.toLocaleString(locale)}</b> {t('offers.decided')}
         </span>
-        <span>
-          Accepting an offer <b>creates an order</b>; the buyer pays by <b>bank transfer</b>.
-        </span>
+        <span>{t('offers.acceptCreates')}</span>
       </div>
 
       <div className="filters">
@@ -395,57 +400,54 @@ export default function SupplierOffers() {
           className={`chip ${only === 'open' ? 'on' : ''}`}
           onClick={() => setOnly('open')}
         >
-          Awaiting answer ({open.length})
+          {t('offers.filterAwaiting', { n: open.length.toLocaleString(locale) })}
         </button>
         <button
           className={`chip ${only === 'decided' ? 'on' : ''}`}
           onClick={() => setOnly('decided')}
         >
-          Decided ({decided.length})
+          {t('offers.filterDecided', { n: decided.length.toLocaleString(locale) })}
         </button>
-        <span className="muted">Counters open a new linked offer; your original terms stay on record.</span>
+        <span className="muted">{t('offers.counterNote')}</span>
       </div>
 
       {res.isLoading ? (
         <Spinner />
       ) : res.isError ? (
-        <Empty title="Offers could not be loaded">
-          Could not load the offers on your stock — try again.
+        <Empty title={t('offers.loadErrorTitle')}>
+          {t('offers.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <button className="btn btn-sm btn-grey" onClick={() => res.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-grey" onClick={() => res.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       ) : all.length === 0 ? (
-        <Empty title="No offers yet">
-          When a buyer negotiates on one of your lots it appears here, with the price they proposed
-          and the quantity they want. You can accept it, reject it, or answer with your own price.
+        <Empty title={t('offers.emptyTitle')}>
+          {t('offers.emptyBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">See my listings</Link>
-            <Link href="/supplier/post" className="btn btn-sm btn-gold">+ Post more stock</Link>
+            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('offers.seeListings')}</Link>
+            <Link href="/supplier/post" className="btn btn-sm btn-gold">{t('offers.postMore')}</Link>
           </div>
         </Empty>
       ) : visible.length === 0 ? (
-        <Empty title={only === 'open' ? 'Nothing awaiting your answer' : 'No decided offers yet'}>
-          {only === 'open'
-            ? 'Every offer on your stock has been answered. Switch to Decided to review them.'
-            : 'Offers you accept or reject are kept here as a record.'}
+        <Empty title={only === 'open' ? t('offers.noneAwaiting') : t('offers.noneDecided')}>
+          {only === 'open' ? t('offers.noneAwaitingBody') : t('offers.noneDecidedBody')}
         </Empty>
       ) : (
         <div className="card">
           <div className="hd">
-            <b>{visible.length.toLocaleString()} offer{visible.length === 1 ? '' : 's'}</b>
-            <span className="muted" style={{ marginLeft: 'auto' }}>Newest first</span>
+            <b>{t('offers.count', { n: visible.length.toLocaleString(locale) })}</b>
+            <span className="muted" style={{ marginLeft: 'auto' }}>{t('common.newestFirst')}</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Listing</th>
-                  <th>Buyer</th>
-                  <th style={{ textAlign: 'right' }}>Quantity</th>
-                  <th style={{ textAlign: 'right' }}>Their price</th>
-                  <th>Status</th>
-                  <th className="hidem">Received</th>
+                  <th>{t('offers.col.listing')}</th>
+                  <th>{t('offers.col.buyer')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('offers.col.quantity')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('offers.col.theirPrice')}</th>
+                  <th>{t('offers.col.status')}</th>
+                  <th className="hidem">{t('offers.col.received')}</th>
                   <th />
                 </tr>
               </thead>
@@ -458,42 +460,42 @@ export default function SupplierOffers() {
                         {o.dataSource === 'demo' && <DemoTag />}
                       </div>
                       <div className="muted">
-                        offer #{o.id}
-                        {o.parentOfferId !== null ? ` · answers offer #${o.parentOfferId}` : ''}
+                        {t('offers.offerRef', { id: o.id })}
+                        {o.parentOfferId !== null ? ` · ${t('offers.answersOffer', { id: o.parentOfferId })}` : ''}
                         {o.notes ? ` · “${o.notes}”` : ''}
                       </div>
                     </td>
                     <td>{o.buyerName}</td>
-                    <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString('en-US')}</td>
+                    <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString(locale)}</td>
                     <td style={{ textAlign: 'right' }} className="strong">
                       {money(o.currency, o.unitPrice)}
                     </td>
                     <td><StatusChip status={o.status} /></td>
-                    <td className="hidem muted" title={new Date(o.createdAt).toLocaleString()}>
-                      {shortDate(o.createdAt)}
+                    <td className="hidem muted" title={new Date(o.createdAt).toLocaleString(locale)}>
+                      {shortDate(o.createdAt, locale)}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       {FINAL.has(o.status) ? (
-                        <span className="muted">Decided</span>
+                        <span className="muted">{t('offers.decidedLabel')}</span>
                       ) : (
                         <>
                           <button
                             className="btn btn-sm btn-ghost"
                             onClick={() => { setNotice(''); setCountering(o); }}
                           >
-                            Counter
+                            {t('offers.counter')}
                           </button>{' '}
                           <button
                             className="btn btn-sm btn-green"
                             onClick={() => { setNotice(''); setAccepting(o); }}
                           >
-                            Accept
+                            {t('offers.accept')}
                           </button>{' '}
                           <button
                             className="btn btn-sm btn-red"
                             onClick={() => { setNotice(''); setRejecting(o); }}
                           >
-                            Reject
+                            {t('offers.reject')}
                           </button>
                         </>
                       )}
@@ -508,8 +510,8 @@ export default function SupplierOffers() {
 
       <div className="stripe" style={{ marginTop: 12 }}>
         <span>
-          A row tagged <span className="pill p-amber">Demo</span> sits on a seeded lot, not stock you
-          posted. Accepting it still creates a real order — check the lot before you commit.
+          {t('offers.demoNoteLead')} <span className="pill p-amber">{t('cards.demo')}</span>{' '}
+          {t('offers.demoNoteTail')}
         </span>
       </div>
 

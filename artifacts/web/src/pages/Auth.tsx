@@ -4,12 +4,16 @@ import { useLogin, useRegister } from '@workspace/api-client-react';
 import type { ApiError } from '@workspace/api-client-react';
 import { zRole } from '@workspace/api-zod';
 import { dashboardRole, homeFor } from '../components';
+import { useI18n, type DictKey } from '../i18n';
 
 /**
  * Auth — dense, centred sign-in / sign-up cards on the navy/gold design system.
  * After success the user lands on the landing route for their role
  * (admin → /admin, supplier → /supplier/listings, buyer → /feed), unless a
  * gated action asked for a specific `next` path.
+ *
+ * Registration stores the language currently selected in the interface, so a
+ * new account starts in the language it was created in.
  */
 
 const DEMO_EMAIL = 'demo@factorydepo.com';
@@ -44,6 +48,7 @@ function AuthCard({ title, sub, children }: { title: string; sub: string; childr
 }
 
 export function SignIn() {
+  const { t } = useI18n();
   const [, navigate] = useLocation();
   const next = safeNext(useSearch().match(/next=([^&]+)/)?.[1]);
   const login = useLogin();
@@ -56,15 +61,15 @@ export function SignIn() {
       const res = await login.mutateAsync(form);
       navigate(next || homeFor(dashboardRole(res.user.role, true)));
     } catch (e) {
-      setErr((e as ApiError).message ?? 'Login failed');
+      setErr((e as ApiError).message ?? t('auth.signInFailed'));
     }
   };
 
   return (
-    <AuthCard title="Sign in" sub="Access your orders, offers and RFQs.">
+    <AuthCard title={t('action.signIn')} sub={t('auth.signIn.sub')}>
       {err && <div className="errtext" style={{ marginBottom: 9 }}>{err}</div>}
       <div className="field">
-        <label htmlFor="signin-email">Email</label>
+        <label htmlFor="signin-email">{t('auth.email')}</label>
         <input
           id="signin-email"
           className="in"
@@ -76,7 +81,7 @@ export function SignIn() {
         />
       </div>
       <div className="field">
-        <label htmlFor="signin-password">Password</label>
+        <label htmlFor="signin-password">{t('auth.password')}</label>
         <input
           id="signin-password"
           className="in"
@@ -94,42 +99,43 @@ export function SignIn() {
         disabled={login.isPending || !form.email || !form.password}
         onClick={() => void submit()}
       >
-        {login.isPending ? 'Signing in…' : 'Sign in'}
+        {login.isPending ? t('action.signingIn') : t('action.signIn')}
       </button>
       <p className="muted" style={{ textAlign: 'center', margin: '11px 0 0' }}>
-        New here? <Link href={next ? `/sign-up?next=${encodeURIComponent(next)}` : '/sign-up'}>Create an account</Link>
+        {t('auth.newHere')} <Link href={next ? `/sign-up?next=${encodeURIComponent(next)}` : '/sign-up'}>{t('action.createAccount')}</Link>
       </p>
 
       <div style={{ borderTop: '1px solid var(--line)', marginTop: 12, paddingTop: 9 }}>
         <div className="row" style={{ gap: 6 }}>
-          <span className="pill p-amber">Demo notice</span>
-          <span className="muted">Seeded review login</span>
+          <span className="pill p-amber">{t('auth.demoNotice')}</span>
+          <span className="muted">{t('auth.seededLogin')}</span>
           <button
             className="btn btn-sm btn-grey"
             style={{ marginLeft: 'auto' }}
             onClick={() => setForm({ email: DEMO_EMAIL, password: DEMO_PASSWORD })}
           >
-            Fill in
+            {t('auth.fillIn')}
           </button>
         </div>
         <p className="hint" style={{ margin: '6px 0 0' }}>
-          <b>{DEMO_EMAIL}</b> / <b>{DEMO_PASSWORD}</b> is a seeded <b>demo admin</b> account for reviewing the
-          admin console. It is not a real seller — do not enter real credentials.
+          <b>{DEMO_EMAIL}</b> / <b>{DEMO_PASSWORD}</b> {t('auth.demoHintLead')} <b>{t('auth.demoHintLead2')}</b>{' '}
+          <b>{t('auth.demoHintProduct')}</b> {t('auth.demoHintTail')}
         </p>
       </div>
     </AuthCard>
   );
 }
 
-const ROLE_META: { role: string; label: string; hint: string }[] = [
-  { role: 'buyer', label: 'Buyer', hint: 'I source products' },
-  { role: 'supplier', label: 'Supplier', hint: 'I sell / manufacture' },
-  { role: 'inspector', label: 'Inspector', hint: 'I verify factories' },
-  { role: 'lab', label: 'Laboratory', hint: 'I test materials' },
-  { role: 'logistics', label: 'Logistics', hint: 'I move cargo' },
+const ROLE_META: { role: string; label: DictKey; hint: DictKey }[] = [
+  { role: 'buyer', label: 'auth.role.buyer', hint: 'auth.role.buyerHint' },
+  { role: 'supplier', label: 'auth.role.supplier', hint: 'auth.role.supplierHint' },
+  { role: 'inspector', label: 'auth.role.inspector', hint: 'auth.role.inspectorHint' },
+  { role: 'lab', label: 'auth.role.lab', hint: 'auth.role.labHint' },
+  { role: 'logistics', label: 'auth.role.logistics', hint: 'auth.role.logisticsHint' },
 ];
 
 export function SignUp() {
+  const { t, lang } = useI18n();
   const [, navigate] = useLocation();
   const next = safeNext(useSearch().match(/next=([^&]+)/)?.[1]);
   const register = useRegister();
@@ -139,20 +145,21 @@ export function SignUp() {
   const submit = async () => {
     setErr('');
     try {
-      const res = await register.mutateAsync({ ...form, lang: 'en', role: zRole.parse(form.role) });
+      // The account stores the language the interface is in right now.
+      const res = await register.mutateAsync({ ...form, lang, role: zRole.parse(form.role) });
       navigate(next || homeFor(dashboardRole(res.user.role, true)));
     } catch (e) {
-      setErr((e as ApiError).message ?? 'Registration failed');
+      setErr((e as ApiError).message ?? t('auth.registerFailed'));
     }
   };
 
   const activeRole = ROLE_META.find((r) => r.role === form.role);
 
   return (
-    <AuthCard title="Create an account" sub="One account to buy, sell, or provide inspection and logistics services.">
+    <AuthCard title={t('auth.signUp.title')} sub={t('auth.signUp.sub')}>
       {err && <div className="errtext" style={{ marginBottom: 9 }}>{err}</div>}
       <div className="field">
-        <label htmlFor="signup-name">Full name <i>*</i></label>
+        <label htmlFor="signup-name">{t('auth.fullName')} <i>*</i></label>
         <input
           id="signup-name"
           className="in"
@@ -163,7 +170,7 @@ export function SignUp() {
         />
       </div>
       <div className="field">
-        <label htmlFor="signup-email">Work email <i>*</i></label>
+        <label htmlFor="signup-email">{t('auth.workEmail')} <i>*</i></label>
         <input
           id="signup-email"
           className="in"
@@ -175,20 +182,20 @@ export function SignUp() {
         />
       </div>
       <div className="field">
-        <label htmlFor="signup-password">Password <i>*</i></label>
+        <label htmlFor="signup-password">{t('auth.password')} <i>*</i></label>
         <input
           id="signup-password"
           className="in"
           type="password"
-          placeholder="Minimum 8 characters"
+          placeholder={t('auth.minChars')}
           autoComplete="new-password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
-        <div className="hint">At least 8 characters.</div>
+        <div className="hint">{t('auth.atLeast8')}</div>
       </div>
       <div className="field">
-        <label>I am a…</label>
+        <label>{t('auth.iAmA')}</label>
         <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
           {ROLE_META.map((r) => (
             <button
@@ -197,30 +204,30 @@ export function SignUp() {
               className={`chip ${form.role === r.role ? 'on' : ''}`}
               onClick={() => setForm({ ...form, role: r.role })}
             >
-              {r.label}
+              {t(r.label)}
             </button>
           ))}
         </div>
-        {activeRole && <div className="hint">{activeRole.hint}</div>}
+        {activeRole && <div className="hint">{t(activeRole.hint)}</div>}
       </div>
       <div className="f2">
         <div className="field">
-          <label htmlFor="signup-company">Company</label>
+          <label htmlFor="signup-company">{t('auth.company')}</label>
           <input
             id="signup-company"
             className="in"
-            placeholder="Optional"
+            placeholder={t('common.optional')}
             autoComplete="organization"
             value={form.company}
             onChange={(e) => setForm({ ...form, company: e.target.value })}
           />
         </div>
         <div className="field">
-          <label htmlFor="signup-country">Country</label>
+          <label htmlFor="signup-country">{t('auth.country')}</label>
           <input
             id="signup-country"
             className="in"
-            placeholder="Türkiye, China…"
+            placeholder={t('auth.countryHint')}
             autoComplete="country-name"
             value={form.country}
             onChange={(e) => setForm({ ...form, country: e.target.value })}
@@ -233,13 +240,13 @@ export function SignUp() {
         disabled={register.isPending || !form.name || !form.email || form.password.length < 8}
         onClick={() => void submit()}
       >
-        {register.isPending ? 'Creating account…' : 'Create account'}
+        {register.isPending ? t('action.creatingAccount') : t('auth.createCta')}
       </button>
       <p className="muted" style={{ textAlign: 'center', margin: '11px 0 0' }}>
-        Already registered? <Link href={next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in'}>Sign in</Link>
+        {t('auth.alreadyRegistered')} <Link href={next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in'}>{t('action.signIn')}</Link>
       </p>
       <p className="hint" style={{ marginTop: 9 }}>
-        Listing is free. Trust badges are earned through verification, inspections and delivery history.
+        {t('auth.signUpHint')}
       </p>
     </AuthCard>
   );

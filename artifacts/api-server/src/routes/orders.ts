@@ -5,6 +5,7 @@ import { db, orders, products, productViews, quotes, rfqs, savedLots, suppliers,
 import { requireAuth } from '../auth.js';
 import { HttpError, mapOrder, respond, toNum } from '../http.js';
 import { seedShipmentForOrder } from './shipments.js';
+import { callerContext, notify, queueEmail } from '../helpers.js';
 
 export const ordersRouter = Router();
 
@@ -53,7 +54,7 @@ ordersRouter.post('/', requireAuth, async (req, res) => {
   const { productId, quantity, shippingName, shippingAddress, shippingCity, shippingCountry, shippingPhone, notes } = input.data;
   const qty = toNum(quantity);
 
-  const { inserted, productName, supplierName } = await db.transaction(async (tx) => {
+  const { inserted, productName, supplierName, supplierUserId, supplierEmail } = await db.transaction(async (tx) => {
     const [row] = await tx
       .select({
         productId: products.id,
@@ -66,9 +67,12 @@ ordersRouter.post('/', requireAuth, async (req, res) => {
         quantityAvailable: products.quantityAvailable,
         status: products.status,
         supplierName: suppliers.companyName,
+        supplierUserId: suppliers.userId,
+        supplierEmail: users.email,
       })
       .from(products)
       .innerJoin(suppliers, eq(products.supplierId, suppliers.id))
+      .innerJoin(users, eq(suppliers.userId, users.id))
       .where(eq(products.id, productId))
       .for('update')
       .limit(1);
@@ -109,7 +113,7 @@ ordersRouter.post('/', requireAuth, async (req, res) => {
       })
       .returning();
 
-    return { inserted: insertedRow, productName: row.name, supplierName: row.supplierName };
+    return { inserted: insertedRow, productName: row.name, supplierName: row.supplierName, supplierUserId: row.supplierUserId, supplierEmail: row.supplierEmail };
   });
 
   // Every order gets a trackable shipment at step 0 (nothing reached yet), so
@@ -117,6 +121,36 @@ ordersRouter.post('/', requireAuth, async (req, res) => {
   // call. Same transaction boundary as the order: a failed seed must not leave
   // an order that cannot be tracked.
   await seedShipmentForOrder(toNum(inserted?.id));
+
+  // Best-effort side effects. Placing an order previously produced no
+  // notification and no email at all, so a supplier could receive an order
+  // without ever being told. Both helpers swallow their own errors, so a mail
+  // or notification failure can never fail the order itself.
+  const newOrderId = toNum(inserted?.id);
+  if (newOrderId) {
+    const buyer = await callerContext(uid);
+    const total = inserted?.total;
+
+    void notify({
+      userId: supplierUserId,
+      role: 'supplier',
+      text: `New order #${newOrderId} for ${productName}`,
+      type: 'order',
+      link: '/orders',
+    });
+    void queueEmail({
+      toEmail: supplierEmail,
+      template: 'order-placed',
+      payload: { orderId: newOrderId, productName, quantity: qty, total, currency: inserted?.currency },
+    });
+    if (buyer?.email) {
+      void queueEmail({
+        toEmail: buyer.email,
+        template: 'order-placed',
+        payload: { orderId: newOrderId, productName, quantity: qty, total, currency: inserted?.currency },
+      });
+    }
+  }
 
   res.status(201);
   respond(
