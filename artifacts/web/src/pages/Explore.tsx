@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useProducts } from '@workspace/api-client-react';
 import { View, ProductCard, Spinner, Empty } from '../components';
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
+import { useI18n } from '../i18n';
 
 function readParam(key: string): string {
   return new URLSearchParams(window.location.search).get(key) ?? '';
@@ -12,6 +13,7 @@ function readParam(key: string): string {
  * Every number shown here comes from the API; nothing is embellished.
  */
 export default function Explore() {
+  const { t, locale } = useI18n();
   const [q, setQ] = useState(() => readParam('q'));
   const [appliedQ, setAppliedQ] = useState(() => readParam('q'));
   const [category, setCategory] = useState(() => readParam('category'));
@@ -55,50 +57,50 @@ export default function Explore() {
 
   return (
     <View
-      title="Explore stock"
+      title={t('explore.title')}
       sub={
         res.isLoading
-          ? 'Loading live lots…'
-          : `${total.toLocaleString()} listing${total === 1 ? '' : 's'} matching your filters`
+          ? t('explore.subLoading')
+          : t('explore.subCount', { n: total.toLocaleString(locale) })
       }
       actions={
-        <button className="btn btn-sm btn-grey" onClick={clear}>Clear filters</button>
+        <button className="btn btn-sm btn-grey" onClick={clear}>{t('action.clearFilters')}</button>
       }
     >
       <div className="filters">
         <input
           className="in"
           style={{ width: 220 }}
-          placeholder="Copper cathode, pumps…"
+          placeholder={t('explore.searchPlaceholder')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && apply()}
-          aria-label="Search listings"
+          aria-label={t('explore.searchAria')}
         />
-        <select value={category} onChange={(e) => { setCategory(e.target.value); apply(1); }} aria-label="Category">
-          <option value="">All categories</option>
+        <select value={category} onChange={(e) => { setCategory(e.target.value); apply(1); }} aria-label={t('explore.categoryAria')}>
+          <option value="">{t('explore.allCategories')}</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <select value={country} onChange={(e) => { setCountry(e.target.value); apply(1); }} aria-label="Origin country">
-          <option value="">All countries</option>
+        <select value={country} onChange={(e) => { setCountry(e.target.value); apply(1); }} aria-label={t('explore.originAria')}>
+          <option value="">{t('explore.allCountries')}</option>
           {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <input
-          className="in" style={{ width: 84 }} placeholder="Min $" inputMode="numeric"
+          className="in" style={{ width: 84 }} placeholder={t('explore.min')} inputMode="numeric"
           value={minPrice} onChange={(e) => setMinPrice(e.target.value)}
         />
         <input
-          className="in" style={{ width: 84 }} placeholder="Max $" inputMode="numeric"
+          className="in" style={{ width: 84 }} placeholder={t('explore.max')} inputMode="numeric"
           value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}
         />
-        <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>Search</button>
+        <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>{t('action.search')}</button>
       </div>
 
       {res.isLoading ? (
         <Spinner />
       ) : items.length === 0 ? (
-        <Empty title="No listings match those filters">
-          Try a broader category, a different origin country, or clear the filters.
+        <Empty title={t('explore.emptyTitle')}>
+          {t('explore.emptyBody')}
         </Empty>
       ) : (
         <>
@@ -108,11 +110,14 @@ export default function Explore() {
 
           {pages > 1 && (
             <div className="row" style={{ justifyContent: 'center', marginTop: 14, gap: 6 }}>
-              <button className="btn btn-sm btn-grey" disabled={page <= 1} onClick={() => setPage(page - 1)}>← Prev</button>
+              <button className="btn btn-sm btn-grey" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('explore.prev')}</button>
               <span className="muted" style={{ fontSize: 12, alignSelf: 'center' }}>
-                Page {res.data?.page ?? page} of {pages}
+                {t('explore.page', {
+                  page: (res.data?.page ?? page).toLocaleString(locale),
+                  pages: pages.toLocaleString(locale),
+                })}
               </span>
-              <button className="btn btn-sm btn-grey" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next →</button>
+              <button className="btn btn-sm btn-grey" disabled={page >= pages} onClick={() => setPage(page + 1)}>{t('explore.next')}</button>
             </div>
           )}
         </>

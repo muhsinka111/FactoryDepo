@@ -257,3 +257,73 @@ tbody tr:hover{background:#fbfcfe}
 }
 @keyframes fdspin{to{transform:rotate(360deg)}}
 
+/* ---------------------------------------------------------------------
+   RTL overrides — Arabic (العربية) sets <html dir="rtl">.
+   These flip ONLY the genuinely directional rules the ported template block
+   hard-codes. The template itself is NOT rewritten to logical properties, so
+   read the honesty note at the end of this block for what is still mirrored
+   by the browser alone.
+   --------------------------------------------------------------------- */
+
+/* Search field: the template pads for the icon on the left and absolutely
+   positions that icon at left:10px. Both must follow the text direction, and
+   the placeholder/typing alignment too. */
+[dir='rtl'] .searchwrap input{padding:7px 32px 7px 12px;text-align:right}
+[dir='rtl'] .searchwrap svg{left:auto;right:10px}
+
+/* Sidebar sits on the right in RTL, so its divider moves to the other edge. */
+[dir='rtl'] .side{border-right:none;border-left:1px solid var(--line)}
+
+/* Tables: the template left-aligns th/td. The header row and data cells read
+   from the right in RTL; per-cell inline text-align:right (numeric columns)
+   still wins because inline styles beat this rule, which is what we want. */
+[dir='rtl'] th,[dir='rtl'] td{text-align:right}
+
+/* Flex rows that push one item to the far end with margin-left:auto (the
+   "see all" links, nav badge counters, modal footers' first item). */
+[dir='rtl'] .card .hd .link{margin-left:0;margin-right:auto}
+[dir='rtl'] .navitem .n{margin-left:0;margin-right:auto}
+[dir='rtl'] .stripe .x{margin-left:0}
+
+/* Notification badge and card corner tags are pinned with left/right. */
+[dir='rtl'] .badge{right:auto;left:0}
+[dir='rtl'] .lcard .vtag{left:auto;right:5px}
+[dir='rtl'] .lcard .ptag{right:auto;left:5px}
+[dir='rtl'] .lcard .atag{left:auto;right:5px}
+[dir='rtl'] .lcard .savebtn{right:auto;left:5px}
+
+/* Toasts and the hero dots are anchored to the physical corner. */
+[dir='rtl'] #toasts{right:auto;left:14px}
+[dir='rtl'] .toast{border-left:none;border-right:3px solid var(--gold)}
+[dir='rtl'] .toast.ok{border-right-color:#2e9e63}
+[dir='rtl'] .toast.bad{border-right-color:#d9463c}
+[dir='rtl'] .heroDots{right:auto;left:14px}
+
+/* Tracking steps: the connector line is drawn with a left margin. */
+[dir='rtl'] .tstep:after{margin:-12px 20px 6px 0}
+
+/* NOT mirrored / only partially mirrored — stated honestly:
+   • Arrows in "← Prev / Next →" and "← Back to …" are literal characters in
+     the translated dictionaries, so they are already written in the correct
+     reading direction per language rather than being flipped by CSS.
+   • The mobile .bottomnav row order is left-to-right DOM order in both
+     directions; it reads correctly but is not reversed.
+   • The ported template block (lines 1–245) still uses physical padding /
+     margin shorthands in places (e.g. .stripe gap flow, .msg.me alignment),
+     so a few minor spacings are mirrored by the browser's own direction
+     handling rather than by explicit rules here.
+   • Icons that depict direction (none today) would need per-asset flipping;
+     no such asset exists in this app. */
+
+/* Deliberate placeholder for a listing with no photograph. Safety & PPE and
+   Hardware & Fasteners have no owned photo that genuinely depicts them, so
+   rather than showing a picture of something the lot is not, we show a quiet
+   category tile that reads as intentional rather than broken. */
+.ph-empty{
+  width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;padding:12px;text-align:center;
+  background:linear-gradient(150deg,#eef1f5 0%,#e2e7ee 100%);
+}
+.ph-empty .ph-cat{font-size:11px;font-weight:600;color:var(--navy);letter-spacing:-.1px;line-height:1.3}
+.ph-empty .ph-note{font-size:9.5px;color:var(--faint);line-height:1.3}
+

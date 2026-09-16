@@ -6,9 +6,10 @@
  */
 import { Link, useLocation } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useMe, useLogout, getToken } from '@workspace/api-client-react';
+import { useMe, useLogout, useUpdateMe, getToken } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
+import { LANGUAGES, useI18n, isLangCode, statusLabel, type DictKey, type LangCode } from './i18n';
 
 /* ============================ navigation model ============================ */
 
@@ -22,58 +23,71 @@ export type NavKey =
 interface NavItem {
   key: NavKey;
   icon: string;
+  /**
+   * English source label AND the dictionary key. `navLabel()` translates it at
+   * render time, so the nav changes language live without rebuilding the list.
+   * Only `useI18n().t` may consume these values.
+   */
   label: string;
   path: string;
 }
 
 export const NAV_BUYER: NavItem[] = [
-  { key: 'feed', icon: '🏠', label: 'Feed', path: '/feed' },
-  { key: 'explore', icon: '🧭', label: 'Explore', path: '/explore' },
-  { key: 'offers-buyer', icon: '🏷️', label: 'My offers', path: '/offers' },
-  { key: 'rfqs', icon: '📄', label: 'My RFQs', path: '/rfqs' },
-  { key: 'orders', icon: '🧾', label: 'Orders', path: '/orders' },
-  { key: 'shipments', icon: '🚚', label: 'Shipments', path: '/shipments' },
-  { key: 'messages', icon: '💬', label: 'Messages', path: '/messages' },
-  { key: 'saved', icon: '🔖', label: 'Saved', path: '/saved' },
-  { key: 'notifications', icon: '🔔', label: 'Notifications', path: '/notifications' },
-  { key: 'help', icon: '❓', label: 'Help centre', path: '/help' },
-  { key: 'profile', icon: '👤', label: 'Profile', path: '/profile' },
+  { key: 'feed', icon: '🏠', label: 'nav.feed', path: '/feed' },
+  { key: 'explore', icon: '🧭', label: 'nav.explore', path: '/explore' },
+  { key: 'offers-buyer', icon: '🏷️', label: 'nav.offersBuyer', path: '/offers' },
+  { key: 'rfqs', icon: '📄', label: 'nav.rfqs', path: '/rfqs' },
+  { key: 'orders', icon: '🧾', label: 'nav.orders', path: '/orders' },
+  { key: 'shipments', icon: '🚚', label: 'nav.shipments', path: '/shipments' },
+  { key: 'messages', icon: '💬', label: 'nav.messages', path: '/messages' },
+  { key: 'saved', icon: '🔖', label: 'nav.saved', path: '/saved' },
+  { key: 'notifications', icon: '🔔', label: 'nav.notifications', path: '/notifications' },
+  { key: 'help', icon: '❓', label: 'nav.help', path: '/help' },
+  { key: 'profile', icon: '👤', label: 'nav.profile', path: '/profile' },
 ];
 
 export const NAV_SUPPLIER: NavItem[] = [
-  { key: 'listings', icon: '📦', label: 'My listings', path: '/supplier/listings' },
-  { key: 'post', icon: '➕', label: 'Post stock', path: '/supplier/post' },
-  { key: 'offers-sup', icon: '🏷️', label: 'Offers', path: '/supplier/offers' },
-  { key: 'rfq-opps', icon: '📄', label: 'RFQ opportunities', path: '/supplier/rfq-opportunities' },
-  { key: 'orders', icon: '🧾', label: 'Orders', path: '/orders' },
-  { key: 'shipments', icon: '🚚', label: 'Shipments', path: '/shipments' },
-  { key: 'verification', icon: '🛡️', label: 'Verification', path: '/supplier/verification' },
-  { key: 'messages', icon: '💬', label: 'Messages', path: '/messages' },
-  { key: 'notifications', icon: '🔔', label: 'Notifications', path: '/notifications' },
-  { key: 'help', icon: '❓', label: 'Help centre', path: '/help' },
-  { key: 'profile', icon: '👤', label: 'Profile', path: '/profile' },
+  { key: 'listings', icon: '📦', label: 'nav.listings', path: '/supplier/listings' },
+  { key: 'post', icon: '➕', label: 'nav.post', path: '/supplier/post' },
+  { key: 'offers-sup', icon: '🏷️', label: 'nav.offersSup', path: '/supplier/offers' },
+  { key: 'rfq-opps', icon: '📄', label: 'nav.rfqOpps', path: '/supplier/rfq-opportunities' },
+  { key: 'orders', icon: '🧾', label: 'nav.orders', path: '/orders' },
+  { key: 'shipments', icon: '🚚', label: 'nav.shipments', path: '/shipments' },
+  { key: 'verification', icon: '🛡️', label: 'nav.verification', path: '/supplier/verification' },
+  { key: 'messages', icon: '💬', label: 'nav.messages', path: '/messages' },
+  { key: 'notifications', icon: '🔔', label: 'nav.notifications', path: '/notifications' },
+  { key: 'help', icon: '❓', label: 'nav.help', path: '/help' },
+  { key: 'profile', icon: '👤', label: 'nav.profile', path: '/profile' },
 ];
 
 export const NAV_ADMIN: NavItem[] = [
-  { key: 'overview', icon: '🏠', label: 'Overview', path: '/admin' },
-  { key: 'admin-suppliers', icon: '🚚', label: 'Suppliers', path: '/admin/suppliers' },
-  { key: 'admin-verify', icon: '🛡️', label: 'Verification desk', path: '/admin/verification' },
-  { key: 'admin-listings', icon: '📦', label: 'Listings', path: '/admin/listings' },
-  { key: 'admin-rfqs', icon: '📄', label: 'RFQs', path: '/admin/rfqs' },
-  { key: 'admin-payments', icon: '💳', label: 'Payments', path: '/admin/payments' },
-  { key: 'sources', icon: '🔌', label: 'Supply sources', path: '/admin/sources' },
-  { key: 'growth', icon: '📣', label: 'Banners and promos', path: '/admin/growth' },
-  { key: 'shipments', icon: '🚚', label: 'Shipments', path: '/shipments' },
-  { key: 'features', icon: '⚙️', label: 'Features', path: '/admin/features' },
-  { key: 'help', icon: '❓', label: 'Help centre', path: '/help' },
+  { key: 'overview', icon: '🏠', label: 'nav.overview', path: '/admin' },
+  { key: 'admin-suppliers', icon: '🚚', label: 'nav.adminSuppliers', path: '/admin/suppliers' },
+  { key: 'admin-verify', icon: '🛡️', label: 'nav.adminVerify', path: '/admin/verification' },
+  { key: 'admin-listings', icon: '📦', label: 'nav.adminListings', path: '/admin/listings' },
+  { key: 'admin-rfqs', icon: '📄', label: 'nav.adminRfqs', path: '/admin/rfqs' },
+  { key: 'admin-payments', icon: '💳', label: 'nav.adminPayments', path: '/admin/payments' },
+  { key: 'sources', icon: '🔌', label: 'nav.sources', path: '/admin/sources' },
+  { key: 'growth', icon: '📣', label: 'nav.growth', path: '/admin/growth' },
+  { key: 'shipments', icon: '🚚', label: 'nav.shipments', path: '/shipments' },
+  { key: 'features', icon: '⚙️', label: 'nav.features', path: '/admin/features' },
+  { key: 'help', icon: '❓', label: 'nav.help', path: '/help' },
 ];
 
 /** Logged-out visitors get the public slice of the marketplace. */
 export const NAV_GUEST: NavItem[] = [
-  { key: 'explore', icon: '🧭', label: 'Explore stock', path: '/explore' },
-  { key: 'suppliers', icon: '🏭', label: 'Suppliers', path: '/suppliers' },
-  { key: 'help', icon: '❓', label: 'How it works', path: '/help' },
+  { key: 'explore', icon: '🧭', label: 'nav.exploreStock', path: '/explore' },
+  { key: 'suppliers', icon: '🏭', label: 'nav.suppliers', path: '/suppliers' },
+  { key: 'help', icon: '❓', label: 'nav.howItWorks', path: '/help' },
 ];
+
+/**
+ * Translate a nav item's label. `NavItem.label` is a `DictKey` at runtime; the
+ * cast is the one place where the nav model and the dictionary meet.
+ */
+export function navLabel(t: (key: DictKey, vars?: Record<string, string | number>) => string, item: NavItem): string {
+  return t(item.label as DictKey);
+}
 
 /** Roles collapse to one of the three template dashboards. */
 export type DashboardRole = 'buyer' | 'supplier' | 'admin';
@@ -164,8 +178,20 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
   const [, navigate] = useLocation();
   const { data: user } = useMe();
   const logout = useLogout();
+  const updateMe = useUpdateMe();
+  const { t, lang, setLang } = useI18n();
   const loggedIn = !!getToken();
   const [q, setQ] = useState('');
+
+  /**
+   * Switching language is always local and immediate. When an account is signed
+   * in we also mirror the choice onto it, but the request is fire-and-forget:
+   * a failed PATCH must never roll the interface back or block the switch.
+   */
+  const changeLang = (next: LangCode) => {
+    setLang(next);
+    if (loggedIn) void updateMe.mutateAsync({ lang: next }).catch(() => { /* non-blocking */ });
+  };
 
   return (
     <div className="topbar">
@@ -181,10 +207,10 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
           <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
         </svg>
         <input
-          placeholder="Search products, suppliers, categories…"
+          placeholder={t('topbar.searchPlaceholder')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label="Search the marketplace"
+          aria-label={t('topbar.searchAria')}
         />
       </form>
 
@@ -197,22 +223,37 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
       </div>
       <div className="spacer" />
 
+      {/* Language switcher — always visible, signed in or not. Native names only,
+          so a speaker recognises their language without reading English. */}
+      <div className="rolepick">
+        <select
+          value={lang}
+          onChange={(e) => { if (isLangCode(e.target.value)) changeLang(e.target.value); }}
+          aria-label={t('topbar.languageAria')}
+          title={t('topbar.languageAria')}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>{l.native}</option>
+          ))}
+        </select>
+      </div>
+
       {loggedIn && (
-        <Link href="/notifications" className="iconbtn" title="Notifications">
+        <Link href="/notifications" className="iconbtn" title={t('topbar.notifications')}>
           🔔{notificationCount > 0 && <span className="badge">{notificationCount}</span>}
         </Link>
       )}
 
       {loggedIn && role ? (
         <div className="rolepick">
-          <span style={{ fontSize: 12, opacity: 0.8 }}>{user?.name ?? 'Account'}</span>
+          <span style={{ fontSize: 12, opacity: 0.8 }}>{user?.name ?? t('topbar.account')}</span>
           <span className="pill p-navy">{role}</span>
-          <button className="iconbtn" onClick={logout} title="Sign out" aria-label="Sign out">⎋</button>
+          <button className="iconbtn" onClick={logout} title={t('action.signOut')} aria-label={t('action.signOut')}>⎋</button>
         </div>
       ) : (
         <div className="rolepick">
-          <Link href="/sign-in" className="btn btn-sm btn-grey">Sign in</Link>
-          <Link href="/sign-up" className="btn btn-sm btn-gold">Join free</Link>
+          <Link href="/sign-in" className="btn btn-sm btn-grey">{t('action.signIn')}</Link>
+          <Link href="/sign-up" className="btn btn-sm btn-gold">{t('action.joinFree')}</Link>
         </div>
       )}
     </div>
@@ -220,14 +261,15 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
 }
 
 export function CategoryRail({ active, onPick }: { active?: string; onPick?: (c: string) => void }) {
+  const { t } = useI18n();
   return (
     <div className="rail">
-      <button className={!active ? 'on' : ''} onClick={() => onPick?.('All')}>All industries</button>
+      <button className={!active ? 'on' : ''} onClick={() => onPick?.('All')}>{t('rail.allIndustries')}</button>
       {CATEGORIES.map((c) => (
         <button key={c} className={active === c ? 'on' : ''} onClick={() => onPick?.(c)}>{c}</button>
       ))}
       <Link href="/help" style={{ marginLeft: 'auto', color: 'var(--blue)', alignSelf: 'center', padding: '8px 11px', fontSize: 12.5 }}>
-        How it works
+        {t('rail.howItWorks')}
       </Link>
     </div>
   );
@@ -241,6 +283,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ items, activeKey, who, counts }: SidebarProps) {
+  const { t } = useI18n();
   return (
     <nav className="side">
       <div className="who">
@@ -252,27 +295,28 @@ export function Sidebar({ items, activeKey, who, counts }: SidebarProps) {
         return (
           <Link key={it.key} href={it.path} className={`navitem ${activeKey === it.key ? 'on' : ''}`}>
             <span aria-hidden="true">{it.icon}</span>
-            {it.label}
+            {navLabel(t, it)}
             {n ? <span className="n">{n}</span> : null}
           </Link>
         );
       })}
       <div className="sidefoot">
-        <b>More industries. More countries.</b>
-        One marketplace for ready stock.
+        <b>{t('sidebar.moreIndustries')}</b>
+        {t('sidebar.moreIndustriesSub')}
       </div>
     </nav>
   );
 }
 
 export function BottomNav({ items, activeKey }: { items: NavItem[]; activeKey?: NavKey }) {
+  const { t } = useI18n();
   const tabs = items.slice(0, 5);
   return (
     <div className="bottomnav">
       {tabs.map((it) => (
         <Link key={it.key} href={it.path} className={activeKey === it.key ? 'on' : ''}>
           <span style={{ fontSize: 19 }} aria-hidden="true">{it.icon}</span>
-          {it.label}
+          {navLabel(t, it)}
         </Link>
       ))}
     </div>
@@ -293,12 +337,19 @@ export function activeKeyFor(items: NavItem[], location: string): NavKey | undef
 
 export function Spinner() { return <div className="spinner" />; }
 
-export function Verified({ label = 'Verified' }: { label?: string }) {
-  return <span className="pill p-green">✓ {label}</span>;
+/**
+ * `Verified` and `DemoTag` are reused by many pages. The default label is
+ * translated here; a caller that passes an explicit `label` keeps full control
+ * (those callers translate their own string).
+ */
+export function Verified({ label }: { label?: string }) {
+  const { t } = useI18n();
+  return <span className="pill p-green">✓ {label ?? t('common.verified')}</span>;
 }
 
 export function DemoTag() {
-  return <span className="pill p-amber" title="Seed data — not a real offer">Demo</span>;
+  const { t } = useI18n();
+  return <span className="pill p-amber" title={t('cards.demoTitle')}>{t('cards.demo')}</span>;
 }
 
 export function Stars({ rating }: { rating: number }) {
@@ -315,14 +366,22 @@ const STATUS_PILL: Record<string, string> = {
   active: 'p-green', sold_out: 'p-grey',
   scheduled: 'p-amber', in_progress: 'p-blue', passed: 'p-green', failed: 'p-red',
   pending: 'p-amber', paid: 'p-green', shipped: 'p-blue', delivered: 'p-green', cancelled: 'p-red',
+  missing: 'p-grey', approved: 'p-green', countered: 'p-amber', withdrawn: 'p-grey',
 };
 
+/**
+ * Raw API status values are mapped through the dictionary, so `sold_out`
+ * renders as the translated phrase. An unknown status falls back to the raw
+ * value with underscores replaced — never blank.
+ */
 export function StatusChip({ status }: { status: string }) {
-  return <span className={`pill ${STATUS_PILL[status] ?? 'p-grey'}`}>{status.replace(/_/g, ' ')}</span>;
+  const { lang } = useI18n();
+  return <span className={`pill ${STATUS_PILL[status] ?? 'p-grey'}`}>{statusLabel(lang, status)}</span>;
 }
 
 /* ================================ cards ================================== */
 
+/** Currency symbol + amount exactly as the API supplied them; never recalculated. */
 function Price({ p }: { p: Product }) {
   return (
     <span className="price">
@@ -334,23 +393,29 @@ function Price({ p }: { p: Product }) {
 }
 
 export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) => void }) {
+  const { t } = useI18n();
   return (
     <div className="lcard">
       <Link href={`/products/${p.id}`} className="media">
         {p.imageKey
           ? <img src={p.imageKey} alt={p.name} loading="lazy" />
-          : <div className="ph" style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: 'var(--faint)', fontSize: 11 }}>no photo</div>}
+          : (
+            <div className="ph-empty">
+              <span className="ph-cat">{p.category}</span>
+              <span className="ph-note">{t('cards.noPhoto')}</span>
+            </div>
+          )}
         {p.verified && <span className="vtag"><Verified /></span>}
         {p.dataSource === 'demo' && <span className="ptag"><DemoTag /></span>}
       </Link>
       <div className="bd">
         <h3><Link href={`/products/${p.id}`}>{p.name}</Link></h3>
         <div className="meta"><b>{p.originCountry}</b></div>
-        <div className="meta">MOQ {p.moq.toLocaleString()} {p.unit}</div>
+        <div className="meta">{t('cards.moq')} {p.moq.toLocaleString()} {p.unit}</div>
         <div className="between" style={{ marginTop: 'auto', paddingTop: 5 }}>
           <Price p={p} />
           {onSave && (
-            <button className="btn btn-sm btn-grey" onClick={() => onSave(p)} title="Save this lot">🔖</button>
+            <button className="btn btn-sm btn-grey" onClick={() => onSave(p)} title={t('cards.saveLot')}>🔖</button>
           )}
         </div>
       </div>
@@ -359,6 +424,7 @@ export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) =
 }
 
 export function SupplierCard({ s }: { s: Supplier }) {
+  const { t } = useI18n();
   return (
     <Link href={`/suppliers/${s.id}`} className="card">
       <div className="bd row" style={{ alignItems: 'flex-start', gap: 10 }}>
@@ -371,11 +437,11 @@ export function SupplierCard({ s }: { s: Supplier }) {
             {s.verifiedLevel >= 2 ? <Verified /> : (s.dataSource === 'demo' ? <DemoTag /> : null)}
           </div>
           <div className="muted" style={{ fontSize: 11.5 }}>
-            {s.country}{s.city ? ` · ${s.city}` : ''} · {s.productCount} listing{s.productCount === 1 ? '' : 's'}
+            {s.country}{s.city ? ` · ${s.city}` : ''} · {s.productCount} {t('listings.col.lot')}
           </div>
           <div className="row" style={{ marginTop: 5, gap: 8 }}>
             <Stars rating={s.rating} />
-            <span className="muted" style={{ fontSize: 11 }}>{s.inspectionsCount} inspections</span>
+            <span className="muted" style={{ fontSize: 11 }}>{s.inspectionsCount} {t('cards.inspections')}</span>
           </div>
         </div>
       </div>
@@ -384,6 +450,7 @@ export function SupplierCard({ s }: { s: Supplier }) {
 }
 
 export function RfqCard({ r }: { r: Rfq }) {
+  const { t } = useI18n();
   return (
     <Link href={`/rfqs/${r.id}`} className="card">
       <div className="bd">
@@ -394,7 +461,7 @@ export function RfqCard({ r }: { r: Rfq }) {
         <b style={{ display: 'block', fontSize: 13, margin: '5px 0 3px' }}>{r.title}</b>
         <div className="muted" style={{ fontSize: 11.5 }}>
           {r.quantity.toLocaleString()} {r.unit}
-          {r.targetCountry ? ` · ${r.targetCountry}` : ''} · {r.quoteCount} quote{r.quoteCount === 1 ? '' : 's'}
+          {r.targetCountry ? ` · ${r.targetCountry}` : ''} · {t('rfq.quotesCount', { n: r.quoteCount })}
         </div>
       </div>
     </Link>
@@ -430,6 +497,7 @@ export function requireAuthGate() {
 export function AuthGateModal() {
   const [open, setOpen] = useState(false);
   const { data: user } = useMe();
+  const { t } = useI18n();
 
   useEffect(() => {
     const handler = () => { if (!getToken()) setOpen(true); };
@@ -444,16 +512,15 @@ export function AuthGateModal() {
     <div className="overlay" onClick={() => setOpen(false)}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>Member access</h2>
-          <button className="x" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+          <h2>{t('gate.title')}</h2>
+          <button className="x" onClick={() => setOpen(false)} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
-            Contacting suppliers, posting requests and quoting are member actions.
-            Browsing the marketplace stays free and open.
+            {t('gate.body')}
           </p>
-          <Link href="/sign-up" className="btn btn-gold" style={{ width: '100%', marginBottom: 8 }}>Create free account</Link>
-          <Link href="/sign-in" className="btn btn-ghost" style={{ width: '100%' }}>I already have an account</Link>
+          <Link href="/sign-up" className="btn btn-gold" style={{ width: '100%', marginBottom: 8 }}>{t('gate.createAccount')}</Link>
+          <Link href="/sign-in" className="btn btn-ghost" style={{ width: '100%' }}>{t('gate.haveAccount')}</Link>
         </div>
       </div>
     </div>

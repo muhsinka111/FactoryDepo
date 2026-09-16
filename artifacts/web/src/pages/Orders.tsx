@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { useMe, useMyOrders, useDashboardStats, getToken } from '@workspace/api-client-react';
 import { View, Empty, StatusChip, Spinner, dashboardRole } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * Orders — every order the signed-in user is party to (buy-now / dropshipping).
@@ -22,6 +23,7 @@ interface StatCell {
 }
 
 export default function Orders() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const user = me.data;
   const loggedIn = !!getToken();
@@ -32,23 +34,24 @@ export default function Orders() {
   const stats = useDashboardStats({ enabled: !!user });
   const s = stats.data;
 
-  const fmt = (n: number | undefined): string => (typeof n === 'number' ? n.toLocaleString() : '—');
+  /** Counts are API values; only their grouping is localised. */
+  const fmt = (n: number | undefined): string => (typeof n === 'number' ? n.toLocaleString(locale) : '—');
 
   // Only metrics the API genuinely computes today. totalViews is hard-coded to 0
   // server-side because nothing tracks views yet, so it is shown as '—'.
   const cells: StatCell[] = [
-    { icon: '📦', value: fmt(s?.totalListings), label: isSupplier ? 'My listings' : 'My RFQs' },
-    { icon: '🏷️', value: fmt(s?.activeOffers), label: isSupplier ? 'Offers received' : 'Offers on my RFQs' },
-    { icon: '🧾', value: fmt(s?.orders), label: 'Orders' },
+    { icon: '📦', value: fmt(s?.totalListings), label: isSupplier ? t('orders.statListings') : t('nav.rfqs') },
+    { icon: '🏷️', value: fmt(s?.activeOffers), label: isSupplier ? t('orders.statOffersReceived') : t('orders.statOffersOnRfqs') },
+    { icon: '🧾', value: fmt(s?.orders), label: t('orders.statOrders') },
     ...(isSupplier
-      ? [{ icon: '🚚', value: fmt(s?.soldItems), label: 'Sold items', title: 'Shipped or delivered orders' }]
+      ? [{ icon: '🚚', value: fmt(s?.soldItems), label: t('orders.statSoldItems'), title: t('orders.statSoldTitle') }]
       : []),
-    { icon: '👁️', value: '—', label: 'Views · not tracked yet', title: 'View tracking is not implemented yet' },
+    { icon: '👁️', value: '—', label: t('orders.statViews'), title: t('orders.statViewsTitle') },
   ];
 
   if (me.isLoading) {
     return (
-      <View title="Orders">
+      <View title={t('orders.title')}>
         <Spinner />
       </View>
     );
@@ -56,12 +59,12 @@ export default function Orders() {
 
   if (!user) {
     return (
-      <View title="Orders" sub="Sign in to see the orders you are party to">
-        <Empty title="You are not signed in">
-          Orders are private: sign in to see what you have committed to buy or sell.
+      <View title={t('orders.title')} sub={t('orders.signInSub')}>
+        <Empty title={t('orders.notSignedIn')}>
+          {t('orders.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/sign-in?next=%2Forders" className="btn btn-sm btn-primary">Sign in</Link>
-            <Link href="/sign-up?next=%2Forders" className="btn btn-sm btn-ghost">Create an account</Link>
+            <Link href="/sign-in?next=%2Forders" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
+            <Link href="/sign-up?next=%2Forders" className="btn btn-sm btn-ghost">{t('action.createAccount')}</Link>
           </div>
         </Empty>
       </View>
@@ -73,8 +76,8 @@ export default function Orders() {
 
   return (
     <View
-      title="Orders"
-      sub={isSupplier ? 'Orders buyers placed on your stock' : 'Everything you have committed to buy'}
+      title={t('orders.title')}
+      sub={isSupplier ? t('orders.subSupplier') : t('orders.subBuyer')}
     >
       <div className="grid stats">
         {cells.map((c) => (
@@ -87,41 +90,39 @@ export default function Orders() {
           </div>
         ))}
       </div>
-      {stats.isError && <p className="errtext" style={{ marginTop: -8, marginBottom: 12 }}>Metrics could not be loaded right now.</p>}
+      {stats.isError && <p className="errtext" style={{ marginTop: -8, marginBottom: 12 }}>{t('orders.metricsError')}</p>}
 
       {orders.isLoading ? (
         <Spinner />
       ) : orders.isError ? (
-        <Empty title="Orders could not be loaded">
-          The API did not return your orders. Refresh the page or sign in again.
+        <Empty title={t('orders.loadErrorTitle')}>
+          {t('orders.loadErrorBody')}
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No orders yet">
-          {isSupplier
-            ? 'When a buyer orders from your stock it appears here.'
-            : 'Buy-now orders you place on ready stock appear here.'}
+        <Empty title={t('orders.emptyTitle')}>
+          {isSupplier ? t('orders.emptySupplier') : t('orders.emptyBuyer')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/explore" className="btn btn-sm btn-primary">Browse ready stock</Link>
-            {!isSupplier && <Link href="/rfqs" className="btn btn-sm btn-ghost">Post an RFQ</Link>}
+            <Link href="/explore" className="btn btn-sm btn-primary">{t('orders.browseStock')}</Link>
+            {!isSupplier && <Link href="/rfqs" className="btn btn-sm btn-ghost">{t('orders.postRfq')}</Link>}
           </div>
         </Empty>
       ) : (
         <div className="card">
           <div className="hd">
-            <b>{count.toLocaleString()} order{count === 1 ? '' : 's'}</b>
-            <span className="muted" style={{ marginLeft: 'auto' }}>Newest first</span>
+            <b>{t('orders.count', { n: count.toLocaleString(locale) })}</b>
+            <span className="muted" style={{ marginLeft: 'auto' }}>{t('common.newestFirst')}</span>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Order</th>
-                  <th>Product</th>
-                  <th>Counterparty</th>
-                  <th style={{ textAlign: 'right' }}>Qty</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
-                  <th>Status</th>
-                  <th className="hidem">Date</th>
+                  <th>{t('orders.col.order')}</th>
+                  <th>{t('orders.col.product')}</th>
+                  <th>{t('orders.col.counterparty')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('orders.col.qty')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('orders.col.total')}</th>
+                  <th>{t('orders.col.status')}</th>
+                  <th className="hidem">{t('orders.col.date')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -132,14 +133,14 @@ export default function Orders() {
                       <Link href={`/products/${o.productId}`} className="strong">{o.productName}</Link>
                     </td>
                     <td>
-                      {o.side === 'selling' ? `Buyer #${o.buyerId}` : o.supplierName}
-                      <div className="muted">{o.side === 'selling' ? 'buyer' : 'supplier'}</div>
+                      {o.side === 'selling' ? t('orders.buyerId', { id: o.buyerId }) : o.supplierName}
+                      <div className="muted">{o.side === 'selling' ? t('orders.buyerLabel') : t('orders.supplierLabel')}</div>
                     </td>
-                    <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString(locale)}</td>
                     <td style={{ textAlign: 'right' }} className="strong">{money(o.currency, o.total)}</td>
                     <td><StatusChip status={o.status} /></td>
-                    <td className="muted hidem" title={new Date(o.createdAt).toLocaleString()}>
-                      {new Date(o.createdAt).toLocaleDateString()}
+                    <td className="muted hidem" title={new Date(o.createdAt).toLocaleString(locale)}>
+                      {new Date(o.createdAt).toLocaleDateString(locale)}
                     </td>
                   </tr>
                 ))}

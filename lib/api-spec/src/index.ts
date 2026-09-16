@@ -124,6 +124,7 @@ export const CATEGORIES = [
   'Food Processing',
   'Marine & Offshore',
   'Aerospace',
+  'Hardware & Fasteners',
 ] as const;
 
 export const COUNTRIES = ['Türkiye', 'China', 'Vietnam', 'Germany', 'India', 'USA', 'Italy', 'Poland', 'Mexico', 'South Korea', 'Japan'] as const;

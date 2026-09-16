@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { useProducts, useRfqs, useSuppliers, useMe } from '@workspace/api-client-react';
 import { View, ProductCard, Spinner, Empty, RAIL_CATEGORIES } from '../components';
 import { COUNTRIES } from '@workspace/api-spec';
+import { useI18n } from '../i18n';
 
 /**
  * Buyer feed — the landing view after sign-in.
@@ -18,6 +19,7 @@ function readParam(key: string): string {
 }
 
 export default function Feed() {
+  const { t, locale } = useI18n();
   const { data: user } = useMe();
 
   const [q, setQ] = useState(() => readParam('q'));
@@ -65,6 +67,8 @@ export default function Feed() {
     setQ(''); setAppliedQ(''); setCategory(''); setCountry('');
     setMinPrice(''); setMaxPrice(''); setPage(1);
   };
+  // The empty string is the "no category" sentinel the API understands; only the
+  // visible label is translated, so the request never depends on the language.
   const pickCategory = (c: string) => {
     setCategory(c === 'All industries' ? '' : c);
     setPage(1);
@@ -75,24 +79,24 @@ export default function Feed() {
 
   return (
     <View
-      title={user ? `Welcome back, ${user.name.split(' ')[0]}` : 'Marketplace feed'}
-      sub="Ready stock, surplus and overstock lots from verified factories — newest first."
+      title={user ? t('feed.welcomeBack', { name: user.name.split(' ')[0] ?? user.name }) : t('feed.title')}
+      sub={t('feed.sub')}
       actions={
         <div className="row">
-          <Link href="/supplier/post" className="btn btn-sm btn-grey">Sell stock</Link>
-          <Link href="/rfqs" className="btn btn-gold">Post a request</Link>
+          <Link href="/supplier/post" className="btn btn-sm btn-grey">{t('feed.sellStock')}</Link>
+          <Link href="/rfqs" className="btn btn-gold">{t('feed.postRequest')}</Link>
         </div>
       }
     >
       <div className="stripe">
         <span>
-          <b>{products.isLoading ? '—' : total.toLocaleString()}</b> lots match your filters
+          <b>{products.isLoading ? '—' : total.toLocaleString(locale)}</b> {t('feed.lotsMatch')}
         </span>
         <span>
-          <b>{suppliers.isLoading ? '—' : verifiedSuppliers}</b> verified suppliers
+          <b>{suppliers.isLoading ? '—' : verifiedSuppliers.toLocaleString(locale)}</b> {t('feed.verifiedSuppliers')}
         </span>
         <span>
-          <b>{rfqs.isLoading ? '—' : openRequests}</b> open requests
+          <b>{rfqs.isLoading ? '—' : openRequests.toLocaleString(locale)}</b> {t('feed.openRequests')}
         </span>
       </div>
 
@@ -104,7 +108,7 @@ export default function Feed() {
               className={`chip ${category === '' ? 'on' : ''}`}
               onClick={() => pickCategory('All industries')}
             >
-              All industries
+              {t('feed.allIndustries')}
             </button>
             {RAIL_CATEGORIES.map((c) => (
               <button
@@ -121,44 +125,44 @@ export default function Feed() {
             <input
               className="in"
               style={{ width: 210 }}
-              placeholder="Copper cathode, pumps…"
+              placeholder={t('explore.searchPlaceholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && apply()}
-              aria-label="Search lots"
+              aria-label={t('feed.searchAria')}
             />
             <select
               value={country}
               onChange={(e) => { setCountry(e.target.value); setPage(1); }}
-              aria-label="Origin country"
+              aria-label={t('explore.originAria')}
             >
-              <option value="">All origins</option>
+              <option value="">{t('feed.allOrigins')}</option>
               {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <input
               className="in"
               style={{ width: 88 }}
-              placeholder="Min $"
+              placeholder={t('explore.min')}
               inputMode="numeric"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              aria-label="Minimum price"
+              aria-label={t('feed.minAria')}
             />
             <input
               className="in"
               style={{ width: 88 }}
-              placeholder="Max $"
+              placeholder={t('explore.max')}
               inputMode="numeric"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              aria-label="Maximum price"
+              aria-label={t('feed.maxAria')}
             />
-            <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>Search</button>
+            <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>{t('action.search')}</button>
             {hasFilters && (
-              <button className="btn btn-sm btn-grey" onClick={clear}>Clear filters</button>
+              <button className="btn btn-sm btn-grey" onClick={clear}>{t('action.clearFilters')}</button>
             )}
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              {products.isLoading ? '—' : `${total.toLocaleString()} lot${total === 1 ? '' : 's'}`}
+              {products.isLoading ? '—' : t('listings.count', { n: total.toLocaleString(locale) })}
             </span>
           </div>
         </div>
@@ -166,21 +170,25 @@ export default function Feed() {
 
       <div className="card">
         <div className="hd">
-          <h2>{category || 'All industries'}</h2>
+          <h2>{category || t('feed.allIndustries')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
             {products.isLoading
               ? '—'
               : total === 0
-                ? 'No lots'
-                : `${first.toLocaleString()}–${last.toLocaleString()} of ${total.toLocaleString()}`}
+                ? t('feed.noLots')
+                : t('feed.shownRange', {
+                    first: first.toLocaleString(locale),
+                    last: last.toLocaleString(locale),
+                    total: total.toLocaleString(locale),
+                  })}
           </span>
         </div>
 
         {products.isLoading ? (
           <Spinner />
         ) : items.length === 0 ? (
-          <Empty title="No lots match those filters">
-            Try a different industry, another origin country, or clear the filters.
+          <Empty title={t('feed.emptyTitle')}>
+            {t('feed.emptyBody')}
           </Empty>
         ) : (
           <div className="bd">
@@ -198,29 +206,32 @@ export default function Feed() {
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
           >
-            ← Prev
+            {t('explore.prev')}
           </button>
           <span className="muted">
-            Page {(products.data?.page ?? page).toLocaleString()} of {pages.toLocaleString()}
+            {t('explore.page', {
+              page: (products.data?.page ?? page).toLocaleString(locale),
+              pages: pages.toLocaleString(locale),
+            })}
           </span>
           <button
             className="btn btn-sm btn-grey"
             disabled={page >= pages}
             onClick={() => setPage(page + 1)}
           >
-            Next →
+            {t('explore.next')}
           </button>
         </div>
       )}
 
       <div className="stripe" style={{ marginTop: 12 }}>
         <span>
-          Looking for something specific?{' '}
-          <Link href="/rfqs">Post a request</Link> and let verified factories quote you.
+          {t('feed.lookingFor')}{' '}
+          <Link href="/rfqs">{t('feed.postRequestLink')}</Link> {t('feed.lookingForTail')}
         </span>
         <span>
-          Selling instead? <Link href="/supplier/post">List your stock</Link> —{' '}
-          {user ? `signed in as ${user.role}` : <Link href="/sign-up">create a free account</Link>}.
+          {t('feed.sellingInstead')} <Link href="/supplier/post">{t('feed.listYourStock')}</Link> —{' '}
+          {user ? t('feed.signedInAs', { role: user.role }) : <Link href="/sign-up">{t('feed.createFree')}</Link>}.
         </span>
       </div>
     </View>
