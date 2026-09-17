@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearch } from 'wouter';
 import { useProducts, useCategoryCounts } from '@workspace/api-client-react';
 import { View, ProductCard, Spinner, Empty } from '../components';
 import { COUNTRIES } from '@workspace/api-spec';
@@ -14,6 +15,10 @@ function readParam(key: string): string {
  */
 export default function Explore() {
   const { t, locale } = useI18n();
+  // The filter state lives in the QUERY STRING, so it must subscribe to the
+  // query — not to the path. wouter's `useLocation()` returns the pathname only
+  // (wouter 3.x), so `/explore?category=Steel` looks identical to `/explore`
+  // there; `useSearch()` is the reactive query-string hook.
   const [q, setQ] = useState(() => readParam('q'));
   const [appliedQ, setAppliedQ] = useState(() => readParam('q'));
   const [category, setCategory] = useState(() => readParam('category'));
@@ -22,18 +27,26 @@ export default function Explore() {
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(1);
 
-  // Keep in step with the topbar search and the category rail, which navigate
-  // to /explore?q=… and /explore?category=… .
+  const search = useSearch();
+  /**
+   * Keep in step with the topbar search and the category rail, which navigate to
+   * /explore?q=… and /explore?category=… .
+   *
+   * The dependency is the QUERY STRING from wouter's `useSearch()`. Two earlier
+   * attempts each looked right and failed:
+   *   • listening on `popstate` — wouter navigates with pushState, which never
+   *     fires popstate, so the grid kept the previous results;
+   *   • depending on `useLocation()` — in wouter 3.x that hook returns the
+   *     pathname only, so adding `?category=Steel` did not change it at all.
+   * `useSearch()` subscribes to pushState/replaceState/popstate, which covers the
+   * rail click, the topbar search and back/forward.
+   */
   useEffect(() => {
-    const onPop = () => {
-      setQ(readParam('q'));
-      setAppliedQ(readParam('q'));
-      setCategory(readParam('category'));
-      setPage(1);
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
+    setQ(readParam('q'));
+    setAppliedQ(readParam('q'));
+    setCategory(readParam('category'));
+    setPage(1);
+  }, [search]);
 
   const res = useProducts({
     q: appliedQ || undefined,

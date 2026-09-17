@@ -4,7 +4,7 @@
  * shell: a dense navy topbar, a category rail, a left sidebar of role nav and a
  * mobile bottom nav. Class names here map 1:1 onto styles.css.
  */
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
@@ -273,13 +273,17 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
 export function CategoryRail({ active, onPick }: { active?: string; onPick?: (c: string) => void }) {
   const { t } = useI18n();
   const [, navigate] = useLocation();
+  const search = useSearch();
   const { data } = useCategoryCounts();
   const cats = data?.items ?? [];
 
-  // App.tsx renders this bare, so read the active category out of the URL.
-  const urlCategory =
-    typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('category') ?? '';
-  const current = active ?? urlCategory;
+  // The active category comes from the QUERY STRING, which is a different
+  // channel from the path in wouter: `useLocation()` in wouter 3.x returns the
+  // pathname only (its `usePathname`), so a `?category=…` navigation never
+  // appears there — and reading `window.location.search` at render time is not
+  // reactive either, which is why the highlight stuck on "All industries".
+  // `useSearch()` is the hook that subscribes to push/replace/popstate.
+  const current = active ?? new URLSearchParams(search).get('category') ?? '';
 
   const pick = (c: string) => {
     if (onPick) { onPick(c); return; }
