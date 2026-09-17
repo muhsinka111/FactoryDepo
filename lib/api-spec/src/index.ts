@@ -26,6 +26,7 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/api/me', auth: 'user', output: c.zUser, desc: 'Current user profile' },
 
   { method: 'GET', path: '/api/products', auth: 'public', input: c.zProductListQuery, output: c.zProductList, desc: 'Search products: q, category, country, min/maxPrice, page, limit' },
+  { method: 'GET', path: '/api/products/categories', auth: 'public', output: c.zCategoryCountList, desc: 'Live listing count per category — the UI offers only categories that hold stock' },
   { method: 'GET', path: '/api/products/:id', auth: 'public', output: c.zProduct, desc: 'Product detail' },
 
   { method: 'GET', path: '/api/suppliers', auth: 'public', output: c.zSupplierList, desc: 'Verified supplier directory' },
