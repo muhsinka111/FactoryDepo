@@ -16,4 +16,6 @@ scripts/import/alibaba_sample.html
 
 # Stray agent scratch files that must never ship
 .claude-restart.*
+# Ad-hoc i18n audit harnesses written into the web package by tooling
+artifacts/web/i18n-*.cjs
 

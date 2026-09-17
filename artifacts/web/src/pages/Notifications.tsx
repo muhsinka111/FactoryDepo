@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { useNotifications, useMarkNotificationsRead, useMe, getToken } from '@workspace/api-client-react';
 import { View, Empty, Spinner, requireAuthGate } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * Notifications — the caller's own feed, newest first.
@@ -13,22 +14,10 @@ import { View, Empty, Spinner, requireAuthGate } from '../components';
  * `createdAt` is the only time the API supplies, and it is rendered as a
  * relative label; the exact timestamp stays in the title attribute. A row with
  * no timestamp renders '—'.
+ *
+ * `text` and `type` on a row are server-supplied notification content, not
+ * interface copy — they are shown as received.
  */
-
-/** Compact "5m ago" label. Falls back to a date, then to '—' for junk input. */
-function timeAgo(iso: string): string {
-  const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return '—';
-  const secs = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (secs < 45) return 'just now';
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
 
 function errMessage(e: unknown, fallback: string): string {
   const m = e instanceof Error ? e.message : '';
@@ -66,6 +55,7 @@ function resolveLink(link: string | null): string | null {
 }
 
 export default function Notifications() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const user = me.data;
 
@@ -73,9 +63,24 @@ export default function Notifications() {
   const markRead = useMarkNotificationsRead();
   const [actionErr, setActionErr] = useState('');
 
+  /** Compact relative label in the interface language; exact time stays in `title`. */
+  const timeAgo = (iso: string): string => {
+    const ts = new Date(iso).getTime();
+    if (Number.isNaN(ts)) return '—';
+    const secs = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (secs < 45) return t('notes.justNow');
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return t('notes.minutesAgo', { n: mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('notes.hoursAgo', { n: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('notes.daysAgo', { n: days });
+    return new Date(ts).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   if (me.isLoading) {
     return (
-      <View title="Notifications">
+      <View title={t('notes.title')}>
         <Spinner />
       </View>
     );
@@ -83,12 +88,12 @@ export default function Notifications() {
 
   if (!user) {
     return (
-      <View title="Notifications" sub="Sign in to see your account activity">
-        <Empty title="You are not signed in">
-          Notifications are private to your account: sign in to read them.
+      <View title={t('notes.title')} sub={t('notes.signInSub')}>
+        <Empty title={t('notes.notSignedIn')}>
+          {t('notes.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/sign-in?next=%2Fnotifications" className="btn btn-sm btn-primary">Sign in</Link>
-            <Link href="/sign-up?next=%2Fnotifications" className="btn btn-sm btn-ghost">Create an account</Link>
+            <Link href="/sign-in?next=%2Fnotifications" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
+            <Link href="/sign-up?next=%2Fnotifications" className="btn btn-sm btn-ghost">{t('action.createAccount')}</Link>
           </div>
         </Empty>
       </View>
@@ -105,14 +110,14 @@ export default function Notifications() {
     try {
       await markRead.mutateAsync();
     } catch (e) {
-      setActionErr(errMessage(e, 'Notifications could not be marked read — try again.'));
+      setActionErr(errMessage(e, t('notes.errMark')));
     }
   };
 
   return (
     <View
-      title="Notifications"
-      sub="Offers, messages and shipment updates on your account, newest first."
+      title={t('notes.title')}
+      sub={t('notes.sub')}
       actions={
         <div className="row">
           <button
@@ -120,15 +125,15 @@ export default function Notifications() {
             onClick={() => void notifs.refetch()}
             disabled={notifs.isFetching}
           >
-            {notifs.isFetching ? 'Refreshing…' : 'Refresh'}
+            {notifs.isFetching ? t('action.refreshing') : t('action.refresh')}
           </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={() => void markAll()}
             disabled={markRead.isPending || unread === 0}
-            title={unread === 0 ? 'Nothing is unread' : `Mark ${unread} unread notification${unread === 1 ? '' : 's'} read`}
+            title={unread === 0 ? t('notes.nothingUnread') : t('notes.markAllTitle', { n: unread })}
           >
-            {markRead.isPending ? 'Marking…' : 'Mark all read'}
+            {markRead.isPending ? t('notes.marking') : t('notes.markAll')}
           </button>
         </div>
       }
@@ -138,30 +143,28 @@ export default function Notifications() {
       {notifs.isLoading ? (
         <Spinner />
       ) : notifs.isError ? (
-        <Empty title="Notifications could not be loaded">
-          The API did not return your notifications — try again.
+        <Empty title={t('notes.loadErrorTitle')}>
+          {t('notes.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <button className="btn btn-sm btn-primary" onClick={() => void notifs.refetch()} disabled={notifs.isFetching}>
-              {notifs.isFetching ? 'Trying…' : 'Try again'}
+              {notifs.isFetching ? t('notes.trying') : t('action.tryAgain')}
             </button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No notifications yet">
-          When an offer is countered, a message arrives or a shipment moves, it is recorded here.
+        <Empty title={t('notes.emptyTitle')}>
+          {t('notes.emptyBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/explore" className="btn btn-sm btn-primary">Browse ready stock</Link>
-            <Link href="/orders" className="btn btn-sm btn-ghost">My orders</Link>
+            <Link href="/explore" className="btn btn-sm btn-primary">{t('notes.browse')}</Link>
+            <Link href="/orders" className="btn btn-sm btn-ghost">{t('notes.myOrders')}</Link>
           </div>
         </Empty>
       ) : (
         <div className="card">
           <div className="hd">
-            <b>
-              {total.toLocaleString()} notification{total === 1 ? '' : 's'}
-            </b>
+            <b>{t('notes.count', { n: total.toLocaleString(locale) })}</b>
             <span className={unread > 0 ? 'pill p-blue' : 'pill p-grey'}>
-              {unread > 0 ? `${unread} unread` : 'All read'}
+              {unread > 0 ? t('notes.unreadCount', { n: unread.toLocaleString(locale) }) : t('notes.allRead')}
             </span>
           </div>
           <div>
@@ -181,16 +184,16 @@ export default function Notifications() {
                 >
                   <div style={{ minWidth: 0 }}>
                     <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
-                      {!n.read && <span className="pill p-blue">Unread</span>}
+                      {!n.read && <span className="pill p-blue">{t('notes.unreadLabel')}</span>}
                       {n.type && <span className="pill p-grey">{n.type.replace(/_/g, ' ')}</span>}
                     </div>
                     <div className={n.read ? undefined : 'strong'}>{n.text}</div>
-                    <div className="muted" title={new Date(n.createdAt).toLocaleString()}>
+                    <div className="muted" title={new Date(n.createdAt).toLocaleString(locale)}>
                       {timeAgo(n.createdAt)}
                     </div>
                   </div>
                   {href && (
-                    <Link href={href} className="btn btn-sm btn-grey">Open</Link>
+                    <Link href={href} className="btn btn-sm btn-grey">{t('notes.open')}</Link>
                   )}
                 </div>
               );
@@ -198,8 +201,7 @@ export default function Notifications() {
           </div>
           <div className="bd" style={{ paddingTop: 9, paddingBottom: 9 }}>
             <span className="muted">
-              Unread counts come straight from the API. Opening a conversation or an offer from here does not
-              clear a notification on its own — use “Mark all read”.
+              {t('notes.footnote')}
             </span>
           </div>
         </div>

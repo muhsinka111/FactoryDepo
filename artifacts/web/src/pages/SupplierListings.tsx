@@ -242,9 +242,9 @@ export default function SupplierListings() {
         <span>
           <b>{res.isLoading ? '—' : total.toLocaleString(locale)}</b> {t('listings.lotsPublished')}
         </span>
-        <span>
-          <b>—</b> {t('listings.viewsNotTracked')}
-        </span>
+        {/* Views are tracked (GET /api/products/:id writes product_views and the
+            dashboard reports the real total), but the product contract exposes no
+            per-listing count — so no per-row figure is shown rather than a fake one. */}
         <span>{t('listings.bankTransferNote')}</span>
       </div>
 

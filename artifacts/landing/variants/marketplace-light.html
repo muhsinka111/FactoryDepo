@@ -1,12 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FactoryDepo — Global Industrial Marketplace</title>
-<meta name="description" content="Source industrial products and request quotes from factories worldwide. Inspections, laboratory testing and logistics — one verified supply chain.">
+<title data-t="doc.title">FactoryDepo — Global Industrial Marketplace</title>
+<meta name="description" content="Source industrial products and request quotes from factories worldwide. Inspections, laboratory testing and logistics — one verified supply chain." data-t-attr="content:doc.description">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23132238'/%3E%3Cpath d='M16 4l12 8v16H4V12z' fill='%23f5a623'/%3E%3Cpath d='M11 16h10v12H11z' fill='%23132238'/%3E%3C/svg%3E">
+<script>
+/* Direction and language are applied before the first paint, so a visitor who
+   chose Arabic (or any non-English language) does not get a flash of the
+   English/LTR layout. This list is a mirror of LANGS in the script at the end
+   of this file; the dictionary itself is applied there. */
+(function(){try{
+  var codes=['en','tr','ar','ru','zh','es'];
+  var c=localStorage.getItem('fd:lang');
+  if(codes.indexOf(c)===-1)c='en';
+  var d=document.documentElement;
+  d.lang=c;
+  d.dir=(c==='ar')?'rtl':'ltr';
+}catch(e){}})();
+</script>
 <style>
 /* =====================================================================
    FactoryDepo — marketing landing.
@@ -21,6 +34,18 @@
    · Listings with dataSource === 'demo' carry a visible "Demo" badge.
    · rating / inspectionsCount / fulfillmentRate are seeded and nothing
      writes them, so they are never shown as earned metrics.
+
+   I18N MARKUP CONTRACT (see the script at the end of this file):
+   · data-t="key"        — element text is replaced on every language change.
+   · data-t-attr="attr:key[,attr:key]" — attribute text is replaced likewise
+                           (used for placeholder / aria-label / title /
+                           content of <meta>, and for <title> text via data-t).
+   · A data-t element is a LEAF: it must contain no child elements, because
+     the text is written with textContent. Copy that wraps inline code or
+     emphasis is therefore split into adjacent leaf spans.
+   · English is the source of truth and the fallback: the English text in the
+     markup is captured at load, and a key missing from a dictionary leaves
+     that English text in place — an element is never blanked.
    ===================================================================== */
 :root{
   --navy:#132238; --navy-2:#1c3050; --ink:#1a2432; --mute:#7b8794; --faint:#9aa5b1;
@@ -59,6 +84,8 @@ h3{font-size:13.5px;font-weight:500}
 .stack{display:flex;flex-direction:column;gap:4px}
 a.skip{position:absolute;left:-9999px;top:0;background:#fff;color:var(--navy);padding:8px 12px;border-radius:0 0 var(--r) 0;z-index:200}
 a.skip:focus{left:0}
+/* physical "push to the end of a flex row" — mirrored for RTL further down */
+.push{margin-left:auto}
 
 /* ---------- pills (mirrors .pill + p-* from the app) ---------- */
 .pill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:500;padding:1px 6px;border-radius:3px;white-space:nowrap;line-height:1.6}
@@ -97,6 +124,24 @@ a.skip:focus{left:0}
 .topbar .markets{display:flex;gap:11px;font-size:12px;color:#c2cbd6;white-space:nowrap}
 .topbar .markets b{color:#fff;font-weight:500}
 .topbar .authlinks{display:flex;gap:7px;align-items:center}
+
+/* language switcher — lives in the sticky topbar, so it is reachable at any
+   scroll position, and is kept visible at every viewport width */
+.langwrap{display:inline-flex;align-items:center;gap:5px;flex:none;color:#c2cbd6}
+.langwrap svg{opacity:.75;flex:none}
+.lang{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.22);
+  border-radius:4px;padding:3px 6px;font-size:12px;line-height:1.45;cursor:pointer;max-width:8.5rem}
+.lang:hover{background:rgba(255,255,255,.17)}
+.lang:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.lang option{background:#fff;color:var(--ink)}
+/* the switcher takes width the bar did not have before: let the search field
+   shrink instead of overflowing, and drop the redundant flex spacer on phones
+   so the input keeps usable room next to the control */
+.searchwrap{min-width:0}
+@media (max-width:560px){
+  .topbar .spacer{display:none}
+  .lang{max-width:5.5rem}
+}
 
 /* market strip under the bar */
 /* market strip under the bar — the rail itself is the horizontal scroll
@@ -262,10 +307,56 @@ a.skip:focus{left:0}
   .band .acts{margin-left:0;width:100%}
   .band .acts .btn{flex:1}
 }
+
+/* =====================================================================
+   RTL — Arabic (dir="rtl" is set on <html> by the language layer).
+
+   WHAT THE BROWSER MIRRORS FOR FREE (no rule below, and none needed):
+   flex row order and `justify-content`, the start/end side of text
+   alignment, text inputs, list markers and the rail's horizontal scroll
+   direction. So the topbar order, the rail order, the trustline, the
+   counters stripe, .between and .foot-bottom all flip by themselves.
+
+   WHAT IS GENUINELY DIRECTIONAL AND IS MIRRORED BELOW (physical sides):
+   the search icon + its input padding, the .push / .link / .ft / .acts
+   auto-margin pushes, the listing badge corner, the promo band accent
+   bar, the skip link, and the hero shade gradient angle.
+
+   WHAT IS *NOT* MIRRORED, DELIBERATELY:
+   · The hero photograph and every product/category photo — a mirrored
+     photograph of a real factory would be a different picture.
+   · Latin literals inside the copy (RFQ, MOQ, GET /api/products,
+     dataSource, FactoryDepo): they stay LTR and rely on the bidi
+     algorithm; no unicode-bidi override is applied.
+   · Typography: the font stack is the system stack, so Arabic is shaped
+     by the operating system's own Arabic face (same as the app shell);
+     no Arabic webfont is downloaded.
+   · Numerals and dates switch to the language locale (e.g. ar), so on
+     platforms with full ICU data Arabic-Indic digits can appear. Values
+     are never altered, only grouped/rendered.
+   · Forward arrows ("→") in link copy are part of the translatable
+     string, not a CSS decoration, so the Arabic dictionary uses "←"
+     where English uses "→" (the app's own ar dictionary does the same:
+     explore.next = 'التالي ←').
+   ===================================================================== */
+[dir='rtl'] .searchwrap svg{left:auto;right:9px}
+[dir='rtl'] .searchwrap input{padding:7px 30px 7px 12px}
+[dir='rtl'] .push{margin-left:0;margin-right:auto}
+[dir='rtl'] .card .card-hd .link{margin-left:0;margin-right:auto}
+[dir='rtl'] .sup .ft{margin-left:0;margin-right:auto}
+[dir='rtl'] .band .acts{margin-left:0;margin-right:auto}
+[dir='rtl'] .band:before{left:auto;right:0}
+[dir='rtl'] .lcard .tags{right:auto;left:5px;align-items:flex-start}
+[dir='rtl'] a.skip{left:auto;right:-9999px;border-radius:0 0 0 var(--r)}
+[dir='rtl'] a.skip:focus{right:0;left:auto}
+[dir='rtl'] .hero-shade{background:linear-gradient(260deg,rgba(19,34,56,.97) 0%,rgba(19,34,56,.9) 42%,rgba(28,48,80,.62) 100%)}
+@media (max-width:560px){
+  [dir='rtl'] .band .acts{margin-right:0}
+}
 </style>
 </head>
 <body>
-<a class="skip" href="#listings">Skip to listings</a>
+<a class="skip" href="#listings" data-t="skip">Skip to listings</a>
 
 <!-- ============================ top bar ============================ -->
 <header class="topbar">
@@ -273,31 +364,45 @@ a.skip:focus{left:0}
     <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
     <form class="searchwrap" id="searchForm" role="search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="q" type="search" placeholder="Search lots, materials, machinery…" aria-label="Search listings">
+      <input id="q" type="search" placeholder="Search lots, materials, machinery…" aria-label="Search listings" data-t-attr="placeholder:search.placeholder,aria-label:search.aria">
     </form>
     <span class="spacer"></span>
     <div class="markets">
-      <span>Markets: <b>Türkiye</b></span>
-      <span><b>China</b></span>
-      <span><b>Global</b></span>
+      <span><span data-t="markets.label">Markets:</span> <b data-t="markets.tr">Türkiye</b></span>
+      <span><b data-t="markets.cn">China</b></span>
+      <span><b data-t="markets.global">Global</b></span>
     </div>
+    <!-- Language switcher. Options are the languages' own names and are never
+         translated (mirrors artifacts/web/src/i18n.tsx LANGUAGES.native), so the
+         control stays readable to someone who cannot read the current language. -->
+    <label class="langwrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></svg>
+      <select id="langSelect" class="lang" aria-label="Interface language" title="Interface language" data-t-attr="aria-label:lang.aria,title:lang.aria">
+        <option value="en" lang="en" selected>English</option>
+        <option value="tr" lang="tr">Türkçe</option>
+        <option value="ar" lang="ar" dir="rtl">العربية</option>
+        <option value="ru" lang="ru">Русский</option>
+        <option value="zh" lang="zh">中文</option>
+        <option value="es" lang="es">Español</option>
+      </select>
+    </label>
     <div class="authlinks">
-      <a class="btn btn-sm btn-grey hide-s" href="/sign-in">Sign in</a>
-      <a class="btn btn-sm btn-gold" href="/sign-up">Join free</a>
+      <a class="btn btn-sm btn-grey hide-s" href="/sign-in" data-t="action.signIn">Sign in</a>
+      <a class="btn btn-sm btn-gold" href="/sign-up" data-t="action.joinFree">Join free</a>
     </div>
   </div>
 </header>
 
 <nav class="rail" aria-label="Sections">
   <div class="rail-in">
-    <a href="#listings"><b>Listings</b></a>
-    <a href="#requests">Requests</a>
-    <a href="#categories">Categories</a>
-    <a href="#suppliers">Suppliers</a>
-    <a href="#verification">Verification</a>
-    <a href="#services">Services</a>
+    <a href="#listings"><b data-t="rail.listings">Listings</b></a>
+    <a href="#requests" data-t="rail.requests">Requests</a>
+    <a href="#categories" data-t="rail.categories">Categories</a>
+    <a href="#suppliers" data-t="rail.suppliers">Suppliers</a>
+    <a href="#verification" data-t="rail.verification">Verification</a>
+    <a href="#services" data-t="rail.services">Services</a>
     <span class="spacer" aria-hidden="true"></span>
-    <a href="/products">Browse all listings →</a>
+    <a href="/products" data-t="rail.browseAll">Browse all listings →</a>
   </div>
 </nav>
 
@@ -310,34 +415,34 @@ a.skip:focus{left:0}
   <div class="hero-shade"></div>
   <div class="hero-in">
     <div>
-      <span class="eyebrow">Industrial sourcing, one chain of custody</span>
-      <h1>Request quotes on <span class="g">real industrial supply</span>.</h1>
-      <p>Post a request for quotation and receive offers from listed suppliers — or buy ready stock directly.<br>Factory inspection, laboratory testing and logistics can be added to the same order.</p>
+      <span class="eyebrow" data-t="hero.eyebrow">Industrial sourcing, one chain of custody</span>
+      <h1><span data-t="hero.titleLead">Request quotes on</span> <span class="g" data-t="hero.titleAccent">real industrial supply</span><span data-t="hero.titleEnd">.</span></h1>
+      <p><span data-t="hero.sub1">Post a request for quotation and receive offers from listed suppliers — or buy ready stock directly.</span><br><span data-t="hero.sub2">Factory inspection, laboratory testing and logistics can be added to the same order.</span></p>
       <div class="hero-ctas">
-        <a class="btn btn-lg btn-gold" href="/rfq">Post a request for quotation</a>
-        <a class="btn btn-lg btn-ghost" href="/products">Browse the catalogue →</a>
+        <a class="btn btn-lg btn-gold" href="/rfq" data-t="hero.ctaRfq">Post a request for quotation</a>
+        <a class="btn btn-lg btn-ghost" href="/products" data-t="hero.ctaBrowse">Browse the catalogue →</a>
       </div>
       <div class="trustline">
-        <span><i>●</i> Free to join</span>
-        <span><i>●</i> Same-origin live catalogue</span>
-        <span><i>●</i> Seed rows are labelled <em>Demo</em></span>
+        <span><i>●</i> <span data-t="hero.trust1">Free to join</span></span>
+        <span><i>●</i> <span data-t="hero.trust2">Same-origin live catalogue</span></span>
+        <span><i>●</i> <span data-t="hero.trust3a">Seed rows are labelled</span> <em data-t="hero.trust3b">Demo</em></span>
       </div>
       <div class="popular">
-        <span>Popular searches:</span>
-        <a href="/products?q=copper">Copper cathode</a>
-        <a href="/products?q=steel%20coil">Steel coil</a>
-        <a href="/products?q=pump">Industrial pump</a>
-        <a href="/products?q=lithium">Lithium carbonate</a>
-        <a href="/products?q=cnc">CNC machining</a>
+        <span data-t="hero.popular">Popular searches:</span>
+        <a href="/products?q=copper" data-t="hero.q.copper">Copper cathode</a>
+        <a href="/products?q=steel%20coil" data-t="hero.q.steel">Steel coil</a>
+        <a href="/products?q=pump" data-t="hero.q.pump">Industrial pump</a>
+        <a href="/products?q=lithium" data-t="hero.q.lithium">Lithium carbonate</a>
+        <a href="/products?q=cnc" data-t="hero.q.cnc">CNC machining</a>
       </div>
     </div>
 
     <div class="sidecard" id="heroCard" aria-live="polite">
-      <div class="hd"><span class="pill p-grey">Newest listing</span><span class="mono" style="margin-left:auto">live</span></div>
+      <div class="hd"><span class="pill p-grey" data-t="side.newest">Newest listing</span><span class="mono push" data-t="side.live">live</span></div>
       <div class="card-bd" style="padding:11px">
-        <div class="ph"><div class="noimg">Loading latest listing…</div></div>
+        <div class="ph"><div class="noimg" data-t="side.loading">Loading latest listing…</div></div>
         <div class="nm">—</div>
-        <div class="muted">Reading GET /api/products…</div>
+        <div class="muted" data-t="side.reading">Reading GET /api/products…</div>
       </div>
     </div>
   </div>
@@ -347,7 +452,7 @@ a.skip:focus{left:0}
 <section class="section" style="padding-bottom:0">
   <div class="wrap">
     <div class="stripe" id="counters">
-      <span class="load">Reading live totals from the catalogue…</span>
+      <span class="load" data-t="counters.loading">Reading live totals from the catalogue…</span>
     </div>
   </div>
 </section>
@@ -357,11 +462,11 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Live catalogue</span>
-        <h2>Newest listings with photos</h2>
-        <p id="listingsSub">Every card below is a row returned by <span class="mono">GET /api/products?hasImage=1</span> at page load. Rows whose <span class="mono">dataSource</span> is <b>demo</b> are seed data and carry a Demo badge — they are not live offers.</p>
+        <span class="eyebrow" data-t="list.eyebrow">Live catalogue</span>
+        <h2 data-t="list.h2">Newest listings with photos</h2>
+        <p id="listingsSub"><span data-t="list.subLead">Every card below is a row returned by</span> <span class="mono">GET /api/products?hasImage=1</span> <span data-t="list.subA">at page load. Rows whose</span> <span class="mono">dataSource</span> <span data-t="list.subB">is</span> <b data-t="list.subC">demo</b> <span data-t="list.subD">are seed data and carry a Demo badge — they are not live offers.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/products">Browse all listings →</a>
+      <a class="btn btn-ghost" href="/products" data-t="list.cta">Browse all listings →</a>
     </div>
     <div class="feedgrid" id="featuredGrid" aria-live="polite">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -374,20 +479,20 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Request board</span>
-        <h2>Open sourcing requests</h2>
-        <p>Posted by buyers on FactoryDepo and read from <span class="mono">GET /api/rfqs</span>. Quote counts and statuses are exactly what the API returns — no urgency timers, no invented activity.</p>
+        <span class="eyebrow" data-t="req.eyebrow">Request board</span>
+        <h2 data-t="req.h2">Open sourcing requests</h2>
+        <p><span data-t="req.subA">Posted by buyers on FactoryDepo and read from</span> <span class="mono">GET /api/rfqs</span><span data-t="req.subB">. Quote counts and statuses are exactly what the API returns — no urgency timers, no invented activity.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/rfq">See the request board →</a>
+      <a class="btn btn-ghost" href="/rfq" data-t="req.cta">See the request board →</a>
     </div>
     <div class="card">
       <div class="card-hd">
         <span class="pill p-blue">RFQ</span>
-        <span class="muted">Newest first</span>
-        <a class="link" href="/rfq">Post your own request →</a>
+        <span class="muted" data-t="req.newest">Newest first</span>
+        <a class="link" href="/rfq" data-t="req.postOwn">Post your own request →</a>
       </div>
       <div class="card-bd" id="rfqList" aria-live="polite">
-        <div class="empty">Loading requests…</div>
+        <div class="empty" data-t="req.loading">Loading requests…</div>
       </div>
     </div>
   </div>
@@ -398,11 +503,11 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Browse</span>
-        <h2>Categories</h2>
-        <p>Each tile shows the number of lots the catalogue currently returns for that category (<span class="mono">total</span> from <span class="mono">GET /api/products?category=…</span>). A dash means the count could not be read.</p>
+        <span class="eyebrow" data-t="cat.eyebrow">Browse</span>
+        <h2 data-t="cat.h2">Categories</h2>
+        <p><span data-t="cat.subA">Each tile shows the number of lots the catalogue currently returns for that category (</span><span class="mono">total</span> <span data-t="cat.subB">from</span> <span class="mono">GET /api/products?category=…</span><span data-t="cat.subC">). A dash means the count could not be read.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/products">View all listings →</a>
+      <a class="btn btn-ghost" href="/products" data-t="cat.cta">View all listings →</a>
     </div>
     <div class="cats" id="catGrid"></div>
   </div>
@@ -413,11 +518,11 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">More from the catalogue</span>
-        <h2>Further down the list</h2>
-        <p>The next page of the same live response — the newest listings after the ones shown above.</p>
+        <span class="eyebrow" data-t="more.eyebrow">More from the catalogue</span>
+        <h2 data-t="more.h2">Further down the list</h2>
+        <p data-t="more.sub">The next page of the same live response — the newest listings after the ones shown above.</p>
       </div>
-      <a class="btn btn-ghost" href="/products">Refine with filters →</a>
+      <a class="btn btn-ghost" href="/products" data-t="more.cta">Refine with filters →</a>
     </div>
     <div class="feedgrid" id="trendingGrid" aria-live="polite">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -430,16 +535,16 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">What verification means here</span>
-        <h2>How a supplier gets listed</h2>
-        <p>We describe the process rather than publishing numbers we have not measured. Ratings, inspection counts and fulfilment rates are <b>not</b> shown on this page: they are seeded values in our database and no workflow writes them yet.</p>
+        <span class="eyebrow" data-t="ver.eyebrow">What verification means here</span>
+        <h2 data-t="ver.h2">How a supplier gets listed</h2>
+        <p><span data-t="ver.subA">We describe the process rather than publishing numbers we have not measured. Ratings, inspection counts and fulfilment rates are</span> <b data-t="ver.subB">not</b> <span data-t="ver.subC">shown on this page: they are seeded values in our database and no workflow writes them yet.</span></p>
       </div>
     </div>
     <div class="steps">
-      <div class="step"><span class="n">01</span><b>Company submitted</b><p>The supplier registers and submits company details.</p></div>
-      <div class="step"><span class="n">02</span><b>Documents reviewed</b><p>Registration, export and product documents are checked by our team.</p></div>
-      <div class="step"><span class="n">03</span><b>Factory visited</b><p>An in-country inspector visits the site and photographs the line.</p></div>
-      <div class="step"><span class="n">04</span><b>Result recorded</b><p>The outcome is recorded on the supplier profile — pass, or the gaps that failed.</p></div>
+      <div class="step"><span class="n">01</span><b data-t="ver.s1t">Company submitted</b><p data-t="ver.s1b">The supplier registers and submits company details.</p></div>
+      <div class="step"><span class="n">02</span><b data-t="ver.s2t">Documents reviewed</b><p data-t="ver.s2b">Registration, export and product documents are checked by our team.</p></div>
+      <div class="step"><span class="n">03</span><b data-t="ver.s3t">Factory visited</b><p data-t="ver.s3b">An in-country inspector visits the site and photographs the line.</p></div>
+      <div class="step"><span class="n">04</span><b data-t="ver.s4t">Result recorded</b><p data-t="ver.s4b">The outcome is recorded on the supplier profile — pass, or the gaps that failed.</p></div>
     </div>
   </div>
 </section>
@@ -449,11 +554,11 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Supplier directory</span>
-        <h2 id="supHead">Suppliers on the platform</h2>
-        <p>Read live from <span class="mono">GET /api/suppliers</span>. Badges reflect the supplier's recorded verification level; a Demo badge means the row is seed data. Stars, trust scores and inspection counters are deliberately not rendered — nothing in the product computes them yet.</p>
+        <span class="eyebrow" data-t="sup.eyebrow">Supplier directory</span>
+        <h2 id="supHead" data-t="sup.h2">Suppliers on the platform</h2>
+        <p><span data-t="sup.subA">Read live from</span> <span class="mono">GET /api/suppliers</span><span data-t="sup.subB">. Badges reflect the supplier's recorded verification level; a Demo badge means the row is seed data. Stars, trust scores and inspection counters are deliberately not rendered — nothing in the product computes them yet.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/suppliers">Open the directory →</a>
+      <a class="btn btn-ghost" href="/suppliers" data-t="sup.cta">Open the directory →</a>
     </div>
     <div class="sups" id="supGrid" aria-live="polite">
       <div class="skel" style="height:86px"></div><div class="skel" style="height:86px"></div><div class="skel" style="height:86px"></div>
@@ -466,59 +571,59 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Trade services</span>
-        <h2>Services the marketplace is built around</h2>
-        <p>These are the service categories on the roadmap, not live SKUs on a shelf. Nothing on this page publishes coverage counts, partner counts or response-time guarantees, because we have not measured any.</p>
+        <span class="eyebrow" data-t="svc.eyebrow">Trade services</span>
+        <h2 data-t="svc.h2">Services the marketplace is built around</h2>
+        <p data-t="svc.sub">These are the service categories on the roadmap, not live SKUs on a shelf. Nothing on this page publishes coverage counts, partner counts or response-time guarantees, because we have not measured any.</p>
       </div>
     </div>
     <div class="svcs">
-      <span class="svc"><i>◆</i> Factory inspection</span>
-      <span class="svc"><i>◆</i> Quality control</span>
-      <span class="svc"><i>◆</i> Laboratory testing</span>
-      <span class="svc"><i>◆</i> Sample purchasing</span>
-      <span class="svc"><i>◆</i> Production monitoring</span>
-      <span class="svc"><i>◆</i> Container loading</span>
-      <span class="svc"><i>◆</i> Warehousing</span>
-      <span class="svc"><i>◆</i> Freight &amp; shipping</span>
-      <span class="svc"><i>◆</i> Customs brokerage</span>
-      <span class="svc"><i>◆</i> Trade insurance</span>
+      <span class="svc"><i>◆</i> <span data-t="svc.factory">Factory inspection</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.qc">Quality control</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.lab">Laboratory testing</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.sample">Sample purchasing</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.production">Production monitoring</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.loading">Container loading</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.warehouse">Warehousing</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.freight">Freight &amp; shipping</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.customs">Customs brokerage</span></span>
+      <span class="svc"><i>◆</i> <span data-t="svc.insurance">Trade insurance</span></span>
     </div>
 
     <div style="margin-top:14px" class="band">
       <div>
-        <h3>Buying? Post a request and let listed suppliers quote you.</h3>
-        <p>Describe the material, the quantity and the destination. Offers arrive in the platform, where you can compare them side by side.</p>
+        <h3 data-t="band.h3">Buying? Post a request and let listed suppliers quote you.</h3>
+        <p data-t="band.p">Describe the material, the quantity and the destination. Offers arrive in the platform, where you can compare them side by side.</p>
       </div>
       <div class="acts">
-        <a class="btn btn-lg btn-gold" href="/rfq">Post a request</a>
-        <a class="btn btn-lg btn-ghost" href="/sign-up">Create a free account</a>
+        <a class="btn btn-lg btn-gold" href="/rfq" data-t="band.cta1">Post a request</a>
+        <a class="btn btn-lg btn-ghost" href="/sign-up" data-t="band.cta2">Create a free account</a>
       </div>
     </div>
 
     <div class="cols" style="margin-top:12px">
       <div class="panel">
-        <h3>Buying</h3>
-        <p>Search the catalogue, compare lots and send a request for quotation. Sample orders and inspections can be added before you commit.</p>
+        <h3 data-t="panel.buyTitle">Buying</h3>
+        <p data-t="panel.buyBody">Search the catalogue, compare lots and send a request for quotation. Sample orders and inspections can be added before you commit.</p>
         <div class="acts">
-          <a class="btn btn-grey btn-block" href="/products">Browse listings</a>
-          <a class="btn btn-grey btn-block" href="/suppliers">Find suppliers</a>
-          <a class="btn btn-grey btn-block" href="/rfq">Post a request</a>
+          <a class="btn btn-grey btn-block" href="/products" data-t="panel.buyBtn1">Browse listings</a>
+          <a class="btn btn-grey btn-block" href="/suppliers" data-t="panel.buyBtn2">Find suppliers</a>
+          <a class="btn btn-grey btn-block" href="/rfq" data-t="band.cta1">Post a request</a>
         </div>
       </div>
       <div class="panel">
-        <h3>Selling</h3>
-        <p>Create an account, list your production and answer requests from buyers. You can list stock even while your verification is in progress.</p>
+        <h3 data-t="panel.sellTitle">Selling</h3>
+        <p data-t="panel.sellBody">Create an account, list your production and answer requests from buyers. You can list stock even while your verification is in progress.</p>
         <div class="acts">
-          <a class="btn btn-grey btn-block" href="/sign-up">Become a supplier</a>
-          <a class="btn btn-grey btn-block" href="/sign-in">Sign in</a>
+          <a class="btn btn-grey btn-block" href="/sign-up" data-t="panel.sellBtn1">Become a supplier</a>
+          <a class="btn btn-grey btn-block" href="/sign-in" data-t="action.signIn">Sign in</a>
         </div>
       </div>
       <div class="panel">
-        <h3>Need a hand?</h3>
-        <p>The help pages explain ordering, quotations and what each status means. No live-chat counter, no invented response times.</p>
+        <h3 data-t="panel.helpTitle">Need a hand?</h3>
+        <p data-t="panel.helpBody">The help pages explain ordering, quotations and what each status means. No live-chat counter, no invented response times.</p>
         <div class="acts">
-          <a class="btn btn-grey btn-block" href="/help">Read the help pages</a>
-          <a class="btn btn-grey btn-block" href="/products">Start from the catalogue</a>
+          <a class="btn btn-grey btn-block" href="/help" data-t="panel.helpBtn1">Read the help pages</a>
+          <a class="btn btn-grey btn-block" href="/products" data-t="panel.helpBtn2">Start from the catalogue</a>
         </div>
       </div>
     </div>
@@ -532,52 +637,1419 @@ a.skip:focus{left:0}
     <div class="foot-grid">
       <div>
         <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
-        <p>Industrial sourcing with the paperwork and the inspections attached. Catalogue figures shown anywhere on this page are read from the live API at page load.</p>
+        <p data-t="foot.tagline">Industrial sourcing with the paperwork and the inspections attached. Catalogue figures shown anywhere on this page are read from the live API at page load.</p>
       </div>
       <div class="foot-col">
-        <h4>Marketplace</h4>
+        <h4 data-t="foot.marketplace">Marketplace</h4>
         <ul>
-          <li><a href="/products">All listings</a></li>
-          <li><a href="/products?q=copper">Copper</a></li>
-          <li><a href="/products?category=Steel">Steel</a></li>
-          <li><a href="/suppliers">Suppliers</a></li>
-          <li><a href="/rfq">Request board</a></li>
+          <li><a href="/products" data-t="foot.allListings">All listings</a></li>
+          <li><a href="/products?q=copper" data-t="foot.copper">Copper</a></li>
+          <li><a href="/products?category=Steel" data-t="cat.steel">Steel</a></li>
+          <li><a href="/suppliers" data-t="rail.suppliers">Suppliers</a></li>
+          <li><a href="/rfq" data-t="req.eyebrow">Request board</a></li>
         </ul>
       </div>
       <div class="foot-col">
-        <h4>Services</h4>
+        <h4 data-t="rail.services">Services</h4>
         <ul>
-          <li><a href="#services">Factory inspection</a></li>
-          <li><a href="#services">Laboratory testing</a></li>
-          <li><a href="#services">Freight &amp; shipping</a></li>
-          <li><a href="#verification">How verification works</a></li>
+          <li><a href="#services" data-t="svc.factory">Factory inspection</a></li>
+          <li><a href="#services" data-t="svc.lab">Laboratory testing</a></li>
+          <li><a href="#services" data-t="svc.freight">Freight &amp; shipping</a></li>
+          <li><a href="#verification" data-t="foot.howVerification">How verification works</a></li>
         </ul>
       </div>
       <div class="foot-col">
-        <h4>Account</h4>
+        <h4 data-t="foot.account">Account</h4>
         <ul>
-          <li><a href="/sign-in">Sign in</a></li>
-          <li><a href="/sign-up">Create an account</a></li>
-          <li><a href="/help">Help</a></li>
+          <li><a href="/sign-in" data-t="action.signIn">Sign in</a></li>
+          <li><a href="/sign-up" data-t="foot.createAccount">Create an account</a></li>
+          <li><a href="/help" data-t="foot.help">Help</a></li>
         </ul>
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© FactoryDepo</span>
-      <span>Catalogue figures on this page are live API values; rows marked Demo are seed data.</span>
+      <span data-t="foot.copyright">© FactoryDepo</span>
+      <span data-t="foot.note">Catalogue figures on this page are live API values; rows marked Demo are seed data.</span>
     </div>
   </div>
 </footer>
 
 <script>
 /* =====================================================================
-   Landing data layer — every number on the page originates here.
-   Same-origin only (the API server serves this file at / and /api/*).
-   Nothing below invents a value: requests that fail render an em dash
+   FactoryDepo landing — language layer + data layer.
+
+   LANGUAGE LAYER (section 1)
+   · Languages, native names, direction and date/number locale mirror
+     artifacts/web/src/i18n.tsx (LANGUAGES) so the funnel and the app agree.
+   · I18N holds one dictionary per language. English is the source of truth
+     and the fallback: a key missing from the active dictionary leaves the
+     English text that is already in the markup — no element is ever blanked.
+   · Static copy is marked up in the DOM (data-t / data-t-attr) and rewritten
+     on every switch. Copy that the data layer generates is built through
+     t()/T()/tn() instead, and those renderers are re-run on every switch, so a
+     language change needs no refetch and no page reload.
+   · Count nouns: a dictionary value may carry two forms separated by "|"
+     (singular|plural), e.g. 'unit.lots': 'lot|lots'. Languages that do not
+     inflect repeat the same word. This mirrors the app dictionary style
+     ('feed.lotsCount': '{n} lots') while keeping "1 lot" correct in English.
+     Russian uses the genitive plural for every count above one — the 2–4 form
+     ('лота') is not produced; that is the one known plural gap here.
+
+   DATA LAYER (section 2)
+   Every number on the page originates here and is read from the same-origin
+   API. Nothing below invents a value: a request that fails renders an em dash
    and an honest note instead of a placeholder figure.
    ===================================================================== */
 (function () {
   'use strict';
+
+  /* ===================================================================
+     1. LANGUAGE LAYER
+     =================================================================== */
+
+  var LANG_KEY = 'fd:lang';
+  var LANGS = [
+    { code: 'en', native: 'English', dir: 'ltr', locale: 'en-GB' },
+    { code: 'tr', native: 'Türkçe',  dir: 'ltr', locale: 'tr-TR' },
+    { code: 'ar', native: 'العربية', dir: 'rtl', locale: 'ar'    },
+    { code: 'ru', native: 'Русский', dir: 'ltr', locale: 'ru-RU' },
+    { code: 'zh', native: '中文',    dir: 'ltr', locale: 'zh-CN' },
+    { code: 'es', native: 'Español', dir: 'ltr', locale: 'es-ES' }
+  ];
+  var LANG_BY_CODE = {};
+  LANGS.forEach(function (l) { LANG_BY_CODE[l.code] = l; });
+
+  var I18N = {
+    /* ---------------- English (source of truth) ---------------- */
+    en: {
+      'doc.title': 'FactoryDepo — Global Industrial Marketplace',
+      'doc.description': 'Source industrial products and request quotes from factories worldwide. Inspections, laboratory testing and logistics — one verified supply chain.',
+      'skip': 'Skip to listings',
+      'lang.aria': 'Interface language',
+      'search.placeholder': 'Search lots, materials, machinery…',
+      'search.aria': 'Search listings',
+      'markets.label': 'Markets:',
+      'markets.tr': 'Türkiye',
+      'markets.cn': 'China',
+      'markets.global': 'Global',
+      'action.signIn': 'Sign in',
+      'action.joinFree': 'Join free',
+      'rail.listings': 'Listings',
+      'rail.requests': 'Requests',
+      'rail.categories': 'Categories',
+      'rail.suppliers': 'Suppliers',
+      'rail.verification': 'Verification',
+      'rail.services': 'Services',
+      'rail.browseAll': 'Browse all listings →',
+      'hero.eyebrow': 'Industrial sourcing, one chain of custody',
+      'hero.titleLead': 'Request quotes on',
+      'hero.titleAccent': 'real industrial supply',
+      'hero.titleEnd': '.',
+      'hero.sub1': 'Post a request for quotation and receive offers from listed suppliers — or buy ready stock directly.',
+      'hero.sub2': 'Factory inspection, laboratory testing and logistics can be added to the same order.',
+      'hero.ctaRfq': 'Post a request for quotation',
+      'hero.ctaBrowse': 'Browse the catalogue →',
+      'hero.trust1': 'Free to join',
+      'hero.trust2': 'Same-origin live catalogue',
+      'hero.trust3a': 'Seed rows are labelled',
+      'hero.trust3b': 'Demo',
+      'hero.popular': 'Popular searches:',
+      'hero.q.copper': 'Copper cathode',
+      'hero.q.steel': 'Steel coil',
+      'hero.q.pump': 'Industrial pump',
+      'hero.q.lithium': 'Lithium carbonate',
+      'hero.q.cnc': 'CNC machining',
+      'counters.loading': 'Reading live totals from the catalogue…',
+      'counters.lots': 'lot with photos|lots with photos',
+      'counters.suppliers': 'supplier listed|suppliers listed',
+      'counters.verified': 'at verification level 2+|at verification level 2+',
+      'counters.requests': 'request posted|requests posted',
+      'counters.unavailable': '— live totals unavailable from this origin',
+      'counters.source': 'live from /api/products, /api/suppliers, /api/rfqs',
+      'side.newest': 'Newest listing',
+      'side.live': 'live',
+      'side.loading': 'Loading latest listing…',
+      'side.reading': 'Reading GET /api/products…',
+      'side.open': 'Open listing',
+      'side.unreachableTitle': 'Catalogue API unreachable',
+      'side.unreachableBody': 'No figure is shown rather than a made-up one.',
+      'list.eyebrow': 'Live catalogue',
+      'list.h2': 'Newest listings with photos',
+      'list.subLead': 'Every card below is a row returned by',
+      'list.subA': 'at page load. Rows whose',
+      'list.subB': 'is',
+      'list.subC': 'demo',
+      'list.subD': 'are seed data and carry a Demo badge — they are not live offers.',
+      'list.cta': 'Browse all listings →',
+      'list.showA': 'Showing 8 of',
+      'list.showB': 'that have photography, newest first, read live from',
+      'list.emptyTitle': 'No listings yet',
+      'list.emptyBody': 'The catalogue returned an empty page.',
+      'list.emptyLink': 'Open the catalogue',
+      'list.tailTitle': 'That is the whole first page',
+      'list.tailBody': 'Load more from the',
+      'list.tailLink': 'full catalogue',
+      'list.errorTitle': 'Live listings unavailable',
+      'list.errorBody': 'The catalogue API could not be reached from this page.',
+      'list.errorLink': 'Try the catalogue directly',
+      'list.failSub': 'The live catalogue could not be read from this page, so no counts or listings are shown.',
+      'card.noPhoto': 'no photo',
+      'card.demo': 'Demo',
+      'card.demoTitle': 'Seed row — sample data, not a live offer',
+      'card.verified': '✓ Verified',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': 'Unknown supplier',
+      'card.view': 'View',
+      'unit.lots': 'lot|lots',
+      'unit.listings': 'listing|listings',
+      'unit.suppliers': 'supplier|suppliers',
+      'unit.requests': 'request|requests',
+      'unit.quotes': 'quote|quotes',
+      'req.eyebrow': 'Request board',
+      'req.h2': 'Open sourcing requests',
+      'req.subA': 'Posted by buyers on FactoryDepo and read from',
+      'req.subB': '. Quote counts and statuses are exactly what the API returns — no urgency timers, no invented activity.',
+      'req.cta': 'See the request board →',
+      'req.newest': 'Newest first',
+      'req.postOwn': 'Post your own request →',
+      'req.loading': 'Loading requests…',
+      'req.statusOpen': 'Open',
+      'req.statusQuoted': 'Quoted',
+      'req.statusClosed': 'Closed',
+      'req.noQuotes': 'no quotes yet',
+      'req.deadline': 'deadline {d}',
+      'req.showMoreLead': 'Showing 5 of',
+      'req.showMoreLink': 'see the rest',
+      'req.emptyTitle': 'No requests posted yet',
+      'req.emptyBody': 'Nothing is shown here until a buyer posts one.',
+      'req.emptyLink': 'Post the first request',
+      'req.errorTitle': 'Request board unavailable',
+      'req.errorBody': 'The API could not be reached from this page, so no requests are shown.',
+      'req.errorLink': 'Open the request board',
+      'cat.eyebrow': 'Browse',
+      'cat.h2': 'Categories',
+      'cat.subA': 'Each tile shows the number of lots the catalogue currently returns for that category (',
+      'cat.subB': 'from',
+      'cat.subC': '). A dash means the count could not be read.',
+      'cat.cta': 'View all listings →',
+      'cat.metals': 'Metals & Minerals',
+      'cat.steel': 'Steel',
+      'cat.chemicals': 'Chemicals',
+      'cat.machinery': 'Machinery',
+      'cat.equipment': 'Industrial Equipment',
+      'cat.energy': 'Renewable Energy',
+      'cat.electronics': 'Electronics',
+      'cat.automotive': 'Automotive',
+      'cat.construction': 'Construction Materials',
+      'cat.packaging': 'Packaging',
+      'cat.plastic': 'Plastic & Rubber',
+      'cat.textiles': 'Textiles',
+      'more.eyebrow': 'More from the catalogue',
+      'more.h2': 'Further down the list',
+      'more.sub': 'The next page of the same live response — the newest listings after the ones shown above.',
+      'more.cta': 'Refine with filters →',
+      'ver.eyebrow': 'What verification means here',
+      'ver.h2': 'How a supplier gets listed',
+      'ver.subA': 'We describe the process rather than publishing numbers we have not measured. Ratings, inspection counts and fulfilment rates are',
+      'ver.subB': 'not',
+      'ver.subC': 'shown on this page: they are seeded values in our database and no workflow writes them yet.',
+      'ver.s1t': 'Company submitted',
+      'ver.s1b': 'The supplier registers and submits company details.',
+      'ver.s2t': 'Documents reviewed',
+      'ver.s2b': 'Registration, export and product documents are checked by our team.',
+      'ver.s3t': 'Factory visited',
+      'ver.s3b': 'An in-country inspector visits the site and photographs the line.',
+      'ver.s4t': 'Result recorded',
+      'ver.s4b': 'The outcome is recorded on the supplier profile — pass, or the gaps that failed.',
+      'sup.eyebrow': 'Supplier directory',
+      'sup.h2': 'Suppliers on the platform',
+      'sup.h2Count': '{n} supplier on the platform|{n} suppliers on the platform',
+      'sup.subA': 'Read live from',
+      'sup.subB': ". Badges reflect the supplier's recorded verification level; a Demo badge means the row is seed data. Stars, trust scores and inspection counters are deliberately not rendered — nothing in the product computes them yet.",
+      'sup.cta': 'Open the directory →',
+      'sup.level': 'Level {n}',
+      'sup.levelTitle': 'Verification level {n}',
+      'sup.demoTitle': 'Seed data — not a real company yet',
+      'sup.emptyTitle': 'No suppliers yet',
+      'sup.emptyBody': 'The directory returned no rows.',
+      'sup.emptyLink': 'Open the directory',
+      'sup.errorTitle': 'Supplier directory unavailable',
+      'sup.errorBody': 'The API could not be reached from this page.',
+      'sup.errorLink': 'Try the directory directly',
+      'svc.eyebrow': 'Trade services',
+      'svc.h2': 'Services the marketplace is built around',
+      'svc.sub': 'These are the service categories on the roadmap, not live SKUs on a shelf. Nothing on this page publishes coverage counts, partner counts or response-time guarantees, because we have not measured any.',
+      'svc.factory': 'Factory inspection',
+      'svc.qc': 'Quality control',
+      'svc.lab': 'Laboratory testing',
+      'svc.sample': 'Sample purchasing',
+      'svc.production': 'Production monitoring',
+      'svc.loading': 'Container loading',
+      'svc.warehouse': 'Warehousing',
+      'svc.freight': 'Freight & shipping',
+      'svc.customs': 'Customs brokerage',
+      'svc.insurance': 'Trade insurance',
+      'band.h3': 'Buying? Post a request and let listed suppliers quote you.',
+      'band.p': 'Describe the material, the quantity and the destination. Offers arrive in the platform, where you can compare them side by side.',
+      'band.cta1': 'Post a request',
+      'band.cta2': 'Create a free account',
+      'panel.buyTitle': 'Buying',
+      'panel.buyBody': 'Search the catalogue, compare lots and send a request for quotation. Sample orders and inspections can be added before you commit.',
+      'panel.buyBtn1': 'Browse listings',
+      'panel.buyBtn2': 'Find suppliers',
+      'panel.sellTitle': 'Selling',
+      'panel.sellBody': 'Create an account, list your production and answer requests from buyers. You can list stock even while your verification is in progress.',
+      'panel.sellBtn1': 'Become a supplier',
+      'panel.helpTitle': 'Need a hand?',
+      'panel.helpBody': 'The help pages explain ordering, quotations and what each status means. No live-chat counter, no invented response times.',
+      'panel.helpBtn1': 'Read the help pages',
+      'panel.helpBtn2': 'Start from the catalogue',
+      'foot.tagline': 'Industrial sourcing with the paperwork and the inspections attached. Catalogue figures shown anywhere on this page are read from the live API at page load.',
+      'foot.marketplace': 'Marketplace',
+      'foot.allListings': 'All listings',
+      'foot.copper': 'Copper',
+      'foot.howVerification': 'How verification works',
+      'foot.account': 'Account',
+      'foot.createAccount': 'Create an account',
+      'foot.help': 'Help',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': 'Catalogue figures on this page are live API values; rows marked Demo are seed data.'
+    },
+
+    /* ---------------- Türkçe ---------------- */
+    tr: {
+      'doc.title': 'FactoryDepo — Küresel Endüstriyel Pazar Yeri',
+      'doc.description': 'Dünya genelindeki fabrikalardan endüstriyel ürün tedarik edin ve teklif isteyin. Denetim, laboratuvar testi ve lojistik — tek doğrulanmış tedarik zinciri.',
+      'skip': 'İlanlara geç',
+      'lang.aria': 'Arayüz dili',
+      'search.placeholder': 'Lot, malzeme, makine ara…',
+      'search.aria': 'İlanlarda ara',
+      'markets.label': 'Pazarlar:',
+      'markets.tr': 'Türkiye',
+      'markets.cn': 'Çin',
+      'markets.global': 'Global',
+      'action.signIn': 'Giriş yap',
+      'action.joinFree': 'Ücretsiz katıl',
+      'rail.listings': 'İlanlar',
+      'rail.requests': 'Talepler',
+      'rail.categories': 'Kategoriler',
+      'rail.suppliers': 'Tedarikçiler',
+      'rail.verification': 'Doğrulama',
+      'rail.services': 'Hizmetler',
+      'rail.browseAll': 'Tüm ilanlara göz at →',
+      'hero.eyebrow': 'Tek elden endüstriyel tedarik zinciri',
+      'hero.titleLead': 'Gerçek endüstriyel arz için',
+      'hero.titleAccent': 'teklif isteyin',
+      'hero.titleEnd': '.',
+      'hero.sub1': 'Teklif talebi oluşturun ve listelenen tedarikçilerden teklif alın — ya da hazır stoğu doğrudan satın alın.',
+      'hero.sub2': 'Fabrika denetimi, laboratuvar testi ve lojistik aynı siparişe eklenebilir.',
+      'hero.ctaRfq': 'Teklif talebi oluştur',
+      'hero.ctaBrowse': 'Kataloğa göz at →',
+      'hero.trust1': 'Üyelik ücretsiz',
+      'hero.trust2': 'Aynı kaynaktan canlı katalog',
+      'hero.trust3a': 'Tohum kayıtları şu etiketle işaretlenir:',
+      'hero.trust3b': 'Demo',
+      'hero.popular': 'Popüler aramalar:',
+      'hero.q.copper': 'Bakır katot',
+      'hero.q.steel': 'Çelik rulo',
+      'hero.q.pump': 'Endüstriyel pompa',
+      'hero.q.lithium': 'Lityum karbonat',
+      'hero.q.cnc': 'CNC işleme',
+      'counters.loading': 'Canlı toplamlar katalogdan okunuyor…',
+      'counters.lots': 'görselli lot|görselli lot',
+      'counters.suppliers': 'listelenen tedarikçi|listelenen tedarikçi',
+      'counters.verified': 'doğrulama seviyesi 2+ olan|doğrulama seviyesi 2+ olan',
+      'counters.requests': 'yayınlanan talep|yayınlanan talep',
+      'counters.unavailable': '— canlı toplamlar bu kaynaktan alınamadı',
+      'counters.source': 'canlı veri: /api/products, /api/suppliers, /api/rfqs',
+      'side.newest': 'En yeni ilan',
+      'side.live': 'canlı',
+      'side.loading': 'En yeni ilan yükleniyor…',
+      'side.reading': 'GET /api/products okunuyor…',
+      'side.open': 'İlanı aç',
+      'side.unreachableTitle': 'Katalog API’sine ulaşılamıyor',
+      'side.unreachableBody': 'Uydurma bir sayı yerine hiçbir sayı gösterilmiyor.',
+      'list.eyebrow': 'Canlı katalog',
+      'list.h2': 'Fotoğraflı en yeni ilanlar',
+      'list.subLead': 'Aşağıdaki her kart şu uçtan dönen bir kayıttır:',
+      'list.subA': 'sayfa yüklemesinde. Satırların',
+      'list.subB': 'değeri',
+      'list.subC': 'demo',
+      'list.subD': 'ise tohum verisidir ve Demo etiketi taşır — canlı teklif değildir.',
+      'list.cta': 'Tüm ilanlara göz at →',
+      'list.showA': 'Gösterilen 8 /',
+      'list.showB': 'görselli lot, en yeniden eskiye, sayfa yüklemesinde şu uçtan canlı okunur:',
+      'list.emptyTitle': 'Henüz ilan yok',
+      'list.emptyBody': 'Katalog boş bir sayfa döndürdü.',
+      'list.emptyLink': 'Kataloğu aç',
+      'list.tailTitle': 'İlk sayfanın tamamı bu',
+      'list.tailBody': 'Daha fazlasını şuradan yükleyin:',
+      'list.tailLink': 'tam katalog',
+      'list.errorTitle': 'Canlı ilanlar kullanılamıyor',
+      'list.errorBody': 'Katalog API’sine bu sayfadan ulaşılamadı.',
+      'list.errorLink': 'Kataloğu doğrudan deneyin',
+      'list.failSub': 'Canlı katalog bu sayfadan okunamadı; bu nedenle hiçbir sayı veya ilan gösterilmiyor.',
+      'card.noPhoto': 'fotoğraf yok',
+      'card.demo': 'Demo',
+      'card.demoTitle': 'Tohum kaydı — örnek veri, canlı teklif değil',
+      'card.verified': '✓ Doğrulanmış',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': 'Bilinmeyen tedarikçi',
+      'card.view': 'Görüntüle',
+      'unit.lots': 'lot|lot',
+      'unit.listings': 'ilan|ilan',
+      'unit.suppliers': 'tedarikçi|tedarikçi',
+      'unit.requests': 'talep|talep',
+      'unit.quotes': 'teklif|teklif',
+      'req.eyebrow': 'Talep panosu',
+      'req.h2': 'Açık tedarik talepleri',
+      'req.subA': 'Alıcıların FactoryDepo’da yayınladığı ve şu uçtan okunan talepler:',
+      'req.subB': '. Teklif sayıları ve durumlar API’nin döndürdüğüyle birebir aynıdır — aciliyet sayacı yok, uydurma hareket yok.',
+      'req.cta': 'Talep panosuna bak →',
+      'req.newest': 'En yeni önce',
+      'req.postOwn': 'Kendi talebini yayınla →',
+      'req.loading': 'Talepler yükleniyor…',
+      'req.statusOpen': 'Açık',
+      'req.statusQuoted': 'Teklif verildi',
+      'req.statusClosed': 'Kapalı',
+      'req.noQuotes': 'henüz teklif yok',
+      'req.deadline': 'son tarih {d}',
+      'req.showMoreLead': 'Gösterilen 5 /',
+      'req.showMoreLink': 'kalanına bak',
+      'req.emptyTitle': 'Henüz talep yayınlanmadı',
+      'req.emptyBody': 'Bir alıcı talep yayınlayana kadar burada hiçbir şey gösterilmez.',
+      'req.emptyLink': 'İlk talebi yayınla',
+      'req.errorTitle': 'Talep panosu kullanılamıyor',
+      'req.errorBody': 'API’ye bu sayfadan ulaşılamadı, bu nedenle hiçbir talep gösterilmiyor.',
+      'req.errorLink': 'Talep panosunu aç',
+      'cat.eyebrow': 'Göz at',
+      'cat.h2': 'Kategoriler',
+      'cat.subA': 'Her kutu, kataloğun o kategori için döndürdüğü lot sayısını gösterir (',
+      'cat.subB': 'değeri şu uçtan okunur:',
+      'cat.subC': '). Tire, sayının okunamadığı anlamına gelir.',
+      'cat.cta': 'Tüm ilanları gör →',
+      'cat.metals': 'Metaller ve Mineraller',
+      'cat.steel': 'Çelik',
+      'cat.chemicals': 'Kimyasallar',
+      'cat.machinery': 'Makine',
+      'cat.equipment': 'Endüstriyel Ekipman',
+      'cat.energy': 'Yenilenebilir Enerji',
+      'cat.electronics': 'Elektronik',
+      'cat.automotive': 'Otomotiv',
+      'cat.construction': 'İnşaat Malzemeleri',
+      'cat.packaging': 'Ambalaj',
+      'cat.plastic': 'Plastik ve Kauçuk',
+      'cat.textiles': 'Tekstil',
+      'more.eyebrow': 'Katalogdan daha fazlası',
+      'more.h2': 'Listenin devamı',
+      'more.sub': 'Aynı canlı yanıtın sonraki sayfası — yukarıda gösterilenlerden sonraki en yeni ilanlar.',
+      'more.cta': 'Filtrelerle daralt →',
+      'ver.eyebrow': 'Burada doğrulama ne demek',
+      'ver.h2': 'Bir tedarikçi nasıl listelenir',
+      'ver.subA': 'Ölçmediğimiz sayıları yayınlamak yerine süreci anlatıyoruz. Puanlar, denetim sayıları ve zamanında teslim oranları bu sayfada',
+      'ver.subB': 'gösterilmez',
+      'ver.subC': ': bunlar veritabanımızdaki tohum değerlerdir ve henüz hiçbir iş akışı bunları yazmaz.',
+      'ver.s1t': 'Şirket başvurusu alındı',
+      'ver.s1b': 'Tedarikçi kaydolur ve şirket bilgilerini iletir.',
+      'ver.s2t': 'Belgeler incelendi',
+      'ver.s2b': 'Ticaret sicili, ihracat ve ürün belgeleri ekibimiz tarafından kontrol edilir.',
+      'ver.s3t': 'Fabrika ziyaret edildi',
+      'ver.s3b': 'Ülke içindeki bir denetçi tesisi ziyaret eder ve üretim hattının fotoğraflarını çeker.',
+      'ver.s4t': 'Sonuç kaydedildi',
+      'ver.s4b': 'Sonuç tedarikçi profilinde kaydedilir — geçti ya da başarısız olan eksikler.',
+      'sup.eyebrow': 'Tedarikçi dizini',
+      'sup.h2': 'Platformdaki tedarikçiler',
+      'sup.h2Count': 'Platformda {n} tedarikçi|Platformda {n} tedarikçi',
+      'sup.subA': 'Şu uçtan canlı okunur:',
+      'sup.subB': '. Rozetler tedarikçinin kayıtlı doğrulama seviyesini yansıtır; Demo rozeti kaydın tohum veri olduğu anlamına gelir. Yıldızlar, güven puanları ve denetim sayaçları kasten gösterilmez — üründe bunları hesaplayan hiçbir şey yok.',
+      'sup.cta': 'Dizini aç →',
+      'sup.level': 'Seviye {n}',
+      'sup.levelTitle': 'Doğrulama seviyesi {n}',
+      'sup.demoTitle': 'Tohum veri — henüz gerçek bir şirket değil',
+      'sup.emptyTitle': 'Henüz tedarikçi yok',
+      'sup.emptyBody': 'Dizin hiç kayıt döndürmedi.',
+      'sup.emptyLink': 'Dizini aç',
+      'sup.errorTitle': 'Tedarikçi dizini kullanılamıyor',
+      'sup.errorBody': 'API’ye bu sayfadan ulaşılamadı.',
+      'sup.errorLink': 'Dizini doğrudan deneyin',
+      'svc.eyebrow': 'Ticaret hizmetleri',
+      'svc.h2': 'Pazar yerinin üzerine kurulduğu hizmetler',
+      'svc.sub': 'Bunlar yol haritasındaki hizmet kategorileri, rafta duran canlı ürünler değil. Bu sayfa kapsama sayısı, iş ortağı sayısı veya yanıt süresi garantisi yayınlamaz, çünkü hiçbirini ölçmedik.',
+      'svc.factory': 'Fabrika denetimi',
+      'svc.qc': 'Kalite kontrol',
+      'svc.lab': 'Laboratuvar testi',
+      'svc.sample': 'Numune satın alma',
+      'svc.production': 'Üretim takibi',
+      'svc.loading': 'Konteyner yükleme',
+      'svc.warehouse': 'Depolama',
+      'svc.freight': 'Nakliye ve deniz taşımacılığı',
+      'svc.customs': 'Gümrük müşavirliği',
+      'svc.insurance': 'Ticaret sigortası',
+      'band.h3': 'Satın mı alıyorsunuz? Talep yayınlayın, listelenen tedarikçiler size teklif versin.',
+      'band.p': 'Malzemeyi, miktarı ve varış yerini tanımlayın. Teklifler platforma düşer ve orada yan yana karşılaştırabilirsiniz.',
+      'band.cta1': 'Talep yayınla',
+      'band.cta2': 'Ücretsiz hesap oluştur',
+      'panel.buyTitle': 'Satın alma',
+      'panel.buyBody': 'Katalogda arayın, lotları karşılaştırın ve teklif talebi gönderin. Sipariş öncesi numune ve denetim eklenebilir.',
+      'panel.buyBtn1': 'İlanlara göz at',
+      'panel.buyBtn2': 'Tedarikçi bul',
+      'panel.sellTitle': 'Satış',
+      'panel.sellBody': 'Hesap oluşturun, üretiminizi listeleyin ve alıcı taleplerini yanıtlayın. Doğrulamanız sürerken bile stok listeleyebilirsiniz.',
+      'panel.sellBtn1': 'Tedarikçi ol',
+      'panel.helpTitle': 'Yardım mı gerekiyor?',
+      'panel.helpBody': 'Yardım sayfaları siparişi, teklifleri ve her durumun ne anlama geldiğini açıklar. Canlı sohbet sayacı yok, uydurma yanıt süresi yok.',
+      'panel.helpBtn1': 'Yardım sayfalarını oku',
+      'panel.helpBtn2': 'Katalogdan başla',
+      'foot.tagline': 'Evrakı ve denetimleri işin içine katan endüstriyel tedarik. Bu sayfada gösterilen katalog sayıları sayfa yüklemesinde canlı API’den okunur.',
+      'foot.marketplace': 'Pazar yeri',
+      'foot.allListings': 'Tüm ilanlar',
+      'foot.copper': 'Bakır',
+      'foot.howVerification': 'Doğrulama nasıl işler',
+      'foot.account': 'Hesap',
+      'foot.createAccount': 'Hesap oluştur',
+      'foot.help': 'Yardım',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': 'Bu sayfadaki katalog sayıları canlı API değerleridir; Demo işaretli kayıtlar tohum veridir.'
+    },
+
+    /* ---------------- العربية (RTL) ---------------- */
+    ar: {
+      'doc.title': 'FactoryDepo — سوق صناعي عالمي',
+      'doc.description': 'ورّد منتجات صناعية واطلب عروض أسعار من مصانع حول العالم. تفتيش واختبار مختبري وخدمات لوجستية — سلسلة توريد موثّقة واحدة.',
+      'skip': 'تخطَّ إلى الإعلانات',
+      'lang.aria': 'لغة الواجهة',
+      'search.placeholder': 'ابحث عن دفعات أو مواد أو آلات…',
+      'search.aria': 'البحث في الإعلانات',
+      'markets.label': 'الأسواق:',
+      'markets.tr': 'تركيا',
+      'markets.cn': 'الصين',
+      'markets.global': 'عالمي',
+      'action.signIn': 'تسجيل الدخول',
+      'action.joinFree': 'انضم مجانًا',
+      'rail.listings': 'الإعلانات',
+      'rail.requests': 'الطلبات',
+      'rail.categories': 'الفئات',
+      'rail.suppliers': 'الموردون',
+      'rail.verification': 'التحقق',
+      'rail.services': 'الخدمات',
+      'rail.browseAll': 'تصفّح كل الإعلانات ←',
+      'hero.eyebrow': 'تأمين صناعي بسلسلة مسؤولية واحدة',
+      'hero.titleLead': 'اطلب عروض أسعار على',
+      'hero.titleAccent': 'توريد صناعي حقيقي',
+      'hero.titleEnd': '.',
+      'hero.sub1': 'انشر طلب عرض سعر واستقبل العروض من الموردين المدرجين — أو اشترِ مخزونًا جاهزًا مباشرة.',
+      'hero.sub2': 'يمكن إضافة تفتيش المصنع والاختبار المختبري والخدمات اللوجستية إلى الطلب نفسه.',
+      'hero.ctaRfq': 'انشر طلب عرض سعر',
+      'hero.ctaBrowse': 'تصفّح الكتالوج ←',
+      'hero.trust1': 'الانضمام مجاني',
+      'hero.trust2': 'كتالوج حيّ من المصدر نفسه',
+      'hero.trust3a': 'الصفوف الأولية مُعلَّمة بـ',
+      'hero.trust3b': 'تجريبي',
+      'hero.popular': 'عمليات بحث شائعة:',
+      'hero.q.copper': 'كاثود النحاس',
+      'hero.q.steel': 'لفائف الفولاذ',
+      'hero.q.pump': 'مضخة صناعية',
+      'hero.q.lithium': 'كربونات الليثيوم',
+      'hero.q.cnc': 'تشغيل CNC',
+      'counters.loading': 'جارٍ قراءة الإجماليات الحيّة من الكتالوج…',
+      'counters.lots': 'دفعة بصور|دفعات بصور',
+      'counters.suppliers': 'مورد مدرج|موردون مدرجون',
+      'counters.verified': 'بمستوى تحقق 2+|بمستوى تحقق 2+',
+      'counters.requests': 'طلب منشور|طلبات منشورة',
+      'counters.unavailable': '— الإجماليات الحيّة غير متاحة من هذا المصدر',
+      'counters.source': 'حيّ من /api/products و/api/suppliers و/api/rfqs',
+      'side.newest': 'أحدث إعلان',
+      'side.live': 'حيّ',
+      'side.loading': 'جارٍ تحميل أحدث إعلان…',
+      'side.reading': 'جارٍ قراءة GET /api/products…',
+      'side.open': 'افتح الإعلان',
+      'side.unreachableTitle': 'واجهة الكتالوج غير متاحة',
+      'side.unreachableBody': 'لا يُعرض أي رقم بدلًا من رقم مختلق.',
+      'list.eyebrow': 'كتالوج حيّ',
+      'list.h2': 'أحدث الإعلانات مع صور',
+      'list.subLead': 'كل بطاقة أدناه صف يعيده',
+      'list.subA': 'عند تحميل الصفحة. الصفوف التي',
+      'list.subB': 'تساوي',
+      'list.subC': 'demo',
+      'list.subD': 'هي بيانات أولية وتحمل شارة «تجريبي» — وليست عروضًا حيّة.',
+      'list.cta': 'تصفّح كل الإعلانات ←',
+      'list.showA': 'يُعرض 8 من',
+      'list.showB': 'مصوّرة، الأحدث أولًا، تُقرأ حيًّا من',
+      'list.emptyTitle': 'لا توجد إعلانات بعد',
+      'list.emptyBody': 'أعاد الكتالوج صفحة فارغة.',
+      'list.emptyLink': 'افتح الكتالوج',
+      'list.tailTitle': 'هذه كل الصفحة الأولى',
+      'list.tailBody': 'حمّل المزيد من',
+      'list.tailLink': 'الكتالوج الكامل',
+      'list.errorTitle': 'الإعلانات الحيّة غير متاحة',
+      'list.errorBody': 'تعذّر الوصول إلى واجهة الكتالوج من هذه الصفحة.',
+      'list.errorLink': 'جرّب الكتالوج مباشرة',
+      'list.failSub': 'تعذّرت قراءة الكتالوج الحيّ من هذه الصفحة، لذلك لا تُعرض أي أعداد أو إعلانات.',
+      'card.noPhoto': 'لا توجد صورة',
+      'card.demo': 'تجريبي',
+      'card.demoTitle': 'صف أولي — بيانات نموذجية وليست عرضًا حيًّا',
+      'card.verified': '✓ موثّق',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': 'مورّد غير معروف',
+      'card.view': 'عرض',
+      'unit.lots': 'دفعة|دفعات',
+      'unit.listings': 'إعلان|إعلانات',
+      'unit.suppliers': 'مورد|موردون',
+      'unit.requests': 'طلب|طلبات',
+      'unit.quotes': 'عرض سعر|عروض أسعار',
+      'req.eyebrow': 'لوحة الطلبات',
+      'req.h2': 'طلبات التوريد المفتوحة',
+      'req.subA': 'ينشرها المشترون على FactoryDepo وتُقرأ من',
+      'req.subB': '. أعداد العروض والحالات هي بالضبط ما تعيده الواجهة — لا مؤقتات إلحاح ولا نشاط مختلق.',
+      'req.cta': 'اطّلع على لوحة الطلبات ←',
+      'req.newest': 'الأحدث أولًا',
+      'req.postOwn': 'انشر طلبك ←',
+      'req.loading': 'جارٍ تحميل الطلبات…',
+      'req.statusOpen': 'مفتوح',
+      'req.statusQuoted': 'تم تقديم عرض',
+      'req.statusClosed': 'مغلق',
+      'req.noQuotes': 'لا عروض بعد',
+      'req.deadline': 'الموعد النهائي {d}',
+      'req.showMoreLead': 'يُعرض 5 من',
+      'req.showMoreLink': 'اعرض الباقي',
+      'req.emptyTitle': 'لم تُنشر أي طلبات بعد',
+      'req.emptyBody': 'لا يظهر شيء هنا حتى ينشر مشترٍ طلبًا.',
+      'req.emptyLink': 'انشر أول طلب',
+      'req.errorTitle': 'لوحة الطلبات غير متاحة',
+      'req.errorBody': 'تعذّر الوصول إلى الواجهة من هذه الصفحة، لذلك لا تُعرض أي طلبات.',
+      'req.errorLink': 'افتح لوحة الطلبات',
+      'cat.eyebrow': 'تصفّح',
+      'cat.h2': 'الفئات',
+      'cat.subA': 'تعرض كل بطاقة عدد الدفعات التي يعيدها الكتالوج حاليًا لهذه الفئة (',
+      'cat.subB': 'من',
+      'cat.subC': '). الشرطة تعني أن العدد تعذّرت قراءته.',
+      'cat.cta': 'اعرض كل الإعلانات ←',
+      'cat.metals': 'المعادن والخامات',
+      'cat.steel': 'الفولاذ',
+      'cat.chemicals': 'المواد الكيميائية',
+      'cat.machinery': 'الآلات',
+      'cat.equipment': 'المعدات الصناعية',
+      'cat.energy': 'الطاقة المتجددة',
+      'cat.electronics': 'الإلكترونيات',
+      'cat.automotive': 'السيارات',
+      'cat.construction': 'مواد البناء',
+      'cat.packaging': 'التغليف',
+      'cat.plastic': 'البلاستيك والمطاط',
+      'cat.textiles': 'المنسوجات',
+      'more.eyebrow': 'المزيد من الكتالوج',
+      'more.h2': 'المزيد في أسفل القائمة',
+      'more.sub': 'الصفحة التالية من الاستجابة الحيّة نفسها — أحدث الإعلانات بعد تلك المعروضة أعلاه.',
+      'more.cta': 'ضيّق النتائج بالمرشحات ←',
+      'ver.eyebrow': 'ماذا يعني التحقق هنا',
+      'ver.h2': 'كيف يُدرَج المورّد',
+      'ver.subA': 'نشرح العملية بدل نشر أرقام لم نقسها. التقييمات وأعداد التفتيش ومعدلات الالتزام بالمواعيد',
+      'ver.subB': 'لا تُعرض',
+      'ver.subC': 'في هذه الصفحة: فهي قيم أولية في قاعدة بياناتنا ولا تكتبها أي دورة عمل بعد.',
+      'ver.s1t': 'تم تقديم الشركة',
+      'ver.s1b': 'يسجّل المورّد بيانات شركته ويرسلها.',
+      'ver.s2t': 'تمت مراجعة المستندات',
+      'ver.s2b': 'يتحقق فريقنا من مستندات التسجيل والتصدير والمنتجات.',
+      'ver.s3t': 'تمت زيارة المصنع',
+      'ver.s3b': 'يزور مفتّش داخل البلد الموقع ويصوّر خط الإنتاج.',
+      'ver.s4t': 'تم تسجيل النتيجة',
+      'ver.s4b': 'تُسجَّل النتيجة في ملف المورّد — إما النجاح أو الثغرات التي لم تجتز.',
+      'sup.eyebrow': 'دليل المورّدين',
+      'sup.h2': 'المورّدون على المنصة',
+      'sup.h2Count': '{n} مورد على المنصة|{n} مورد على المنصة',
+      'sup.subA': 'تُقرأ حيًّا من',
+      'sup.subB': '. تعكس الشارات مستوى التحقق المسجّل للمورّد؛ وشارة «تجريبي» تعني أن الصف بيانات أولية. لا تُعرض النجوم ولا درجات الثقة ولا عدّادات التفتيش عن قصد — فلا شيء في المنتج يحسبها بعد.',
+      'sup.cta': 'افتح الدليل ←',
+      'sup.level': 'المستوى {n}',
+      'sup.levelTitle': 'مستوى التحقق {n}',
+      'sup.demoTitle': 'بيانات أولية — ليست شركة حقيقية بعد',
+      'sup.emptyTitle': 'لا يوجد موردون بعد',
+      'sup.emptyBody': 'لم يُعد الدليل أي صف.',
+      'sup.emptyLink': 'افتح الدليل',
+      'sup.errorTitle': 'دليل المورّدين غير متاح',
+      'sup.errorBody': 'تعذّر الوصول إلى الواجهة من هذه الصفحة.',
+      'sup.errorLink': 'جرّب الدليل مباشرة',
+      'svc.eyebrow': 'خدمات التجارة',
+      'svc.h2': 'الخدمات التي بُني عليها السوق',
+      'svc.sub': 'هذه فئات الخدمات على خطة العمل، وليست منتجات حيّة على رف. ولا تنشر هذه الصفحة أعداد تغطية أو شركاء أو ضمانات لزمن الاستجابة، لأننا لم نقس أيًا منها.',
+      'svc.factory': 'تفتيش المصنع',
+      'svc.qc': 'مراقبة الجودة',
+      'svc.lab': 'الاختبار المختبري',
+      'svc.sample': 'شراء العينات',
+      'svc.production': 'متابعة الإنتاج',
+      'svc.loading': 'تحميل الحاويات',
+      'svc.warehouse': 'التخزين',
+      'svc.freight': 'الشحن والنقل',
+      'svc.customs': 'التخليص الجمركي',
+      'svc.insurance': 'تأمين التجارة',
+      'band.h3': 'تشتري؟ انشر طلبًا ودع المورّدين المدرجين يقدمون عروضهم.',
+      'band.p': 'اوصف المادة والكمية ووجهة الوصول. تصل العروض إلى المنصة حيث يمكنك مقارنتها جنبًا إلى جنب.',
+      'band.cta1': 'انشر طلبًا',
+      'band.cta2': 'أنشئ حسابًا مجانيًا',
+      'panel.buyTitle': 'الشراء',
+      'panel.buyBody': 'ابحث في الكتالوج وقارن الدفعات وأرسل طلب عرض سعر. يمكن إضافة طلبات العينات والتفتيش قبل الالتزام.',
+      'panel.buyBtn1': 'تصفّح الإعلانات',
+      'panel.buyBtn2': 'ابحث عن موردين',
+      'panel.sellTitle': 'البيع',
+      'panel.sellBody': 'أنشئ حسابًا واعرض إنتاجك وأجب طلبات المشترين. يمكنك عرض مخزونك حتى أثناء إجراء التحقق.',
+      'panel.sellBtn1': 'كن مورّدًا',
+      'panel.helpTitle': 'تحتاج مساعدة؟',
+      'panel.helpBody': 'تشرح صفحات المساعدة الطلب وعروض الأسعار ومعنى كل حالة. لا عدّاد محادثة حيّة ولا أزمنة استجابة مختلقة.',
+      'panel.helpBtn1': 'اقرأ صفحات المساعدة',
+      'panel.helpBtn2': 'ابدأ من الكتالوج',
+      'foot.tagline': 'تأمين صناعي مصحوب بالمستندات وعمليات التفتيش. أرقام الكتالوج المعروضة في هذه الصفحة تُقرأ من الواجهة الحيّة عند تحميل الصفحة.',
+      'foot.marketplace': 'السوق',
+      'foot.allListings': 'كل الإعلانات',
+      'foot.copper': 'النحاس',
+      'foot.howVerification': 'كيف يعمل التحقق',
+      'foot.account': 'الحساب',
+      'foot.createAccount': 'إنشاء حساب',
+      'foot.help': 'المساعدة',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': 'أرقام الكتالوج في هذه الصفحة قيم حيّة من الواجهة؛ والصفوف المعلّمة بـ«تجريبي» بيانات أولية.'
+    },
+
+    /* ---------------- Русский ---------------- */
+    ru: {
+      'doc.title': 'FactoryDepo — глобальная промышленная площадка',
+      'doc.description': 'Закупайте промышленную продукцию и запрашивайте предложения у заводов по всему миру. Инспекции, лабораторные испытания и логистика — одна проверенная цепочка поставок.',
+      'skip': 'Перейти к объявлениям',
+      'lang.aria': 'Язык интерфейса',
+      'search.placeholder': 'Поиск партий, материалов, станков…',
+      'search.aria': 'Поиск по объявлениям',
+      'markets.label': 'Рынки:',
+      'markets.tr': 'Турция',
+      'markets.cn': 'Китай',
+      'markets.global': 'Весь мир',
+      'action.signIn': 'Войти',
+      'action.joinFree': 'Регистрация бесплатно',
+      'rail.listings': 'Объявления',
+      'rail.requests': 'Запросы',
+      'rail.categories': 'Категории',
+      'rail.suppliers': 'Поставщики',
+      'rail.verification': 'Проверка',
+      'rail.services': 'Услуги',
+      'rail.browseAll': 'Все объявления →',
+      'hero.eyebrow': 'Промышленные закупки в одной цепочке ответственности',
+      'hero.titleLead': 'Запрашивайте предложения на',
+      'hero.titleAccent': 'реальные промышленные поставки',
+      'hero.titleEnd': '.',
+      'hero.sub1': 'Разместите запрос предложения и получайте оферты от поставщиков из каталога — или покупайте готовый склад напрямую.',
+      'hero.sub2': 'Инспекция завода, лабораторные испытания и логистика добавляются к тому же заказу.',
+      'hero.ctaRfq': 'Разместить запрос предложения',
+      'hero.ctaBrowse': 'Открыть каталог →',
+      'hero.trust1': 'Участие бесплатное',
+      'hero.trust2': 'Живой каталог с того же источника',
+      'hero.trust3a': 'Строки из сида помечены',
+      'hero.trust3b': 'Демо',
+      'hero.popular': 'Популярные запросы:',
+      'hero.q.copper': 'Медный катод',
+      'hero.q.steel': 'Стальной рулон',
+      'hero.q.pump': 'Промышленный насос',
+      'hero.q.lithium': 'Карбонат лития',
+      'hero.q.cnc': 'Обработка на ЧПУ',
+      'counters.loading': 'Читаем актуальные итоги из каталога…',
+      'counters.lots': 'партия с фото|партий с фото',
+      'counters.suppliers': 'поставщик в каталоге|поставщиков в каталоге',
+      'counters.verified': 'с уровнем проверки 2+|с уровнем проверки 2+',
+      'counters.requests': 'размещённый запрос|размещённых запросов',
+      'counters.unavailable': '— актуальные итоги недоступны с этого источника',
+      'counters.source': 'актуальные данные: /api/products, /api/suppliers, /api/rfqs',
+      'side.newest': 'Новое объявление',
+      'side.live': 'актуально',
+      'side.loading': 'Загружаем последнее объявление…',
+      'side.reading': 'Читаем GET /api/products…',
+      'side.open': 'Открыть объявление',
+      'side.unreachableTitle': 'API каталога недоступен',
+      'side.unreachableBody': 'Здесь не показывается никакая цифра вместо выдуманной.',
+      'list.eyebrow': 'Живой каталог',
+      'list.h2': 'Новейшие объявления с фотографиями',
+      'list.subLead': 'Каждая карточка ниже — строка, возвращённая',
+      'list.subA': 'при загрузке страницы. Строки, у которых',
+      'list.subB': 'равно',
+      'list.subC': 'demo',
+      'list.subD': '— это данные сида, они помечены значком «Демо» и не являются живыми предложениями.',
+      'list.cta': 'Все объявления →',
+      'list.showA': 'Показано 8 из',
+      'list.showB': 'с фотографиями, сначала новые, читается вживую из',
+      'list.emptyTitle': 'Объявлений пока нет',
+      'list.emptyBody': 'Каталог вернул пустую страницу.',
+      'list.emptyLink': 'Открыть каталог',
+      'list.tailTitle': 'Это вся первая страница',
+      'list.tailBody': 'Загрузите больше из',
+      'list.tailLink': 'полного каталога',
+      'list.errorTitle': 'Живые объявления недоступны',
+      'list.errorBody': 'Не удалось обратиться к API каталога с этой страницы.',
+      'list.errorLink': 'Открыть каталог напрямую',
+      'list.failSub': 'Живой каталог не удалось прочитать с этой страницы, поэтому ни счётчики, ни объявления не показаны.',
+      'card.noPhoto': 'нет фото',
+      'card.demo': 'Демо',
+      'card.demoTitle': 'Строка сида — образец данных, не живое предложение',
+      'card.verified': '✓ Проверен',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': 'Поставщик не указан',
+      'card.view': 'Открыть',
+      'unit.lots': 'партия|партий',
+      'unit.listings': 'позиция|позиций',
+      'unit.suppliers': 'поставщик|поставщиков',
+      'unit.requests': 'запрос|запросов',
+      'unit.quotes': 'предложение|предложений',
+      'req.eyebrow': 'Доска запросов',
+      'req.h2': 'Открытые запросы на поставку',
+      'req.subA': 'Публикуются покупателями на FactoryDepo и читаются из',
+      'req.subB': '. Количество предложений и статусы — ровно то, что возвращает API: без таймеров срочности и выдуманной активности.',
+      'req.cta': 'Открыть доску запросов →',
+      'req.newest': 'Сначала новые',
+      'req.postOwn': 'Разместить свой запрос →',
+      'req.loading': 'Загружаем запросы…',
+      'req.statusOpen': 'Открыт',
+      'req.statusQuoted': 'Есть предложение',
+      'req.statusClosed': 'Закрыт',
+      'req.noQuotes': 'предложений пока нет',
+      'req.deadline': 'срок {d}',
+      'req.showMoreLead': 'Показано 5 из',
+      'req.showMoreLink': 'показать остальные',
+      'req.emptyTitle': 'Запросов пока нет',
+      'req.emptyBody': 'Здесь ничего не появится, пока покупатель не разместит запрос.',
+      'req.emptyLink': 'Разместить первый запрос',
+      'req.errorTitle': 'Доска запросов недоступна',
+      'req.errorBody': 'Не удалось обратиться к API с этой страницы, поэтому запросы не показаны.',
+      'req.errorLink': 'Открыть доску запросов',
+      'cat.eyebrow': 'Обзор',
+      'cat.h2': 'Категории',
+      'cat.subA': 'Каждая плитка показывает, сколько партий каталог сейчас возвращает по этой категории (',
+      'cat.subB': 'из',
+      'cat.subC': '). Прочерк означает, что счётчик прочитать не удалось.',
+      'cat.cta': 'Все объявления →',
+      'cat.metals': 'Металлы и минералы',
+      'cat.steel': 'Сталь',
+      'cat.chemicals': 'Химия',
+      'cat.machinery': 'Станки',
+      'cat.equipment': 'Промышленное оборудование',
+      'cat.energy': 'Возобновляемая энергия',
+      'cat.electronics': 'Электроника',
+      'cat.automotive': 'Автопром',
+      'cat.construction': 'Стройматериалы',
+      'cat.packaging': 'Упаковка',
+      'cat.plastic': 'Пластик и резина',
+      'cat.textiles': 'Текстиль',
+      'more.eyebrow': 'Ещё из каталога',
+      'more.h2': 'Дальше по списку',
+      'more.sub': 'Следующая страница того же живого ответа — новейшие объявления после показанных выше.',
+      'more.cta': 'Уточнить фильтрами →',
+      'ver.eyebrow': 'Что здесь означает проверка',
+      'ver.h2': 'Как поставщик попадает в каталог',
+      'ver.subA': 'Мы описываем процесс, а не публикуем неизмеренные цифры. Рейтинги, число инспекций и доля поставок в срок',
+      'ver.subB': 'не показываются',
+      'ver.subC': 'на этой странице: это значения сида в нашей базе, и ни один процесс их пока не записывает.',
+      'ver.s1t': 'Компания подала заявку',
+      'ver.s1b': 'Поставщик регистрируется и отправляет данные компании.',
+      'ver.s2t': 'Документы проверены',
+      'ver.s2b': 'Наша команда проверяет регистрационные, экспортные и товарные документы.',
+      'ver.s3t': 'Завод посещён',
+      'ver.s3b': 'Инспектор в стране посещает площадку и фотографирует линию.',
+      'ver.s4t': 'Результат зафиксирован',
+      'ver.s4b': 'Результат записывается в профиль поставщика — пройдено или выявленные несоответствия.',
+      'sup.eyebrow': 'Каталог поставщиков',
+      'sup.h2': 'Поставщики на площадке',
+      'sup.h2Count': '{n} поставщик на площадке|{n} поставщиков на площадке',
+      'sup.subA': 'Читается вживую из',
+      'sup.subB': '. Значки отражают записанный уровень проверки; значок «Демо» означает, что строка — данные сида. Звёзды, рейтинги доверия и счётчики инспекций сознательно не показываются: в продукте их пока никто не считает.',
+      'sup.cta': 'Открыть каталог →',
+      'sup.level': 'Уровень {n}',
+      'sup.levelTitle': 'Уровень проверки {n}',
+      'sup.demoTitle': 'Данные сида — ещё не реальная компания',
+      'sup.emptyTitle': 'Поставщиков пока нет',
+      'sup.emptyBody': 'Каталог не вернул ни одной строки.',
+      'sup.emptyLink': 'Открыть каталог',
+      'sup.errorTitle': 'Каталог поставщиков недоступен',
+      'sup.errorBody': 'Не удалось обратиться к API с этой страницы.',
+      'sup.errorLink': 'Открыть каталог напрямую',
+      'svc.eyebrow': 'Торговые услуги',
+      'svc.h2': 'Услуги, вокруг которых построена площадка',
+      'svc.sub': 'Это категории услуг из плана, а не живые товары на полке. Страница не публикует охват, число партнёров или гарантии времени ответа, потому что мы их не измеряли.',
+      'svc.factory': 'Инспекция завода',
+      'svc.qc': 'Контроль качества',
+      'svc.lab': 'Лабораторные испытания',
+      'svc.sample': 'Закупка образцов',
+      'svc.production': 'Мониторинг производства',
+      'svc.loading': 'Загрузка контейнера',
+      'svc.warehouse': 'Складское хранение',
+      'svc.freight': 'Перевозка и доставка',
+      'svc.customs': 'Таможенное оформление',
+      'svc.insurance': 'Страхование сделки',
+      'band.h3': 'Покупаете? Разместите запрос — поставщики из каталога пришлют предложения.',
+      'band.p': 'Опишите материал, количество и пункт назначения. Предложения приходят на площадку, где их можно сравнить рядом.',
+      'band.cta1': 'Разместить запрос',
+      'band.cta2': 'Создать бесплатный аккаунт',
+      'panel.buyTitle': 'Покупка',
+      'panel.buyBody': 'Ищите в каталоге, сравнивайте партии и отправляйте запрос предложения. Образцы и инспекции можно добавить до сделки.',
+      'panel.buyBtn1': 'Смотреть объявления',
+      'panel.buyBtn2': 'Найти поставщиков',
+      'panel.sellTitle': 'Продажа',
+      'panel.sellBody': 'Создайте аккаунт, разместите продукцию и отвечайте на запросы покупателей. Вы можете публиковать склад, даже пока идёт проверка.',
+      'panel.sellBtn1': 'Стать поставщиком',
+      'panel.helpTitle': 'Нужна помощь?',
+      'panel.helpBody': 'В справке описаны заказ, предложения и значение каждого статуса. Без счётчика живого чата и выдуманного времени ответа.',
+      'panel.helpBtn1': 'Читать справку',
+      'panel.helpBtn2': 'Начать с каталога',
+      'foot.tagline': 'Промышленные закупки вместе с документами и инспекциями. Все цифры каталога на этой странице читаются из живого API при загрузке.',
+      'foot.marketplace': 'Площадка',
+      'foot.allListings': 'Все объявления',
+      'foot.copper': 'Медь',
+      'foot.howVerification': 'Как работает проверка',
+      'foot.account': 'Аккаунт',
+      'foot.createAccount': 'Создать аккаунт',
+      'foot.help': 'Справка',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': 'Цифры каталога на этой странице — живые значения API; строки со значком «Демо» — данные сида.'
+    },
+
+    /* ---------------- 中文 (简体) ---------------- */
+    zh: {
+      'doc.title': 'FactoryDepo — 全球工业交易平台',
+      'doc.description': '从全球工厂采购工业产品并索取报价。验厂、实验室检测与物流——一条经过验证的供应链。',
+      'skip': '跳转到货源列表',
+      'lang.aria': '界面语言',
+      'search.placeholder': '搜索货源、材料、机械…',
+      'search.aria': '搜索货源',
+      'markets.label': '市场：',
+      'markets.tr': '土耳其',
+      'markets.cn': '中国',
+      'markets.global': '全球',
+      'action.signIn': '登录',
+      'action.joinFree': '免费注册',
+      'rail.listings': '货源',
+      'rail.requests': '询价需求',
+      'rail.categories': '类目',
+      'rail.suppliers': '供应商',
+      'rail.verification': '认证',
+      'rail.services': '服务',
+      'rail.browseAll': '浏览全部货源 →',
+      'hero.eyebrow': '工业采购，一条可追溯的链路',
+      'hero.titleLead': '针对',
+      'hero.titleAccent': '真实工业货源',
+      'hero.titleEnd': '。',
+      'hero.sub1': '发布询价需求，接收已收录供应商的报价，或直接购买现货。',
+      'hero.sub2': '工厂验厂、实验室检测和物流可以加到同一笔订单中。',
+      'hero.ctaRfq': '发布询价需求',
+      'hero.ctaBrowse': '浏览产品目录 →',
+      'hero.trust1': '免费加入',
+      'hero.trust2': '同源实时产品目录',
+      'hero.trust3a': '种子数据会标注',
+      'hero.trust3b': '演示',
+      'hero.popular': '热门搜索：',
+      'hero.q.copper': '阴极铜',
+      'hero.q.steel': '钢卷',
+      'hero.q.pump': '工业泵',
+      'hero.q.lithium': '碳酸锂',
+      'hero.q.cnc': 'CNC 加工',
+      'counters.loading': '正在从产品目录读取实时总数…',
+      'counters.lots': '条带图货源|条带图货源',
+      'counters.suppliers': '家已收录供应商|家已收录供应商',
+      'counters.verified': '家认证等级 2+|家认证等级 2+',
+      'counters.requests': '条已发布询价|条已发布询价',
+      'counters.unavailable': '— 无法从当前来源读取实时总数',
+      'counters.source': '实时来自 /api/products、/api/suppliers、/api/rfqs',
+      'side.newest': '最新货源',
+      'side.live': '实时',
+      'side.loading': '正在加载最新货源…',
+      'side.reading': '正在读取 GET /api/products…',
+      'side.open': '查看货源',
+      'side.unreachableTitle': '无法访问产品目录接口',
+      'side.unreachableBody': '这里不显示任何数字，而不是编造一个。',
+      'list.eyebrow': '实时产品目录',
+      'list.h2': '带图片的最新货源',
+      'list.subLead': '下面每张卡片都是此接口返回的一行数据：',
+      'list.subA': '页面加载时。其中',
+      'list.subB': '为',
+      'list.subC': 'demo',
+      'list.subD': '的行属于种子数据，会带有「演示」标记——它们不是真实报价。',
+      'list.cta': '浏览全部货源 →',
+      'list.showA': '显示 8 /',
+      'list.showB': '条带图货源，最新优先，实时读取自',
+      'list.emptyTitle': '暂无货源',
+      'list.emptyBody': '产品目录返回了空页面。',
+      'list.emptyLink': '打开产品目录',
+      'list.tailTitle': '第一页就到这里',
+      'list.tailBody': '从以下位置加载更多：',
+      'list.tailLink': '完整产品目录',
+      'list.errorTitle': '无法加载实时货源',
+      'list.errorBody': '此页面无法访问产品目录接口。',
+      'list.errorLink': '直接打开产品目录',
+      'list.failSub': '此页面无法读取实时产品目录，因此不显示任何数量或货源。',
+      'card.noPhoto': '暂无图片',
+      'card.demo': '演示',
+      'card.demoTitle': '种子数据——示例数据，不是真实报价',
+      'card.verified': '✓ 已认证',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': '供应商未注明',
+      'card.view': '查看',
+      'unit.lots': '条货源|条货源',
+      'unit.listings': '条货源|条货源',
+      'unit.suppliers': '家供应商|家供应商',
+      'unit.requests': '条询价|条询价',
+      'unit.quotes': '条报价|条报价',
+      'req.eyebrow': '询价板',
+      'req.h2': '开放的采购需求',
+      'req.subA': '由买家在 FactoryDepo 发布，读取自',
+      'req.subB': '。报价数量和状态与接口返回完全一致——没有紧迫倒计时，也没有编造的活动数据。',
+      'req.cta': '查看询价板 →',
+      'req.newest': '最新优先',
+      'req.postOwn': '发布你的需求 →',
+      'req.loading': '正在加载询价…',
+      'req.statusOpen': '开放中',
+      'req.statusQuoted': '已报价',
+      'req.statusClosed': '已关闭',
+      'req.noQuotes': '暂无报价',
+      'req.deadline': '截止 {d}',
+      'req.showMoreLead': '显示 5 /',
+      'req.showMoreLink': '查看其余',
+      'req.emptyTitle': '暂无询价',
+      'req.emptyBody': '买家发布之前，这里不会显示内容。',
+      'req.emptyLink': '发布第一条需求',
+      'req.errorTitle': '询价板不可用',
+      'req.errorBody': '此页面无法访问接口，因此不显示任何询价。',
+      'req.errorLink': '打开询价板',
+      'cat.eyebrow': '浏览',
+      'cat.h2': '类目',
+      'cat.subA': '每个卡片显示产品目录当前为该类目返回的货源数量（',
+      'cat.subB': '来自',
+      'cat.subC': '）。横线表示数量无法读取。',
+      'cat.cta': '查看全部货源 →',
+      'cat.metals': '金属与矿产',
+      'cat.steel': '钢材',
+      'cat.chemicals': '化工',
+      'cat.machinery': '机械',
+      'cat.equipment': '工业设备',
+      'cat.energy': '可再生能源',
+      'cat.electronics': '电子',
+      'cat.automotive': '汽车',
+      'cat.construction': '建筑材料',
+      'cat.packaging': '包装',
+      'cat.plastic': '塑料与橡胶',
+      'cat.textiles': '纺织',
+      'more.eyebrow': '产品目录更多内容',
+      'more.h2': '列表往下',
+      'more.sub': '同一个实时响应的下一页——上面展示的货源之后最新的那些。',
+      'more.cta': '用筛选缩小范围 →',
+      'ver.eyebrow': '这里的认证意味着什么',
+      'ver.h2': '供应商如何被收录',
+      'ver.subA': '我们描述流程，而不发布未测量的数字。评分、验厂次数和履约率在这页',
+      'ver.subB': '不予展示',
+      'ver.subC': '：它们只是数据库里的种子值，目前没有任何流程会写入它们。',
+      'ver.s1t': '提交公司资料',
+      'ver.s1b': '供应商注册并提交公司信息。',
+      'ver.s2t': '审核文件',
+      'ver.s2b': '我们的团队核查注册、出口和产品文件。',
+      'ver.s3t': '实地验厂',
+      'ver.s3b': '当地验厂员到现场查看并拍摄产线。',
+      'ver.s4t': '记录结果',
+      'ver.s4b': '结果记录在供应商资料上——通过，或未通过的具体缺项。',
+      'sup.eyebrow': '供应商名录',
+      'sup.h2': '平台上的供应商',
+      'sup.h2Count': '平台上 {n} 家供应商|平台上 {n} 家供应商',
+      'sup.subA': '实时读取自',
+      'sup.subB': '。徽标反映供应商已记录的认证等级；「演示」徽标表示该行是种子数据。星级、信任分和验厂计数有意不展示——产品里还没有任何逻辑在计算它们。',
+      'sup.cta': '打开名录 →',
+      'sup.level': '等级 {n}',
+      'sup.levelTitle': '认证等级 {n}',
+      'sup.demoTitle': '种子数据——还不是真实公司',
+      'sup.emptyTitle': '暂无供应商',
+      'sup.emptyBody': '名录没有返回任何数据。',
+      'sup.emptyLink': '打开名录',
+      'sup.errorTitle': '供应商名录不可用',
+      'sup.errorBody': '此页面无法访问接口。',
+      'sup.errorLink': '直接打开名录',
+      'svc.eyebrow': '贸易服务',
+      'svc.h2': '平台围绕这些服务搭建',
+      'svc.sub': '这些是路线图上的服务类目，不是货架上的现货。本页不发布覆盖数量、合作方数量或响应时间承诺，因为我们没有测量过。',
+      'svc.factory': '工厂验厂',
+      'svc.qc': '质量控制',
+      'svc.lab': '实验室检测',
+      'svc.sample': '样品采购',
+      'svc.production': '生产监控',
+      'svc.loading': '集装箱装柜',
+      'svc.warehouse': '仓储',
+      'svc.freight': '货运与运输',
+      'svc.customs': '报关代理',
+      'svc.insurance': '贸易保险',
+      'band.h3': '要采购？发布需求，让已收录的供应商给你报价。',
+      'band.p': '说明材料、数量和目的地。报价会进入平台，你可以并排比较。',
+      'band.cta1': '发布需求',
+      'band.cta2': '创建免费账号',
+      'panel.buyTitle': '采购',
+      'panel.buyBody': '搜索产品目录、比较货源并发送询价需求。下单前可以加样品和验厂。',
+      'panel.buyBtn1': '浏览货源',
+      'panel.buyBtn2': '寻找供应商',
+      'panel.sellTitle': '销售',
+      'panel.sellBody': '创建账号、发布你的产能并回复买家需求。认证进行中也可以发布库存。',
+      'panel.sellBtn1': '成为供应商',
+      'panel.helpTitle': '需要帮助？',
+      'panel.helpBody': '帮助页面说明下单、报价以及每种状态的含义。没有在线客服计数，也没有编造的响应时间。',
+      'panel.helpBtn1': '阅读帮助页面',
+      'panel.helpBtn2': '从产品目录开始',
+      'foot.tagline': '工业采购，文件和验厂一并附上。本页任何位置显示的产品目录数字都在页面加载时从实时接口读取。',
+      'foot.marketplace': '交易市场',
+      'foot.allListings': '全部货源',
+      'foot.copper': '铜',
+      'foot.howVerification': '认证如何运作',
+      'foot.account': '账号',
+      'foot.createAccount': '创建账号',
+      'foot.help': '帮助',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': '本页的产品目录数字是实时接口值；标记为「演示」的行是种子数据。'
+    },
+
+    /* ---------------- Español ---------------- */
+    es: {
+      'doc.title': 'FactoryDepo — Marketplace industrial global',
+      'doc.description': 'Compra productos industriales y solicita cotizaciones a fábricas de todo el mundo. Inspecciones, ensayos de laboratorio y logística: una cadena de suministro verificada.',
+      'skip': 'Saltar a las publicaciones',
+      'lang.aria': 'Idioma de la interfaz',
+      'search.placeholder': 'Buscar lotes, materiales, maquinaria…',
+      'search.aria': 'Buscar publicaciones',
+      'markets.label': 'Mercados:',
+      'markets.tr': 'Turquía',
+      'markets.cn': 'China',
+      'markets.global': 'Global',
+      'action.signIn': 'Iniciar sesión',
+      'action.joinFree': 'Únete gratis',
+      'rail.listings': 'Publicaciones',
+      'rail.requests': 'Solicitudes',
+      'rail.categories': 'Categorías',
+      'rail.suppliers': 'Proveedores',
+      'rail.verification': 'Verificación',
+      'rail.services': 'Servicios',
+      'rail.browseAll': 'Ver todas las publicaciones →',
+      'hero.eyebrow': 'Abastecimiento industrial, una sola cadena de custodia',
+      'hero.titleLead': 'Solicita cotizaciones de',
+      'hero.titleAccent': 'suministro industrial real',
+      'hero.titleEnd': '.',
+      'hero.sub1': 'Publica una solicitud de cotización y recibe ofertas de proveedores listados, o compra existencias listas directamente.',
+      'hero.sub2': 'La inspección en fábrica, los ensayos de laboratorio y la logística pueden añadirse al mismo pedido.',
+      'hero.ctaRfq': 'Publicar una solicitud de cotización',
+      'hero.ctaBrowse': 'Ver el catálogo →',
+      'hero.trust1': 'Registro gratuito',
+      'hero.trust2': 'Catálogo en vivo desde el mismo origen',
+      'hero.trust3a': 'Las filas semilla se etiquetan como',
+      'hero.trust3b': 'Demo',
+      'hero.popular': 'Búsquedas populares:',
+      'hero.q.copper': 'Cátodo de cobre',
+      'hero.q.steel': 'Bobina de acero',
+      'hero.q.pump': 'Bomba industrial',
+      'hero.q.lithium': 'Carbonato de litio',
+      'hero.q.cnc': 'Mecanizado CNC',
+      'counters.loading': 'Leyendo los totales en vivo del catálogo…',
+      'counters.lots': 'lote con fotos|lotes con fotos',
+      'counters.suppliers': 'proveedor listado|proveedores listados',
+      'counters.verified': 'con nivel de verificación 2+|con nivel de verificación 2+',
+      'counters.requests': 'solicitud publicada|solicitudes publicadas',
+      'counters.unavailable': '— totales en vivo no disponibles desde este origen',
+      'counters.source': 'en vivo desde /api/products, /api/suppliers, /api/rfqs',
+      'side.newest': 'Publicación más reciente',
+      'side.live': 'en vivo',
+      'side.loading': 'Cargando la última publicación…',
+      'side.reading': 'Leyendo GET /api/products…',
+      'side.open': 'Abrir publicación',
+      'side.unreachableTitle': 'API del catálogo no disponible',
+      'side.unreachableBody': 'No se muestra ninguna cifra en lugar de una inventada.',
+      'list.eyebrow': 'Catálogo en vivo',
+      'list.h2': 'Publicaciones más recientes con fotos',
+      'list.subLead': 'Cada tarjeta de abajo es una fila devuelta por',
+      'list.subA': 'al cargar la página. Las filas cuyo',
+      'list.subB': 'es',
+      'list.subC': 'demo',
+      'list.subD': 'son datos semilla y llevan la etiqueta Demo: no son ofertas en vivo.',
+      'list.cta': 'Ver todas las publicaciones →',
+      'list.showA': 'Mostrando 8 de',
+      'list.showB': 'con fotografía, las más recientes primero, leídas en vivo desde',
+      'list.emptyTitle': 'Todavía no hay publicaciones',
+      'list.emptyBody': 'El catálogo devolvió una página vacía.',
+      'list.emptyLink': 'Abrir el catálogo',
+      'list.tailTitle': 'Esa es toda la primera página',
+      'list.tailBody': 'Carga más desde el',
+      'list.tailLink': 'catálogo completo',
+      'list.errorTitle': 'Publicaciones en vivo no disponibles',
+      'list.errorBody': 'No se pudo acceder a la API del catálogo desde esta página.',
+      'list.errorLink': 'Probar el catálogo directamente',
+      'list.failSub': 'No se pudo leer el catálogo en vivo desde esta página, así que no se muestran recuentos ni publicaciones.',
+      'card.noPhoto': 'sin foto',
+      'card.demo': 'Demo',
+      'card.demoTitle': 'Fila semilla: datos de muestra, no una oferta en vivo',
+      'card.verified': '✓ Verificado',
+      'card.moq': 'MOQ {n} {unit}',
+      'card.moqNone': 'MOQ —',
+      'card.unknownSupplier': 'Proveedor desconocido',
+      'card.view': 'Ver',
+      'unit.lots': 'lote|lotes',
+      'unit.listings': 'publicación|publicaciones',
+      'unit.suppliers': 'proveedor|proveedores',
+      'unit.requests': 'solicitud|solicitudes',
+      'unit.quotes': 'cotización|cotizaciones',
+      'req.eyebrow': 'Tablero de solicitudes',
+      'req.h2': 'Solicitudes de abastecimiento abiertas',
+      'req.subA': 'Publicadas por compradores en FactoryDepo y leídas desde',
+      'req.subB': '. Los recuentos de ofertas y los estados son exactamente lo que devuelve la API: sin temporizadores de urgencia ni actividad inventada.',
+      'req.cta': 'Ver el tablero de solicitudes →',
+      'req.newest': 'Más recientes primero',
+      'req.postOwn': 'Publica tu propia solicitud →',
+      'req.loading': 'Cargando solicitudes…',
+      'req.statusOpen': 'Abierta',
+      'req.statusQuoted': 'Con oferta',
+      'req.statusClosed': 'Cerrada',
+      'req.noQuotes': 'aún sin cotizaciones',
+      'req.deadline': 'plazo {d}',
+      'req.showMoreLead': 'Mostrando 5 de',
+      'req.showMoreLink': 'ver el resto',
+      'req.emptyTitle': 'Todavía no hay solicitudes',
+      'req.emptyBody': 'Aquí no se muestra nada hasta que un comprador publique una.',
+      'req.emptyLink': 'Publicar la primera solicitud',
+      'req.errorTitle': 'Tablero de solicitudes no disponible',
+      'req.errorBody': 'No se pudo acceder a la API desde esta página, así que no se muestran solicitudes.',
+      'req.errorLink': 'Abrir el tablero de solicitudes',
+      'cat.eyebrow': 'Explorar',
+      'cat.h2': 'Categorías',
+      'cat.subA': 'Cada tarjeta muestra cuántos lotes devuelve ahora el catálogo para esa categoría (',
+      'cat.subB': 'de',
+      'cat.subC': '). Un guion significa que no se pudo leer el recuento.',
+      'cat.cta': 'Ver todas las publicaciones →',
+      'cat.metals': 'Metales y minerales',
+      'cat.steel': 'Acero',
+      'cat.chemicals': 'Químicos',
+      'cat.machinery': 'Maquinaria',
+      'cat.equipment': 'Equipos industriales',
+      'cat.energy': 'Energía renovable',
+      'cat.electronics': 'Electrónica',
+      'cat.automotive': 'Automoción',
+      'cat.construction': 'Materiales de construcción',
+      'cat.packaging': 'Envases',
+      'cat.plastic': 'Plástico y caucho',
+      'cat.textiles': 'Textiles',
+      'more.eyebrow': 'Más del catálogo',
+      'more.h2': 'Más abajo en la lista',
+      'more.sub': 'La siguiente página de la misma respuesta en vivo: las publicaciones más recientes después de las mostradas arriba.',
+      'more.cta': 'Afina con filtros →',
+      'ver.eyebrow': 'Qué significa la verificación aquí',
+      'ver.h2': 'Cómo se lista un proveedor',
+      'ver.subA': 'Describimos el proceso en lugar de publicar cifras que no hemos medido. Las valoraciones, los recuentos de inspección y las tasas de cumplimiento',
+      'ver.subB': 'no se muestran',
+      'ver.subC': 'en esta página: son valores semilla de nuestra base de datos y ningún flujo los escribe todavía.',
+      'ver.s1t': 'Empresa enviada',
+      'ver.s1b': 'El proveedor se registra y envía los datos de la empresa.',
+      'ver.s2t': 'Documentos revisados',
+      'ver.s2b': 'Nuestro equipo revisa los documentos de registro, exportación y producto.',
+      'ver.s3t': 'Fábrica visitada',
+      'ver.s3b': 'Un inspector local visita la planta y fotografía la línea.',
+      'ver.s4t': 'Resultado registrado',
+      'ver.s4b': 'El resultado se registra en el perfil del proveedor: aprobado, o los puntos que no pasaron.',
+      'sup.eyebrow': 'Directorio de proveedores',
+      'sup.h2': 'Proveedores en la plataforma',
+      'sup.h2Count': '{n} proveedor en la plataforma|{n} proveedores en la plataforma',
+      'sup.subA': 'Leído en vivo desde',
+      'sup.subB': '. Las insignias reflejan el nivel de verificación registrado; la insignia Demo significa que la fila son datos semilla. Las estrellas, las puntuaciones de confianza y los contadores de inspección no se muestran a propósito: nada en el producto los calcula todavía.',
+      'sup.cta': 'Abrir el directorio →',
+      'sup.level': 'Nivel {n}',
+      'sup.levelTitle': 'Nivel de verificación {n}',
+      'sup.demoTitle': 'Datos semilla: todavía no es una empresa real',
+      'sup.emptyTitle': 'Todavía no hay proveedores',
+      'sup.emptyBody': 'El directorio no devolvió ninguna fila.',
+      'sup.emptyLink': 'Abrir el directorio',
+      'sup.errorTitle': 'Directorio de proveedores no disponible',
+      'sup.errorBody': 'No se pudo acceder a la API desde esta página.',
+      'sup.errorLink': 'Probar el directorio directamente',
+      'svc.eyebrow': 'Servicios de comercio',
+      'svc.h2': 'Servicios sobre los que está construido el marketplace',
+      'svc.sub': 'Son las categorías de servicio de la hoja de ruta, no productos en un estante. Esta página no publica coberturas, número de socios ni garantías de tiempo de respuesta, porque no hemos medido ninguno.',
+      'svc.factory': 'Inspección en fábrica',
+      'svc.qc': 'Control de calidad',
+      'svc.lab': 'Ensayos de laboratorio',
+      'svc.sample': 'Compra de muestras',
+      'svc.production': 'Seguimiento de producción',
+      'svc.loading': 'Carga de contenedores',
+      'svc.warehouse': 'Almacenaje',
+      'svc.freight': 'Flete y transporte',
+      'svc.customs': 'Despacho de aduanas',
+      'svc.insurance': 'Seguro de comercio',
+      'band.h3': '¿Compras? Publica una solicitud y deja que los proveedores listados te coticen.',
+      'band.p': 'Describe el material, la cantidad y el destino. Las ofertas llegan a la plataforma, donde puedes compararlas lado a lado.',
+      'band.cta1': 'Publicar una solicitud',
+      'band.cta2': 'Crear una cuenta gratis',
+      'panel.buyTitle': 'Comprar',
+      'panel.buyBody': 'Busca en el catálogo, compara lotes y envía una solicitud de cotización. Puedes añadir muestras e inspecciones antes de comprometerte.',
+      'panel.buyBtn1': 'Ver publicaciones',
+      'panel.buyBtn2': 'Buscar proveedores',
+      'panel.sellTitle': 'Vender',
+      'panel.sellBody': 'Crea una cuenta, publica tu producción y responde a las solicitudes de los compradores. Puedes listar existencias incluso mientras tu verificación está en curso.',
+      'panel.sellBtn1': 'Ser proveedor',
+      'panel.helpTitle': '¿Necesitas ayuda?',
+      'panel.helpBody': 'Las páginas de ayuda explican los pedidos, las cotizaciones y qué significa cada estado. Sin contador de chat en vivo ni tiempos de respuesta inventados.',
+      'panel.helpBtn1': 'Leer las páginas de ayuda',
+      'panel.helpBtn2': 'Empezar por el catálogo',
+      'foot.tagline': 'Abastecimiento industrial con la documentación y las inspecciones incluidas. Las cifras del catálogo que aparecen en esta página se leen de la API en vivo al cargarla.',
+      'foot.marketplace': 'Mercado',
+      'foot.allListings': 'Todas las publicaciones',
+      'foot.copper': 'Cobre',
+      'foot.howVerification': 'Cómo funciona la verificación',
+      'foot.account': 'Cuenta',
+      'foot.createAccount': 'Crear una cuenta',
+      'foot.help': 'Ayuda',
+      'foot.copyright': '© FactoryDepo',
+      'foot.note': 'Las cifras del catálogo en esta página son valores en vivo de la API; las filas marcadas como Demo son datos semilla.'
+    }
+  };
+
+  function isLangCode(v) {
+    return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_BY_CODE, v);
+  }
+  function localeOf(code) {
+    var def = LANG_BY_CODE[code] || LANG_BY_CODE.en;
+    return def.locale;
+  }
+  function readStoredLang() {
+    try {
+      var raw = window.localStorage.getItem(LANG_KEY);
+      return isLangCode(raw) ? raw : null;
+    } catch (e) {
+      /* private mode / storage disabled must not break the page */
+      return null;
+    }
+  }
+  /** `tr-TR` → `tr`; unsupported tags are ignored. Mirrors i18n.tsx fromNavigator(). */
+  function fromNavigator() {
+    try {
+      var tags = navigator.languages || [navigator.language];
+      for (var i = 0; i < tags.length; i++) {
+        var primary = String(tags[i]).toLowerCase().split('-')[0];
+        if (isLangCode(primary)) return primary;
+      }
+    } catch (e) { /* no navigator */ }
+    return null;
+  }
+  /** Stored choice → browser preference → English. */
+  function detectLang() {
+    return readStoredLang() || fromNavigator() || 'en';
+  }
+
+  var lang = detectLang();
+
+  function dictFor(code) {
+    return Object.prototype.hasOwnProperty.call(I18N, code) ? I18N[code] : null;
+  }
+  /** Active-language string, or null when this language has no such key. */
+  function pick(key) {
+    var d = dictFor(lang);
+    if (d && typeof d[key] === 'string' && d[key] !== '') return d[key];
+    return null;
+  }
+  function interp(s, params) {
+    if (!params) return String(s);
+    return String(s).replace(/\{(\w+)\}/g, function (m, name) {
+      return Object.prototype.hasOwnProperty.call(params, name) && params[name] != null
+        ? String(params[name]) : m;
+    });
+  }
+  /**
+   * Translation with English fallback.
+   * Returns null when neither the active dictionary nor English has the key —
+   * the static path uses that null to leave the English markup untouched.
+   */
+  function t(key, params) {
+    var v = pick(key);
+    if (v == null) v = typeof I18N.en[key] === 'string' ? I18N.en[key] : null;
+    if (v == null) return null;
+    return interp(v, params);
+  }
+  /** Same as t(), but never null — for text the data layer builds itself. */
+  function T(key, params) {
+    var v = t(key, params);
+    return v == null ? '' : v;
+  }
+  /**
+   * Count noun: a dictionary value may hold two forms separated by "|"
+   * (singular|plural). Languages that do not inflect repeat one word.
+   * Never returns null.
+   */
+  function tn(n, key, params) {
+    var raw = pick(key);
+    if (raw == null) raw = typeof I18N.en[key] === 'string' ? I18N.en[key] : null;
+    if (raw == null) return '';
+    var forms = String(raw).split('|');
+    var s = forms[Number(n) === 1 ? 0 : (forms.length > 1 ? 1 : 0)];
+    var p = { n: num(n) };
+    if (params) { for (var k in params) { if (Object.prototype.hasOwnProperty.call(params, k)) p[k] = params[k]; } }
+    return interp(s, p);
+  }
+
+  /* ---- static copy in the markup ------------------------------------ */
+
+  /* English source text, captured from the markup once, before any switch.
+     Keyed by key (not by node) so it survives re-rendering, and used as the
+     fallback when a language has no translation for that key. */
+  var EN_TEXT = {};
+  var EN_ATTR = {};
+
+  function collectEnglish() {
+    var i, el, key, pairs, j, spec, attr, akey, id;
+    var nodes = document.querySelectorAll('[data-t]');
+    for (i = 0; i < nodes.length; i++) {
+      el = nodes[i];
+      key = el.getAttribute('data-t');
+      if (key && !Object.prototype.hasOwnProperty.call(EN_TEXT, key)) EN_TEXT[key] = el.textContent;
+    }
+    var anodes = document.querySelectorAll('[data-t-attr]');
+    for (i = 0; i < anodes.length; i++) {
+      el = anodes[i];
+      pairs = String(el.getAttribute('data-t-attr') || '').split(',');
+      for (j = 0; j < pairs.length; j++) {
+        spec = pairs[j].split(':');
+        attr = (spec[0] || '').trim();
+        akey = (spec[1] || '').trim();
+        if (!attr || !akey) continue;
+        id = attr + '|' + akey;
+        if (!Object.prototype.hasOwnProperty.call(EN_ATTR, id)) EN_ATTR[id] = el.getAttribute(attr) || '';
+      }
+    }
+  }
+
+  function applyStatic() {
+    var i, j, el, key, val, pairs, spec, attr, akey, id;
+    var nodes = document.querySelectorAll('[data-t]');
+    for (i = 0; i < nodes.length; i++) {
+      el = nodes[i];
+      key = el.getAttribute('data-t');
+      if (!key) continue;
+      val = pick(key);
+      if (val == null) val = Object.prototype.hasOwnProperty.call(EN_TEXT, key) ? EN_TEXT[key] : null;
+      if (val == null) continue; /* unknown key → leave the element exactly as it is */
+      if (el.textContent !== val) el.textContent = val;
+    }
+    var anodes = document.querySelectorAll('[data-t-attr]');
+    for (i = 0; i < anodes.length; i++) {
+      el = anodes[i];
+      pairs = String(el.getAttribute('data-t-attr') || '').split(',');
+      for (j = 0; j < pairs.length; j++) {
+        spec = pairs[j].split(':');
+        attr = (spec[0] || '').trim();
+        akey = (spec[1] || '').trim();
+        if (!attr || !akey) continue;
+        val = pick(akey);
+        id = attr + '|' + akey;
+        if (val == null) val = Object.prototype.hasOwnProperty.call(EN_ATTR, id) ? EN_ATTR[id] : null;
+        if (val == null) continue;
+        if (el.getAttribute(attr) !== val) el.setAttribute(attr, val);
+      }
+    }
+  }
+
+  /* ===================================================================
+     2. DATA LAYER — every number on the page originates here.
+     Same-origin only (the API server serves this file at / and /api/*).
+     =================================================================== */
 
   /* ---------- small helpers ---------- */
   /* Scraped supplier names arrive with HTML entities baked in ("&amp;"), so a
@@ -589,9 +2061,9 @@ a.skip:focus{left:0}
     'deg': '\u00b0', 'times': '\u00d7', 'sol': '/', 'rsquo': '\u2019', 'lsquo': '\u2018'
   };
   function decodeText(s) {
-    var t = String(s == null ? '' : s);
-    if (t.indexOf('&') !== -1) {
-      t = t.replace(/&(#?[a-zA-Z0-9]+);/g, function (m, name) {
+    var t2 = String(s == null ? '' : s);
+    if (t2.indexOf('&') !== -1) {
+      t2 = t2.replace(/&(#?[a-zA-Z0-9]+);/g, function (m, name) {
         var key = String(name).toLowerCase();
         if (Object.prototype.hasOwnProperty.call(ENTITIES, key)) return ENTITIES[key];
         if (key.charAt(0) === '#') {
@@ -601,28 +2073,36 @@ a.skip:focus{left:0}
         return m; /* unknown entity: leave it exactly as the API sent it */
       });
     }
-    return t.replace(/<[^>]*>/g, '');
+    return t2.replace(/<[^>]*>/g, '');
   }
   function esc(s) {
     return decodeText(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  /* Figures are never altered by translation — only grouped for the active
+     language's locale (identical to the rule stated in artifacts/web/src/i18n.tsx). */
   function num(n) {
     if (n == null || isNaN(n)) return '—';
-    return Number(n).toLocaleString('en-US');
+    try { return Number(n).toLocaleString(localeOf(lang)); } catch (e) { return String(n); }
   }
   function money(p) {
     if (p.price == null || isNaN(p.price)) return '—';
-    var v = Number(p.price).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    var v;
+    try {
+      v = Number(p.price).toLocaleString(localeOf(lang), { maximumFractionDigits: 2 });
+    } catch (e) { v = String(p.price); }
     return (p.currency === 'USD' || !p.currency ? '$' : p.currency + ' ') + v;
   }
-  function plural(n, word) { return num(n) + ' ' + word + (Number(n) === 1 ? '' : 's'); }
   function shortDate(iso) {
     if (!iso) return null;
     var d = new Date(iso);
     if (isNaN(d.getTime())) return null;
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    try {
+      return d.toLocaleDateString(localeOf(lang), { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
   }
   /** imageKey from the API is stored as /products/<file>; assets live under /assets/… */
   function localImg(key) {
@@ -644,20 +2124,22 @@ a.skip:focus{left:0}
   function badge(p) {
     var out = '';
     if (p.dataSource === 'demo') {
-      out += '<span class="pill p-amber" title="Seed row — sample data, not a live offer">Demo</span>';
+      out += '<span class="pill p-amber" title="' + esc(T('card.demoTitle')) + '">' + esc(T('card.demo')) + '</span>';
     } else if (p.verified === true) {
-      out += '<span class="pill p-green">✓ Verified</span>';
+      out += '<span class="pill p-green">' + esc(T('card.verified')) + '</span>';
     }
     return out ? '<span class="tags">' + out + '</span>' : '';
   }
   /** Product photo, or an explicit "no photo" block when no file exists. */
   function media(p, cls) {
     var img = localImg(p.imageKey);
-    if (!img) return '<div class="noimg">no photo</div>';
+    if (!img) return '<div class="noimg">' + esc(T('card.noPhoto')) + '</div>';
     return '<img src="' + esc(img) + '" alt="' + esc(p.name) + '" loading="lazy" class="' + esc(cls || '') + '">';
   }
   function productCard(p) {
-    var moq = p.moq != null ? 'MOQ ' + num(p.moq) + ' ' + esc(p.unit || '') : 'MOQ —';
+    var moq = p.moq != null
+      ? esc(T('card.moq', { n: num(p.moq), unit: p.unit || '' }))
+      : esc(T('card.moqNone'));
     return '<article class="lcard">' +
       '<a class="media" href="/products/' + esc(p.id) + '">' +
         media(p) +
@@ -665,12 +2147,12 @@ a.skip:focus{left:0}
       '</a>' +
       '<div class="bd">' +
         '<h3><a href="/products/' + esc(p.id) + '">' + esc(p.name) + '</a></h3>' +
-        '<div class="meta"><b>' + esc(p.supplierName || 'Unknown supplier') + '</b></div>' +
+        '<div class="meta"><b>' + esc(p.supplierName || T('card.unknownSupplier')) + '</b></div>' +
         '<div class="meta">' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
         '<div class="meta">' + moq + '</div>' +
         '<div class="between" style="margin-top:auto;padding-top:5px">' +
           '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
-          '<a class="btn btn-sm btn-ghost" href="/products/' + esc(p.id) + '">View</a>' +
+          '<a class="btn btn-sm btn-ghost" href="/products/' + esc(p.id) + '">' + esc(T('card.view')) + '</a>' +
         '</div>' +
       '</div>' +
     '</article>';
@@ -679,13 +2161,13 @@ a.skip:focus{left:0}
      a broken-image icon. */
   function watchImages(root) {
     root.addEventListener('error', function (e) {
-      var t = e.target;
-      if (t && t.tagName === 'IMG' && !t.dataset.failed) {
-        t.dataset.failed = '1';
+      var el = e.target;
+      if (el && el.tagName === 'IMG' && !el.dataset.failed) {
+        el.dataset.failed = '1';
         var holder = document.createElement('div');
         holder.className = 'noimg';
-        holder.textContent = 'no photo';
-        if (t.parentNode) t.parentNode.replaceChild(holder, t);
+        holder.textContent = T('card.noPhoto');
+        if (el.parentNode) el.parentNode.replaceChild(holder, el);
       }
     }, true);
   }
@@ -706,34 +2188,239 @@ a.skip:focus{left:0}
     return attempt();
   }
 
-  /* ---------- 1. catalogue: one response feeds cards + counters ---------- */
+  /* ---------- elements ---------- */
   var featuredGrid = document.getElementById('featuredGrid');
   var moreGrid = document.getElementById('trendingGrid');
   var heroCard = document.getElementById('heroCard');
   var listingsSub = document.getElementById('listingsSub');
+  var countersEl = document.getElementById('counters');
+  var supGrid = document.getElementById('supGrid');
+  var supHead = document.getElementById('supHead');
+  var rfqList = document.getElementById('rfqList');
+  var catGrid = document.getElementById('catGrid');
   if (featuredGrid) watchImages(featuredGrid);
   if (moreGrid) watchImages(moreGrid);
+  /* attached once to the container: the hero card is re-rendered on every
+     language switch, but the container itself never changes */
+  if (heroCard) watchImages(heroCard);
 
-  var counters = { products: null, suppliers: null, rfqs: null, verified: null };
+  /* ---------- render state ----------
+     Everything the renderers need is kept here so a language switch can redraw
+     the generated copy without refetching anything. */
+  var counters = { products: null, suppliers: null, verified: null, rfqs: null, anyLoaded: false };
+  var gridState = { mode: 'loading', head: [], tail: [] };
+  var heroState = { mode: 'loading', item: null };
+  var supState = { mode: 'loading', items: [] };
+  var rfqState = { mode: 'loading', items: [], total: null };
+  var catState = { counts: {} };
 
+  /* ---------- renderers ---------- */
   function renderCounters() {
-    var el = document.getElementById('counters');
-    if (!el) return;
+    if (!countersEl || !counters.anyLoaded) return;
     function v(x) { return x == null ? '—' : num(x); }
-    el.innerHTML =
-      '<span><b>' + v(counters.products) + '</b> lots with photos</span>' +
+    countersEl.innerHTML =
+      '<span><b>' + v(counters.products) + '</b> ' + esc(tn(counters.products, 'counters.lots')) + '</span>' +
       '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.suppliers) + '</b> suppliers listed</span>' +
+      '<span><b>' + v(counters.suppliers) + '</b> ' + esc(tn(counters.suppliers, 'counters.suppliers')) + '</span>' +
       '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.verified) + '</b> at verification level 2+</span>' +
+      '<span><b>' + v(counters.verified) + '</b> ' + esc(tn(counters.verified, 'counters.verified')) + '</span>' +
       '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.rfqs) + '</b> requests posted</span>' +
-      (counters.products == null
-        ? '<span class="muted">— live totals unavailable from this origin</span>'
-        : '<span class="muted">live from /api/products, /api/suppliers, /api/rfqs</span>');
+      '<span><b>' + v(counters.rfqs) + '</b> ' + esc(tn(counters.rfqs, 'counters.requests')) + '</span>' +
+      '<span class="muted">' + esc(counters.products == null ? T('counters.unavailable') : T('counters.source')) + '</span>';
   }
 
-  /* ---------- 1. catalogue: one logical response feeds cards + counters ----------
+  function renderGrids() {
+    if (gridState.mode === 'loading') return; /* skeletons stay */
+    if (gridState.mode === 'empty') {
+      var none = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.emptyTitle')) + '</b>' +
+        esc(T('list.emptyBody')) + ' <a href="/products">' + esc(T('list.emptyLink')) + '</a>.</div>';
+      if (featuredGrid) featuredGrid.innerHTML = none;
+      if (moreGrid) moreGrid.innerHTML = none;
+      return;
+    }
+    if (gridState.mode === 'error') {
+      if (featuredGrid) {
+        featuredGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.errorTitle')) + '</b>' +
+          esc(T('list.errorBody')) + ' <a href="/products">' + esc(T('list.errorLink')) + '</a>.</div>';
+      }
+      if (moreGrid) moreGrid.innerHTML = '';
+      return;
+    }
+    if (featuredGrid) featuredGrid.innerHTML = gridState.head.map(productCard).join('');
+    if (moreGrid) {
+      moreGrid.innerHTML = gridState.tail.length
+        ? gridState.tail.map(productCard).join('')
+        : '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.tailTitle')) + '</b>' +
+          esc(T('list.tailBody')) + ' <a href="/products">' + esc(T('list.tailLink')) + '</a>.</div>';
+    }
+  }
+
+  function renderListingsSub() {
+    if (!listingsSub) return;
+    if (gridState.mode === 'error') { listingsSub.textContent = T('list.failSub'); return; }
+    if (gridState.mode !== 'ok' || counters.products == null) return; /* keep the authored English paragraph */
+    listingsSub.innerHTML = esc(T('list.showA')) + ' <b>' + num(counters.products) + '</b> ' +
+      esc(tn(counters.products, 'unit.lots')) + ' ' + esc(T('list.showB')) + ' ' +
+      '<span class="mono">GET /api/products?hasImage=1</span> ' +
+      esc(T('list.subA')) + ' <span class="mono">dataSource</span> ' + esc(T('list.subB')) + ' ' +
+      '<b>' + esc(T('list.subC')) + '</b> ' + esc(T('list.subD'));
+  }
+
+  function renderHero() {
+    if (!heroCard) return;
+    if (heroState.mode === 'loading') return; /* the authored placeholder stays */
+    if (heroState.mode === 'error' || !heroState.item) {
+      heroCard.innerHTML = '<div class="hd"><span class="pill p-grey">' + esc(T('side.newest')) + '</span></div>' +
+        '<div class="empty"><b>' + esc(T('side.unreachableTitle')) + '</b>' + esc(T('side.unreachableBody')) + '</div>';
+      return;
+    }
+    var p = heroState.item;
+    heroCard.innerHTML =
+      '<div class="hd"><span class="pill p-grey">' + esc(T('side.newest')) + '</span><span class="mono push">' + esc(T('side.live')) + '</span></div>' +
+      '<div style="padding:11px">' +
+        '<a class="ph" href="/products/' + esc(p.id) + '">' + media(p) + '</a>' +
+        '<div class="nm"><a href="/products/' + esc(p.id) + '" style="color:var(--ink)">' + esc(p.name) + '</a></div>' +
+        '<div class="muted" style="margin-bottom:7px">' + esc(p.supplierName || '') + ' · ' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
+        '<div class="row" style="gap:5px;flex-wrap:wrap">' + badge(p) + '</div>' +
+        '<div class="ft">' +
+          '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
+          '<a class="btn btn-sm btn-primary" href="/products/' + esc(p.id) + '">' + esc(T('side.open')) + '</a>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderSuppliers() {
+    if (supState.mode === 'loading') return; /* skeletons stay */
+    if (supHead && counters.suppliers != null) {
+      supHead.textContent = tn(counters.suppliers, 'sup.h2Count');
+    }
+    if (!supGrid) return;
+    if (supState.mode === 'error') {
+      supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('sup.errorTitle')) + '</b>' +
+        esc(T('sup.errorBody')) + ' <a href="/suppliers">' + esc(T('sup.errorLink')) + '</a>.</div>';
+      return;
+    }
+    if (!supState.items.length) {
+      supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('sup.emptyTitle')) + '</b>' +
+        esc(T('sup.emptyBody')) + ' <a href="/suppliers">' + esc(T('sup.emptyLink')) + '</a>.</div>';
+      return;
+    }
+    supGrid.innerHTML = supState.items.slice(0, 6).map(function (s) {
+      var initials = String(s.companyName || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+      var tags = (s.tags || []).slice(0, 2).map(function (tg) { return '<span>' + esc(tg) + '</span>'; }).join('');
+      var level = Number(s.verifiedLevel);
+      var badgeHtml = level >= 2
+        ? '<span class="pill p-green" title="' + esc(T('sup.levelTitle', { n: s.verifiedLevel })) + '">' + esc(T('sup.level', { n: s.verifiedLevel })) + '</span>'
+        : (s.dataSource === 'demo'
+          ? '<span class="pill p-amber">' + esc(T('card.demo')) + '</span>'
+          : '<span class="pill p-grey">' + esc(T('sup.level', { n: s.verifiedLevel })) + '</span>');
+      if (level >= 2 && s.dataSource === 'demo') {
+        badgeHtml += ' <span class="pill p-amber" title="' + esc(T('sup.demoTitle')) + '">' + esc(T('card.demo')) + '</span>';
+      }
+      return '<a class="card sup" href="/suppliers/' + esc(s.id) + '">' +
+        '<span class="av" aria-hidden="true">' + esc(initials) + '</span>' +
+        '<span class="b">' +
+          '<span class="nm">' + esc(s.companyName) + '</span>' +
+          '<span class="muted" style="display:block">' + esc(s.country || '') + (s.city ? ' · ' + esc(s.city) : '') + ' · ' + esc(tn(s.productCount || 0, 'unit.listings')) + '</span>' +
+          (tags ? '<span class="tags">' + tags + '</span>' : '') +
+        '</span>' +
+        '<span class="ft">' + badgeHtml + '</span>' +
+      '</a>';
+    }).join('');
+  }
+
+  function renderRfqs() {
+    if (!rfqList || rfqState.mode === 'loading') return;
+    if (rfqState.mode === 'error') {
+      rfqList.innerHTML = '<div class="empty"><b>' + esc(T('req.errorTitle')) + '</b>' + esc(T('req.errorBody')) +
+        ' <a href="/rfq">' + esc(T('req.errorLink')) + '</a>.</div>';
+      return;
+    }
+    if (!rfqState.items.length) {
+      rfqList.innerHTML = '<div class="empty"><b>' + esc(T('req.emptyTitle')) + '</b>' + esc(T('req.emptyBody')) +
+        ' <a href="/rfq">' + esc(T('req.emptyLink')) + '</a>.</div>';
+      return;
+    }
+    rfqList.innerHTML = rfqState.items.slice(0, 5).map(function (r) {
+      var qty = (r.quantity != null && r.unit) ? num(r.quantity) + ' ' + r.unit : '';
+      var quotes = r.quoteCount > 0 ? tn(r.quoteCount, 'unit.quotes') : T('req.noQuotes');
+      var meta = [qty, r.category, r.targetCountry, quotes].filter(Boolean).join(' · ');
+      var dl = shortDate(r.deadline);
+      var st = r.status === 'quoted' ? '<span class="pill p-blue">' + esc(T('req.statusQuoted')) + '</span>'
+        : r.status === 'closed' ? '<span class="pill p-grey">' + esc(T('req.statusClosed')) + '</span>'
+        : '<span class="pill p-green">' + esc(T('req.statusOpen')) + '</span>';
+      return '<div class="req">' +
+        '<span class="t"><b>' + esc(r.title) + '</b><span>' + esc(meta) +
+          (dl ? ' · ' + esc(T('req.deadline', { d: dl })) : '') + '</span></span>' +
+        st +
+        '<a class="btn btn-sm btn-grey" href="/rfq/' + esc(r.id) + '">' + esc(T('card.view')) + '</a>' +
+      '</div>';
+    }).join('') +
+    (rfqState.total != null && rfqState.total > 5
+      ? '<div class="muted" style="padding-top:9px">' + esc(T('req.showMoreLead')) + ' ' + num(rfqState.total) +
+        ' — <a href="/rfq">' + esc(T('req.showMoreLink')) + '</a>.</div>'
+      : '');
+  }
+
+  /* Category tiles: the displayed name is translated, but the category VALUE
+     sent to /api/products?category=… stays the catalogue's English name. */
+  var CATEGORIES = [
+    ['Metals & Minerals', 'cat.metals', '/assets/products/copper-cathode.jpg'],
+    ['Steel', 'cat.steel', '/assets/products/steel-coil.jpg'],
+    ['Chemicals', 'cat.chemicals', '/assets/products/lithium-carbonate.jpg'],
+    ['Machinery', 'cat.machinery', '/assets/products/cnc-machine.jpg'],
+    ['Industrial Equipment', 'cat.equipment', '/assets/products/industrial-pump.jpg'],
+    ['Renewable Energy', 'cat.energy', '/assets/products/solar-panel.jpg'],
+    ['Electronics', 'cat.electronics', '/assets/products/plc-controller.jpg'],
+    ['Automotive', 'cat.automotive', '/assets/products/alloy-wheel.jpg'],
+    ['Construction Materials', 'cat.construction', '/assets/products/cement-bags.jpg'],
+    ['Packaging', 'cat.packaging', '/assets/products/corrugated-boxes.jpg'],
+    ['Plastic & Rubber', 'cat.plastic', '/assets/products/plastic-granules.jpg'],
+    ['Textiles', 'cat.textiles', '/assets/products/polyester-yarn.jpg']
+  ];
+  function renderCats() {
+    if (!catGrid) return;
+    catGrid.innerHTML = CATEGORIES.map(function (c, i) {
+      var href = '/products?category=' + encodeURIComponent(c[0]);
+      var cnt = catState.counts[i];
+      return '<a class="cat" href="' + esc(href) + '">' +
+        '<span class="art"><img src="' + esc(c[2]) + '" alt="" aria-hidden="true" loading="lazy"></span>' +
+        '<span class="nm"><b>' + esc(T(c[1])) + '</b><span>' + (cnt == null ? '—' : esc(tn(cnt, 'unit.lots'))) + '</span></span>' +
+      '</a>';
+    }).join('');
+  }
+
+  function renderAll() {
+    renderCounters();
+    renderGrids();
+    renderListingsSub();
+    renderHero();
+    renderSuppliers();
+    renderRfqs();
+    renderCats();
+  }
+
+  /* ---------- switching ---------- */
+  var langSelect = document.getElementById('langSelect');
+
+  function setLang(code) {
+    lang = isLangCode(code) ? code : 'en';
+    var def = LANG_BY_CODE[lang];
+    var root = document.documentElement;
+    root.lang = lang;
+    root.dir = def.dir;
+    try { window.localStorage.setItem(LANG_KEY, lang); } catch (e) { /* storage disabled */ }
+    if (langSelect && langSelect.value !== lang) langSelect.value = lang;
+    applyStatic();
+    renderAll();
+  }
+
+  /* Capture the authored English text, then apply the detected language, before
+     any fetch can resolve and before the first paint of the switchable copy. */
+  collectEnglish();
+  setLang(lang);
+
+  /* ---------- 1. catalogue: one response feeds cards + counters ----------
      The catalogue API has no sort or "photo available locally" filter, so we read
      a few pages of the newest lots that have an image key, then show the ones
      whose photo file actually exists on this server. Rows are never altered —
@@ -765,12 +2452,12 @@ a.skip:focus{left:0}
     .then(function (res) {
       var items = res.items;
       counters.products = res.total;
-      renderCounters();
+      counters.anyLoaded = true;
 
       if (!items.length) {
-        var none = '<div class="empty" style="grid-column:1/-1"><b>No listings yet</b>The catalogue returned an empty page. <a href="/products">Open the catalogue</a>.</div>';
-        if (featuredGrid) featuredGrid.innerHTML = none;
-        if (moreGrid) moreGrid.innerHTML = none;
+        gridState.mode = 'empty';
+        renderCounters();
+        renderGrids();
         return;
       }
 
@@ -780,159 +2467,77 @@ a.skip:focus{left:0}
       var withLocal = items.slice().sort(function (a, b) {
         return (localImg(a.imageKey) ? 0 : 1) - (localImg(b.imageKey) ? 0 : 1);
       });
-      var head = withLocal.slice(0, 8);
-      var tail = withLocal.slice(8, 16);
+      gridState.mode = 'ok';
+      gridState.head = withLocal.slice(0, 8);
+      gridState.tail = withLocal.slice(8, 16);
+      heroState.mode = gridState.head.length ? 'ok' : 'error';
+      heroState.item = gridState.head[0] || null;
 
-      if (featuredGrid) featuredGrid.innerHTML = head.map(productCard).join('');
-      if (moreGrid) {
-        moreGrid.innerHTML = tail.length
-          ? tail.map(productCard).join('')
-          : '<div class="empty" style="grid-column:1/-1"><b>That is the whole first page</b>Load more from the <a href="/products">full catalogue</a>.</div>';
-      }
-      if (listingsSub && counters.products != null) {
-        listingsSub.innerHTML = 'Showing 8 of <b>' + num(counters.products) + '</b> lots that have photography, newest first, read live from ' +
-          '<span class="mono">GET /api/products?hasImage=1</span> at page load. Rows whose <span class="mono">dataSource</span> is <b>demo</b> are seed data and carry a Demo badge — they are not live offers.';
-      }
-
-      /* hero side card = the newest listing in the same response */
-      if (heroCard && head.length) {
-        var p = head[0];
-        heroCard.innerHTML =
-          '<div class="hd"><span class="pill p-grey">Newest listing</span><span class="mono" style="margin-left:auto">live</span></div>' +
-          '<div style="padding:11px">' +
-            '<a class="ph" href="/products/' + esc(p.id) + '">' + media(p) + '</a>' +
-            '<div class="nm"><a href="/products/' + esc(p.id) + '" style="color:var(--ink)">' + esc(p.name) + '</a></div>' +
-            '<div class="muted" style="margin-bottom:7px">' + esc(p.supplierName || '') + ' · ' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
-            '<div class="row" style="gap:5px;flex-wrap:wrap">' + badge(p) + '</div>' +
-            '<div class="ft">' +
-              '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
-              '<a class="btn btn-sm btn-primary" href="/products/' + esc(p.id) + '">Open listing</a>' +
-            '</div>' +
-          '</div>';
-        watchImages(heroCard);
-      }
+      renderCounters();
+      renderGrids();
+      renderListingsSub();
+      renderHero();
     })
     .catch(function () {
-      var msg = '<div class="empty" style="grid-column:1/-1"><b>Live listings unavailable</b>The catalogue API could not be reached from this page. <a href="/products">Try the catalogue directly</a>.</div>';
-      if (featuredGrid) featuredGrid.innerHTML = msg;
-      if (moreGrid) moreGrid.innerHTML = '';
-      if (heroCard) heroCard.innerHTML = '<div class="hd"><span class="pill p-grey">Newest listing</span></div><div class="empty"><b>Catalogue API unreachable</b>No figure is shown rather than a made-up one.</div>';
-      if (listingsSub) listingsSub.textContent = 'The live catalogue could not be read from this page, so no counts or listings are shown.';
+      gridState.mode = 'error';
+      heroState.mode = 'error';
+      counters.anyLoaded = true;
       renderCounters();
+      renderGrids();
+      renderListingsSub();
+      renderHero();
     });
 
   /* ---------- 2. suppliers (no invented ratings or trust scores) ---------- */
-  var supGrid = document.getElementById('supGrid');
-  var supHead = document.getElementById('supHead');
   apiJson('/api/suppliers')
     .then(function (d) {
       var items = (d && d.items) || [];
       counters.suppliers = d && typeof d.total === 'number' ? d.total : null;
       var verified = items.filter(function (s) { return Number(s.verifiedLevel) >= 2; }).length;
       counters.verified = counters.suppliers == null ? null : verified;
+      counters.anyLoaded = true;
+      supState.mode = 'ok';
+      supState.items = items;
       renderCounters();
-
-      if (supHead && counters.suppliers != null) {
-        supHead.textContent = plural(counters.suppliers, 'supplier') + ' on the platform';
-      }
-      if (!supGrid) return;
-      if (!items.length) {
-        supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>No suppliers yet</b>The directory returned no rows. <a href="/suppliers">Open the directory</a>.</div>';
-        return;
-      }
-      supGrid.innerHTML = items.slice(0, 6).map(function (s) {
-        var initials = String(s.companyName || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
-        var tags = (s.tags || []).slice(0, 2).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
-        var badgeHtml = Number(s.verifiedLevel) >= 2
-          ? '<span class="pill p-green" title="Verification level ' + esc(s.verifiedLevel) + '">Level ' + esc(s.verifiedLevel) + '</span>'
-          : (s.dataSource === 'demo' ? '<span class="pill p-amber">Demo</span>' : '<span class="pill p-grey">Level ' + esc(s.verifiedLevel) + '</span>');
-        if (Number(s.verifiedLevel) >= 2 && s.dataSource === 'demo') {
-          badgeHtml += ' <span class="pill p-amber" title="Seed data — not a real company yet">Demo</span>';
-        }
-        return '<a class="card sup" href="/suppliers/' + esc(s.id) + '">' +
-          '<span class="av" aria-hidden="true">' + esc(initials) + '</span>' +
-          '<span class="b">' +
-            '<span class="nm">' + esc(s.companyName) + '</span>' +
-            '<span class="muted" style="display:block">' + esc(s.country || '') + (s.city ? ' · ' + esc(s.city) : '') + ' · ' + plural(s.productCount || 0, 'listing') + '</span>' +
-            (tags ? '<span class="tags">' + tags + '</span>' : '') +
-          '</span>' +
-          '<span class="ft">' + badgeHtml + '</span>' +
-        '</a>';
-      }).join('');
+      renderSuppliers();
     })
     .catch(function () {
+      counters.anyLoaded = true;
+      supState.mode = 'error';
       renderCounters();
-      if (supGrid) supGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>Supplier directory unavailable</b>The API could not be reached from this page. <a href="/suppliers">Try the directory directly</a>.</div>';
+      renderSuppliers();
     });
 
   /* ---------- 3. request board ---------- */
-  var rfqList = document.getElementById('rfqList');
   apiJson('/api/rfqs')
     .then(function (d) {
       var items = (d && d.items) || [];
       counters.rfqs = d && typeof d.total === 'number' ? d.total : null;
+      counters.anyLoaded = true;
+      rfqState.mode = 'ok';
+      rfqState.items = items;
+      rfqState.total = counters.rfqs;
       renderCounters();
-      if (!rfqList) return;
-      if (!items.length) {
-        rfqList.innerHTML = '<div class="empty"><b>No requests posted yet</b>Nothing is shown here until a buyer posts one. <a href="/rfq">Post the first request</a>.</div>';
-        return;
-      }
-      rfqList.innerHTML = items.slice(0, 5).map(function (r) {
-        var qty = (r.quantity != null && r.unit) ? num(r.quantity) + ' ' + r.unit : '';
-        var meta = [qty, r.category, r.targetCountry, r.quoteCount > 0 ? plural(r.quoteCount, 'quote') : 'no quotes yet'].filter(Boolean).join(' · ');
-        var dl = shortDate(r.deadline);
-        var st = r.status === 'quoted' ? '<span class="pill p-blue">Quoted</span>'
-          : r.status === 'closed' ? '<span class="pill p-grey">Closed</span>'
-          : '<span class="pill p-green">Open</span>';
-        return '<div class="req">' +
-          '<span class="t"><b>' + esc(r.title) + '</b><span>' + esc(meta) + (dl ? ' · deadline ' + esc(dl) : '') + '</span></span>' +
-          st +
-          '<a class="btn btn-sm btn-grey" href="/rfq/' + esc(r.id) + '">View</a>' +
-        '</div>';
-      }).join('') +
-      (counters.rfqs != null && counters.rfqs > 5
-        ? '<div class="muted" style="padding-top:9px">Showing 5 of ' + num(counters.rfqs) + ' — <a href="/rfq">see the rest</a>.</div>'
-        : '');
+      renderRfqs();
     })
     .catch(function () {
+      counters.anyLoaded = true;
+      rfqState.mode = 'error';
       renderCounters();
-      if (rfqList) rfqList.innerHTML = '<div class="empty"><b>Request board unavailable</b>The API could not be reached from this page, so no requests are shown. <a href="/rfq">Open the request board</a>.</div>';
+      renderRfqs();
     });
 
   /* ---------- 4. categories, each with its own live count ---------- */
-  var CATEGORIES = [
-    ['Metals & Minerals', '/assets/products/copper-cathode.jpg'],
-    ['Steel', '/assets/products/steel-coil.jpg'],
-    ['Chemicals', '/assets/products/lithium-carbonate.jpg'],
-    ['Machinery', '/assets/products/cnc-machine.jpg'],
-    ['Industrial Equipment', '/assets/products/industrial-pump.jpg'],
-    ['Renewable Energy', '/assets/products/solar-panel.jpg'],
-    ['Electronics', '/assets/products/plc-controller.jpg'],
-    ['Automotive', '/assets/products/alloy-wheel.jpg'],
-    ['Construction Materials', '/assets/products/cement-bags.jpg'],
-    ['Packaging', '/assets/products/corrugated-boxes.jpg'],
-    ['Plastic & Rubber', '/assets/products/plastic-granules.jpg'],
-    ['Textiles', '/assets/products/polyester-yarn.jpg']
-  ];
-  var catGrid = document.getElementById('catGrid');
-  if (catGrid) {
-    catGrid.innerHTML = CATEGORIES.map(function (c, i) {
-      var href = '/products?category=' + encodeURIComponent(c[0]);
-      return '<a class="cat" href="' + esc(href) + '">' +
-        '<span class="art"><img src="' + esc(c[1]) + '" alt="" aria-hidden="true" loading="lazy"></span>' +
-        '<span class="nm"><b>' + esc(c[0]) + '</b><span data-cat-count="' + i + '">—</span></span>' +
-      '</a>';
-    }).join('');
-    CATEGORIES.forEach(function (c, i) {
-      apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
-        .then(function (d) {
-          var el = catGrid.querySelector('[data-cat-count="' + i + '"]');
-          if (!el) return;
-          if (d && typeof d.total === 'number') el.textContent = plural(d.total, 'lot');
-        })
-        .catch(function () { /* leave the em dash — never guess a count */ });
-    });
-  }
+  CATEGORIES.forEach(function (c, i) {
+    apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
+      .then(function (d) {
+        if (d && typeof d.total === 'number') {
+          catState.counts[i] = d.total;
+          renderCats();
+        }
+      })
+      .catch(function () { /* leave the em dash — never guess a count */ });
+  });
 
   /* ---------- 5. search → the marketplace search route ---------- */
   var form = document.getElementById('searchForm');
@@ -944,6 +2549,15 @@ a.skip:focus{left:0}
       window.location.href = '/products' + (v ? '?q=' + encodeURIComponent(v) : '');
     });
   }
+
+  /* ---------- 6. language switcher ---------- */
+  if (langSelect) {
+    langSelect.value = lang;
+    langSelect.addEventListener('change', function () { setLang(langSelect.value); });
+  }
+  /* Small, documented hook for tests and for the app shell: read or set the
+     language without simulating a click. Not user-visible. */
+  window.fdLang = { get: function () { return lang; }, set: setLang };
 
   /* The only fixed numbers left on this page are the step labels 01–04 and the
      list of services — lengths of markup we control, never a metric about the

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { useSavedLots, useUnsaveLot, useMe, getToken } from '@workspace/api-client-react';
 import { View, Empty, Spinner, ProductCard, requireAuthGate } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * Saved — the buyer's shortlist.
@@ -14,19 +15,13 @@ import { View, Empty, Spinner, ProductCard, requireAuthGate } from '../component
  * supplies: the saved date from the row itself. An unparseable date renders '—'.
  */
 
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 function errMessage(e: unknown, fallback: string): string {
   const m = e instanceof Error ? e.message : '';
   return m && !/^Request failed \(\d+\)$/.test(m) ? m : fallback;
 }
 
 export default function Saved() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const user = me.data;
 
@@ -35,9 +30,16 @@ export default function Saved() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [actionErr, setActionErr] = useState('');
 
+  const shortDate = (iso: string): string => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? '—'
+      : d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   if (me.isLoading) {
     return (
-      <View title="Saved lots">
+      <View title={t('saved.title')}>
         <Spinner />
       </View>
     );
@@ -45,12 +47,12 @@ export default function Saved() {
 
   if (!user) {
     return (
-      <View title="Saved lots" sub="Sign in to keep a shortlist of lots">
-        <Empty title="You are not signed in">
-          Your shortlist is private to your account: sign in to save and remove lots.
+      <View title={t('saved.title')} sub={t('saved.signInSub')}>
+        <Empty title={t('saved.notSignedIn')}>
+          {t('saved.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/sign-in?next=%2Fsaved" className="btn btn-sm btn-primary">Sign in</Link>
-            <Link href="/sign-up?next=%2Fsaved" className="btn btn-sm btn-ghost">Create an account</Link>
+            <Link href="/sign-in?next=%2Fsaved" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
+            <Link href="/sign-up?next=%2Fsaved" className="btn btn-sm btn-ghost">{t('action.createAccount')}</Link>
           </div>
         </Empty>
       </View>
@@ -67,7 +69,7 @@ export default function Saved() {
     try {
       await unsave.mutateAsync({ productId });
     } catch (e) {
-      setActionErr(errMessage(e, 'That lot could not be removed from your shortlist — try again.'));
+      setActionErr(errMessage(e, t('saved.errRemove')));
     } finally {
       setBusyId(null);
     }
@@ -75,11 +77,11 @@ export default function Saved() {
 
   return (
     <View
-      title="Saved lots"
-      sub="Lots you shortlisted. Prices and stock are the supplier's current figures, not a reservation."
+      title={t('saved.title')}
+      sub={t('saved.sub')}
       actions={
         <button className="btn btn-sm btn-grey" onClick={() => void saved.refetch()} disabled={saved.isFetching}>
-          {saved.isFetching ? 'Refreshing…' : 'Refresh'}
+          {saved.isFetching ? t('action.refreshing') : t('action.refresh')}
         </button>
       }
     >
@@ -88,27 +90,27 @@ export default function Saved() {
       {saved.isLoading ? (
         <Spinner />
       ) : saved.isError ? (
-        <Empty title="Saved lots could not be loaded">
-          The API did not return your shortlist — try again.
+        <Empty title={t('saved.loadErrorTitle')}>
+          {t('saved.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <button className="btn btn-sm btn-primary" onClick={() => void saved.refetch()} disabled={saved.isFetching}>
-              {saved.isFetching ? 'Trying…' : 'Try again'}
+              {saved.isFetching ? t('saved.trying') : t('action.tryAgain')}
             </button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="Nothing saved yet">
-          Save a lot from the marketplace and it appears here for a quick comparison later.
+        <Empty title={t('saved.emptyTitle')}>
+          {t('saved.emptyBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/explore" className="btn btn-sm btn-primary">Browse ready stock</Link>
-            <Link href="/feed" className="btn btn-sm btn-ghost">Go to my feed</Link>
+            <Link href="/explore" className="btn btn-sm btn-primary">{t('saved.browse')}</Link>
+            <Link href="/feed" className="btn btn-sm btn-ghost">{t('saved.goToFeed')}</Link>
           </div>
         </Empty>
       ) : (
         <div className="card">
           <div className="hd">
-            <b>{count.toLocaleString()} saved lot{count === 1 ? '' : 's'}</b>
-            <span className="muted" style={{ marginLeft: 'auto' }}>Most recently saved first</span>
+            <b>{t('saved.count', { n: count.toLocaleString(locale) })}</b>
+            <span className="muted" style={{ marginLeft: 'auto' }}>{t('saved.mostRecent')}</span>
           </div>
           <div className="bd">
             <div className="feedgrid">
@@ -116,16 +118,16 @@ export default function Saved() {
                 <div key={lot.productId} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <ProductCard p={lot.product} />
                   <div className="between" style={{ gap: 6 }}>
-                    <span className="muted" style={{ fontSize: 11 }} title={new Date(lot.createdAt).toLocaleString()}>
-                      Saved {shortDate(lot.createdAt)}
+                    <span className="muted" style={{ fontSize: 11 }} title={new Date(lot.createdAt).toLocaleString(locale)}>
+                      {t('saved.savedOn', { date: shortDate(lot.createdAt) })}
                     </span>
                     <button
                       className="btn btn-sm btn-grey"
                       disabled={busyId === lot.productId}
                       onClick={() => void remove(lot.productId)}
-                      title="Remove this lot from your shortlist"
+                      title={t('saved.removeTitle')}
                     >
-                      {busyId === lot.productId ? 'Removing…' : 'Remove'}
+                      {busyId === lot.productId ? t('saved.removing') : t('saved.remove')}
                     </button>
                   </div>
                 </div>

@@ -50,7 +50,9 @@ landing page's inbound links.
 
 ## Honesty rules (enforced in review)
 - Never render an invented number. If the API does not supply a value, render `—` or omit it.
-  `totalViews` is always 0 because nothing tracks views — show `—`, not `0`.
+  `totalViews` IS real: it is a `COUNT` over `product_views` (recorded on
+  `GET /api/products/:id`) scoped to the caller — a supplier sees views on their own
+  listings, a buyer those on their saved ones. A genuine 0 is shown as `0`.
 - Any row with `dataSource === 'demo'` must render `<DemoTag />` so a buyer is never misled.
 - A nav destination whose feature is not built must render an honest placeholder
   (`pages/ComingSoon.tsx`), never a fake working screen.
@@ -58,11 +60,38 @@ landing page's inbound links.
 ## Gates
 1. `pnpm run typecheck` — clean
 2. `pnpm run build` — clean
-3. `curl -s http://localhost:9090/api/healthz` → `{"status":"ok",...}`
-4. Frontend builds with no console errors
+3. `pnpm test` — 18 tests. Unit tests (email rendering, HTML escaping) run anywhere;
+   the integration suite boots against a server and **skips unless `TEST_BASE_URL`
+   is set**:
+   `TEST_BASE_URL=http://localhost:9090 pnpm --filter @workspace/api-server run test`
+   It covers anonymous 401s, forged tokens, authz (a buyer must get 403 from
+   `/api/admin/*`), supplier-ownership enforcement (supplier B must not edit A's
+   listing) and the **oversell test** (8 concurrent 25-unit orders against 100 in
+   stock must yield exactly 4 successes, 4×409, final stock 0, status `sold_out`).
+   It creates throwaway `*@factorydepo.test` rows — clean them up after a local run
+   if you care about the dev catalogue.
+4. `curl -s http://localhost:9090/api/healthz` → `{"status":"ok",...}`
+5. CI (`.github/workflows/ci.yml`) runs typecheck, build, the suite against a real
+   Postgres 16 service, then the rate-limit smoke test. The login-ratelimit step
+   deliberately exhausts the login bucket, so it must stay AFTER the suite.
+
+## Rate limiting
+Two tiers, in-memory (single instance — would need Redis behind a load balancer):
+- `/api` overall 300/min and `/api/auth/login` 10/15min are keyed per **IP**.
+- Writes (POST/PUT/PATCH/DELETE) are 30/min keyed per **authenticated user**,
+  falling back to IP when anonymous. Keying writes on IP alone meant every account
+  behind one office/NAT address shared a single bucket — do not regress that.
 
 ## Deploy
 - Railway: `railway link --project "factorydepo"` first (CLI defaults to another project — always re-link).
-- `git push origin main` triggers deploy. `railway.json` at root.
+- **Attach the GitHub repo to the `api` service** — as of the last check the service
+  had no source attached, which is why production has been down since 2026-08-11.
+- `git push origin main` triggers deploy. `railway.json` at root pins
+  `NODE_ENV=production`, which is required for the APP_SECRET/SITE_URL fail-fast checks.
+- Required env on Railway: `APP_SECRET` (32+ chars — the server refuses to boot without it),
+  `SITE_URL`, `DATABASE_URL`, and `ADMIN_EMAIL` + `ADMIN_PASSWORD` to create the owner
+  admin (the seeded demo admin is deliberately NOT created in production).
+  `RESEND_API_KEY` + `EMAIL_FROM` enable outbound mail; without them mail queues in
+  `email_outbox` rather than failing.
 - Prod DB: Railway Postgres; `railway connect Postgres` with stdin-piped SQL for prod queries.
 - Verify live: `/api/healthz`, then a signed-in flow.

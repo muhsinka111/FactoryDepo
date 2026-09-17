@@ -37,8 +37,10 @@ export default function Orders() {
   /** Counts are API values; only their grouping is localised. */
   const fmt = (n: number | undefined): string => (typeof n === 'number' ? n.toLocaleString(locale) : '—');
 
-  // Only metrics the API genuinely computes today. totalViews is hard-coded to 0
-  // server-side because nothing tracks views yet, so it is shown as '—'.
+  // Every cell here is a value the API genuinely computes. totalViews is a real
+  // COUNT over product_views, scoped to the caller (a supplier sees views on
+  // their own listings, a buyer those on their saved ones) — it reads 0 only
+  // when nothing has actually viewed them.
   const cells: StatCell[] = [
     { icon: '📦', value: fmt(s?.totalListings), label: isSupplier ? t('orders.statListings') : t('nav.rfqs') },
     { icon: '🏷️', value: fmt(s?.activeOffers), label: isSupplier ? t('orders.statOffersReceived') : t('orders.statOffersOnRfqs') },
@@ -46,7 +48,7 @@ export default function Orders() {
     ...(isSupplier
       ? [{ icon: '🚚', value: fmt(s?.soldItems), label: t('orders.statSoldItems'), title: t('orders.statSoldTitle') }]
       : []),
-    { icon: '👁️', value: '—', label: t('orders.statViews'), title: t('orders.statViewsTitle') },
+    { icon: '👁️', value: fmt(s?.totalViews), label: t('orders.statViews'), title: t('orders.statViewsTitle') },
   ];
 
   if (me.isLoading) {
