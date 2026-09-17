@@ -84,9 +84,13 @@ Two tiers, in-memory (single instance — would need Redis behind a load balance
 
 ## Deploy
 - Railway: `railway link --project "factorydepo"` first (CLI defaults to another project — always re-link).
-- **Attach the GitHub repo to the `api` service** — as of the last check the service
-  had no source attached, which is why production has been down since 2026-08-11.
-- `git push origin main` triggers deploy. `railway.json` at root pins
+- **Status (last verified 2026-09-17):** prod is UP at https://www.factorydepo.com
+  (`/api/healthz` → `{"status":"ok","db":"up"}`, 5,402 products), but the deploy that brought it
+  back came from the **local CLI** (`railway deployment list --json` → `cliCaller: agent_unknown:node`,
+  i.e. `railway up`), *not* from GitHub. `origin/main` is far behind the working branch, so the
+  repo is still not the source of truth for production: **push before expecting a GitHub-sourced
+  deploy**, and re-check with `bash scripts/where-are-we.sh` instead of trusting this note.
+- `railway.json` at root pins
   `NODE_ENV=production`, which is required for the APP_SECRET/SITE_URL fail-fast checks.
 - Required env on Railway: `APP_SECRET` (32+ chars — the server refuses to boot without it),
   `SITE_URL`, `DATABASE_URL`, and `ADMIN_EMAIL` + `ADMIN_PASSWORD` to create the owner
