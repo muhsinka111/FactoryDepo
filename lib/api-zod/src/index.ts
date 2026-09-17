@@ -98,6 +98,22 @@ export const zProductList = z.object({
 });
 export type ProductList = z.infer<typeof zProductList>;
 
+/**
+ * Live per-category listing counts. The UI renders only categories that
+ * actually contain stock, so no filter can lead to an empty page.
+ */
+export const zCategoryCount = z.object({
+  category: z.string(),
+  count: z.number(),
+});
+export type CategoryCount = z.infer<typeof zCategoryCount>;
+
+export const zCategoryCountList = z.object({
+  items: z.array(zCategoryCount),
+  total: z.number(),
+});
+export type CategoryCountList = z.infer<typeof zCategoryCountList>;
+
 /* ---------- suppliers ---------- */
 export const zSupplier = z.object({
   id: z.number(),

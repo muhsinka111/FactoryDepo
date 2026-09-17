@@ -6,7 +6,7 @@
  */
 import { Link, useLocation } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useMe, useLogout, useUpdateMe, getToken } from '@workspace/api-client-react';
+import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
 import { LANGUAGES, useI18n, isLangCode, statusLabel, type DictKey, type LangCode } from './i18n';
@@ -260,13 +260,40 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
   );
 }
 
+/**
+ * Category rail.
+ *
+ * Two things this has to get right, both of which were broken:
+ *  1. Clicking a category must actually go somewhere. It previously called an
+ *     optional `onPick` that App.tsx never passed, so every button was inert.
+ *     It now navigates to /explore?category=… by default.
+ *  2. It only offers categories that genuinely contain stock, using live counts
+ *     from the API — so a click can never land on an empty results page.
+ */
 export function CategoryRail({ active, onPick }: { active?: string; onPick?: (c: string) => void }) {
   const { t } = useI18n();
+  const [, navigate] = useLocation();
+  const { data } = useCategoryCounts();
+  const cats = data?.items ?? [];
+
+  // App.tsx renders this bare, so read the active category out of the URL.
+  const urlCategory =
+    typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('category') ?? '';
+  const current = active ?? urlCategory;
+
+  const pick = (c: string) => {
+    if (onPick) { onPick(c); return; }
+    navigate(c === 'All' ? '/explore' : `/explore?category=${encodeURIComponent(c)}`);
+  };
+
   return (
     <div className="rail">
-      <button className={!active ? 'on' : ''} onClick={() => onPick?.('All')}>{t('rail.allIndustries')}</button>
-      {CATEGORIES.map((c) => (
-        <button key={c} className={active === c ? 'on' : ''} onClick={() => onPick?.(c)}>{c}</button>
+      <button className={current ? '' : 'on'} onClick={() => pick('All')}>{t('rail.allIndustries')}</button>
+      {cats.map((c) => (
+        <button key={c.category} className={current === c.category ? 'on' : ''} onClick={() => pick(c.category)}>
+          {c.category}
+          <span className="muted" style={{ marginLeft: 5, fontSize: 10.5 }}>{c.count.toLocaleString()}</span>
+        </button>
       ))}
       <Link href="/help" style={{ marginLeft: 'auto', color: 'var(--blue)', alignSelf: 'center', padding: '8px 11px', fontSize: 12.5 }}>
         {t('rail.howItWorks')}
@@ -392,6 +419,41 @@ function Price({ p }: { p: Product }) {
   );
 }
 
+/**
+ * Abstract line-art glyph for a category, used only where a listing has no
+ * photograph — Medical Supplies, Safety & PPE and Hardware & Fasteners have no
+ * owned photo that genuinely depicts them. Drawing something that looks like the
+ * actual goods would be worse than a neutral mark, so these are deliberately
+ * generic shapes, not product illustrations.
+ */
+function CategoryGlyph({ category, size = 26 }: { category: string; size?: number }) {
+  const p = {
+    width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+  switch (category) {
+    case 'Medical Supplies':
+      return <svg {...p}><path d="M12 5v14M5 12h14" /></svg>;
+    case 'Safety & PPE':
+      return <svg {...p}><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z" /></svg>;
+    case 'Hardware & Fasteners':
+      return <svg {...p}><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" /></svg>;
+    case 'Mining & Ore':
+      return <svg {...p}><path d="M3 20h18M6 20l3-7h6l3 7M9 13l3-6 3 6" /></svg>;
+    case 'Agriculture':
+      return <svg {...p}><path d="M12 21V9M12 9c0-3 2-5 5-5 0 3-2 5-5 5zM12 13c0-3-2-5-5-5 0 3 2 5 5 5z" /></svg>;
+    case 'Food Processing':
+      return <svg {...p}><path d="M6 3v8a3 3 0 006 0V3M9 11v10M18 3c-2 0-3 2-3 5s1 4 3 4v9" /></svg>;
+    case 'Paper & Pulp':
+      return <svg {...p}><path d="M6 3h9l4 4v14H6zM15 3v4h4" /></svg>;
+    case 'Rubber':
+      return <svg {...p}><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></svg>;
+    default:
+      return <svg {...p}><path d="M4 8l8-4 8 4v8l-8 4-8-4z" /><path d="M4 8l8 4 8-4M12 12v8" /></svg>;
+  }
+}
+
 export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) => void }) {
   const { t } = useI18n();
   return (
@@ -401,6 +463,7 @@ export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) =
           ? <img src={p.imageKey} alt={p.name} loading="lazy" />
           : (
             <div className="ph-empty">
+              <span className="ph-glyph"><CategoryGlyph category={p.category} /></span>
               <span className="ph-cat">{p.category}</span>
               <span className="ph-note">{t('cards.noPhoto')}</span>
             </div>

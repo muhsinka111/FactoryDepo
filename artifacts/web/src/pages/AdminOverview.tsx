@@ -2,6 +2,7 @@ import { Link } from 'wouter';
 import type { ReactNode } from 'react';
 import { getToken, useMe, useAdminOverview, useTickets } from '@workspace/api-client-react';
 import { View, Empty, StatusChip, Spinner, DemoTag } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminOverview — the marketplace at a glance, for administrators only.
@@ -25,21 +26,21 @@ interface Cell {
 }
 
 /** A figure we may only show when the API actually supplied it. */
-function num(n: number | null | undefined): string {
-  return typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('en-US') : '—';
+function num(n: number | null | undefined, locale: string): string {
+  return typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString(locale) : '—';
 }
 
 /** Money-shaped totals: same honesty rule, two decimals. */
-function amount(n: number | null | undefined): string {
+function amount(n: number | null | undefined, locale: string): string {
   return typeof n === 'number' && Number.isFinite(n)
-    ? n.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    ? n.toLocaleString(locale, { maximumFractionDigits: 2 })
     : '—';
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function priorityPill(priority: string): string {
@@ -55,17 +56,18 @@ function priorityPill(priority: string): string {
  * the refusal, never a replacement for it.
  */
 function AdminOnly({ signedIn, role, next }: { signedIn: boolean; role?: string; next: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="This console reads and changes marketplace-wide data">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.overview.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. Only administrator accounts are accepted by the admin endpoints.`
-          : 'Sign in with an administrator account to open the admin console.'}
+          ? t('admin.overview.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.overview.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Back to the marketplace</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.common.backToMarketplace')}</Link>
           ) : (
-            <Link href={`/sign-in?next=${encodeURIComponent(next)}`} className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href={`/sign-in?next=${encodeURIComponent(next)}`} className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -74,6 +76,7 @@ function AdminOnly({ signedIn, role, next }: { signedIn: boolean; role?: string;
 }
 
 export default function AdminOverview() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -82,10 +85,20 @@ export default function AdminOverview() {
   const tickets = useTickets({ enabled: isAdmin });
   const ov = overview.data;
 
+  /** Ticket priority is an API value; an unknown one is shown exactly as the API returned it. */
+  const priorityText = (priority: string): string => {
+    const p = priority.toLowerCase();
+    if (p === 'urgent') return t('admin.priority.urgent');
+    if (p === 'high') return t('admin.priority.high');
+    if (p === 'normal') return t('admin.priority.normal');
+    if (p === 'low') return t('admin.priority.low');
+    return priority;
+  };
+
   if (!signedIn) return <AdminOnly signedIn={false} next="/admin" />;
   if (me.isLoading) {
     return (
-      <View title="Marketplace overview">
+      <View title={t('admin.overview.title')}>
         <Spinner />
       </View>
     );
@@ -94,7 +107,7 @@ export default function AdminOverview() {
 
   if (overview.isLoading) {
     return (
-      <View title="Marketplace overview" sub="Platform counts straight from the API">
+      <View title={t('admin.overview.title')} sub={t('admin.overview.subLoading')}>
         <Spinner />
       </View>
     );
@@ -102,12 +115,11 @@ export default function AdminOverview() {
 
   if (overview.isError || !ov) {
     return (
-      <View title="Marketplace overview" sub="Platform counts straight from the API">
-        <Empty title="Could not load the marketplace overview — try again">
-          The admin overview endpoint did not answer. Nothing is cached or estimated here, so no
-          figures are shown.
+      <View title={t('admin.overview.title')} sub={t('admin.overview.subLoading')}>
+        <Empty title={t('admin.overview.loadErrorTitle')}>
+          {t('admin.overview.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-            <button className="btn btn-sm btn-primary" onClick={() => void overview.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-primary" onClick={() => void overview.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       </View>
@@ -115,58 +127,58 @@ export default function AdminOverview() {
   }
 
   const marketplace: Cell[] = [
-    { icon: '👥', value: num(ov.users), label: 'Registered users' },
-    { icon: '🛒', value: num(ov.buyers), label: 'Buyer accounts' },
-    { icon: '🚚', value: num(ov.suppliers), label: 'Supplier accounts' },
-    { icon: '📦', value: num(ov.products), label: 'Listings (all sources)' },
+    { icon: '👥', value: num(ov.users, locale), label: t('admin.overview.users') },
+    { icon: '🛒', value: num(ov.buyers, locale), label: t('admin.overview.buyers') },
+    { icon: '🚚', value: num(ov.suppliers, locale), label: t('admin.overview.suppliers') },
+    { icon: '📦', value: num(ov.products, locale), label: t('admin.overview.products') },
     {
       icon: '✅',
-      value: num(ov.platformProducts),
-      label: 'Real listings',
-      title: 'Listings created by a real supplier through the app (dataSource: platform)',
+      value: num(ov.platformProducts, locale),
+      label: t('admin.overview.platformProducts'),
+      title: t('admin.overview.platformProductsTitle'),
     },
     {
       icon: '🧪',
-      value: num(ov.demoProducts),
-      label: 'Seed listings',
-      title: 'Bootstrap seed data — shown with a Demo tag, never as real supply (dataSource: demo)',
+      value: num(ov.demoProducts, locale),
+      label: t('admin.overview.demoProducts'),
+      title: t('admin.overview.demoProductsTitle'),
       tag: <DemoTag />,
     },
   ];
 
   const trading: Cell[] = [
-    { icon: '📄', value: num(ov.rfqs), label: 'Requests for quotation' },
-    { icon: '🏷️', value: num(ov.quotes), label: 'Quotes submitted' },
-    { icon: '🤝', value: num(ov.offers), label: 'Offers' },
-    { icon: '🔔', value: num(ov.openOffers), label: 'Offers still open' },
-    { icon: '🧾', value: num(ov.orders), label: 'Orders' },
-    { icon: '🚢', value: num(ov.shipments), label: 'Shipments' },
+    { icon: '📄', value: num(ov.rfqs, locale), label: t('admin.overview.rfqs') },
+    { icon: '🏷️', value: num(ov.quotes, locale), label: t('admin.overview.quotes') },
+    { icon: '🤝', value: num(ov.offers, locale), label: t('admin.overview.offers') },
+    { icon: '🔔', value: num(ov.openOffers, locale), label: t('admin.overview.openOffers') },
+    { icon: '🧾', value: num(ov.orders, locale), label: t('admin.overview.orders') },
+    { icon: '🚢', value: num(ov.shipments, locale), label: t('admin.overview.shipments') },
   ];
 
   const operations: Cell[] = [
     {
       icon: '⏳',
-      value: num(ov.paymentsAwaiting),
-      label: 'Payments awaiting confirmation',
-      title: 'Bank transfers recorded by buyers and not yet confirmed by an administrator',
+      value: num(ov.paymentsAwaiting, locale),
+      label: t('admin.overview.paymentsAwaiting'),
+      title: t('admin.overview.paymentsAwaitingTitle'),
     },
     {
       icon: '💰',
-      value: amount(ov.paymentsConfirmedTotal),
-      label: 'Confirmed payments · sum',
-      title: 'Sum of confirmed payment amounts as returned by the API. The API does not split this by currency.',
+      value: amount(ov.paymentsConfirmedTotal, locale),
+      label: t('admin.overview.paymentsConfirmedTotal'),
+      title: t('admin.overview.paymentsConfirmedTotalTitle'),
     },
-    { icon: '🛡️', value: num(ov.docsAwaitingReview), label: 'Documents awaiting review' },
-    { icon: '❓', value: num(ov.supportTicketsOpen), label: 'Open support tickets' },
-    { icon: '✉️', value: num(ov.emailsQueued), label: 'Emails queued' },
+    { icon: '🛡️', value: num(ov.docsAwaitingReview, locale), label: t('admin.overview.docsAwaitingReview') },
+    { icon: '❓', value: num(ov.supportTicketsOpen, locale), label: t('admin.overview.supportTicketsOpen') },
+    { icon: '✉️', value: num(ov.emailsQueued, locale), label: t('admin.overview.emailsQueued') },
     {
       icon: '👁️',
-      value: num(ov.productViews),
-      label: 'Listing views recorded',
-      title: 'Rows recorded in the view table by the API. No other view figure exists.',
+      value: num(ov.productViews, locale),
+      label: t('admin.overview.productViews'),
+      title: t('admin.overview.productViewsTitle'),
     },
-    { icon: '💬', value: num(ov.messages), label: 'Messages' },
-    { icon: '🧵', value: num(ov.threads), label: 'Conversations' },
+    { icon: '💬', value: num(ov.messages, locale), label: t('admin.overview.messages') },
+    { icon: '🧵', value: num(ov.threads, locale), label: t('admin.overview.threads') },
   ];
 
   const ticketItems = tickets.data?.items ?? [];
@@ -174,8 +186,8 @@ export default function AdminOverview() {
 
   return (
     <View
-      title="Marketplace overview"
-      sub="Every number here is a live count or sum from the API — no estimates, no trends, no period labels"
+      title={t('admin.overview.title')}
+      sub={t('admin.overview.sub')}
       actions={
         <div className="row" style={{ gap: 6 }}>
           <button
@@ -183,13 +195,13 @@ export default function AdminOverview() {
             onClick={() => { void overview.refetch(); void tickets.refetch(); }}
             disabled={overview.isFetching}
           >
-            {overview.isFetching ? 'Refreshing…' : 'Refresh'}
+            {overview.isFetching ? t('action.refreshing') : t('action.refresh')}
           </button>
-          <Link href="/admin/verification" className="btn btn-sm btn-ghost">Verification desk</Link>
+          <Link href="/admin/verification" className="btn btn-sm btn-ghost">{t('nav.adminVerify')}</Link>
         </div>
       }
     >
-      <h2 style={{ margin: '0 0 8px' }}>Marketplace</h2>
+      <h2 style={{ margin: '0 0 8px' }}>{t('admin.overview.sectionMarketplace')}</h2>
       <div className="grid stats">
         {marketplace.map((c) => (
           <div key={c.label} className="card stat" title={c.title}>
@@ -202,7 +214,7 @@ export default function AdminOverview() {
         ))}
       </div>
 
-      <h2 style={{ margin: '0 0 8px' }}>Trading activity</h2>
+      <h2 style={{ margin: '0 0 8px' }}>{t('admin.overview.sectionTrading')}</h2>
       <div className="grid stats">
         {trading.map((c) => (
           <div key={c.label} className="card stat" title={c.title}>
@@ -215,7 +227,7 @@ export default function AdminOverview() {
         ))}
       </div>
 
-      <h2 style={{ margin: '0 0 8px' }}>Operations</h2>
+      <h2 style={{ margin: '0 0 8px' }}>{t('admin.overview.sectionOperations')}</h2>
       <div className="grid stats">
         {operations.map((c) => (
           <div key={c.label} className="card stat" title={c.title}>
@@ -231,33 +243,33 @@ export default function AdminOverview() {
       <div className="cols">
         <div className="card">
           <div className="hd">
-            <h2>Listing provenance</h2>
-            <Link href="/admin/listings" className="link">Inspect listings</Link>
+            <h2>{t('admin.overview.provenance.title')}</h2>
+            <Link href="/admin/listings" className="link">{t('admin.overview.provenance.inspect')}</Link>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Source</th>
-                  <th style={{ textAlign: 'right' }}>Listings</th>
-                  <th>What it means</th>
+                  <th>{t('admin.overview.provenance.colSource')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('admin.overview.provenance.colListings')}</th>
+                  <th>{t('admin.overview.provenance.colMeaning')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><span className="pill p-green" title="Created by a real supplier inside the app">Real</span></td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.platformProducts)}</td>
-                  <td className="muted">Posted by a real supplier through the app</td>
+                  <td><span className="pill p-green" title={t('admin.overview.provenance.realTitle')}>{t('admin.overview.provenance.real')}</span></td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.platformProducts, locale)}</td>
+                  <td className="muted">{t('admin.overview.provenance.realMeaning')}</td>
                 </tr>
                 <tr>
                   <td><DemoTag /></td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.demoProducts)}</td>
-                  <td className="muted">Seed data that gives an empty database something to demo</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.demoProducts, locale)}</td>
+                  <td className="muted">{t('admin.overview.provenance.seedMeaning')}</td>
                 </tr>
                 <tr>
-                  <td className="strong">All listings</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.products)}</td>
-                  <td className="muted">Every row the API returns, of both sources</td>
+                  <td className="strong">{t('admin.overview.provenance.all')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.products, locale)}</td>
+                  <td className="muted">{t('admin.overview.provenance.allMeaning')}</td>
                 </tr>
               </tbody>
             </table>
@@ -266,41 +278,41 @@ export default function AdminOverview() {
 
         <div className="card">
           <div className="hd">
-            <h2>Trading funnel</h2>
-            <Link href="/admin/rfqs" className="link">All RFQs</Link>
+            <h2>{t('admin.overview.funnel.title')}</h2>
+            <Link href="/admin/rfqs" className="link">{t('admin.overview.funnel.allRfqs')}</Link>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Stage</th>
-                  <th style={{ textAlign: 'right' }}>Count</th>
+                  <th>{t('admin.overview.funnel.colStage')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('admin.overview.funnel.colCount')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Requests for quotation</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.rfqs)}</td>
+                  <td>{t('admin.overview.rfqs')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.rfqs, locale)}</td>
                 </tr>
                 <tr>
-                  <td>Quotes submitted</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.quotes)}</td>
+                  <td>{t('admin.overview.quotes')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.quotes, locale)}</td>
                 </tr>
                 <tr>
-                  <td>Offers</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.offers)}</td>
+                  <td>{t('admin.overview.offers')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.offers, locale)}</td>
                 </tr>
                 <tr>
-                  <td>Offers still open</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.openOffers)}</td>
+                  <td>{t('admin.overview.openOffers')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.openOffers, locale)}</td>
                 </tr>
                 <tr>
-                  <td>Orders</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.orders)}</td>
+                  <td>{t('admin.overview.orders')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.orders, locale)}</td>
                 </tr>
                 <tr>
-                  <td>Shipments</td>
-                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.shipments)}</td>
+                  <td>{t('admin.overview.shipments')}</td>
+                  <td style={{ textAlign: 'right' }} className="strong">{num(ov.shipments, locale)}</td>
                 </tr>
               </tbody>
             </table>
@@ -310,52 +322,57 @@ export default function AdminOverview() {
 
       <div className="card" style={{ marginTop: 12 }}>
         <div className="hd">
-          <h2>Support tickets</h2>
+          <h2>{t('admin.overview.tickets.title')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
-            {num(ov.supportTicketsOpen)} open · {tickets.data ? `${tickets.data.total.toLocaleString()} total` : '—'}
+            {tickets.data
+              ? t('admin.overview.tickets.openTotal', {
+                open: num(ov.supportTicketsOpen, locale),
+                total: tickets.data.total.toLocaleString(locale),
+              })
+              : t('admin.overview.tickets.openOnly', { open: num(ov.supportTicketsOpen, locale) })}
           </span>
         </div>
 
         {tickets.isLoading ? (
-          <div className="empty">Loading support tickets…</div>
+          <div className="empty">{t('admin.overview.tickets.loading')}</div>
         ) : tickets.isError ? (
           <div className="empty">
-            <b>Could not load support tickets — try again</b>
-            The ticket queue did not answer. The count above still comes from the overview endpoint.
+            <b>{t('admin.overview.tickets.loadErrorTitle')}</b>
+            {t('admin.overview.tickets.loadErrorBody')}
             <div className="row" style={{ justifyContent: 'center', marginTop: 10 }}>
-              <button className="btn btn-sm btn-primary" onClick={() => void tickets.refetch()}>Try again</button>
+              <button className="btn btn-sm btn-primary" onClick={() => void tickets.refetch()}>{t('action.tryAgain')}</button>
             </div>
           </div>
         ) : ticketItems.length === 0 ? (
           <div className="empty">
-            <b>No support tickets</b>
-            Nothing has been filed through the help centre yet.
+            <b>{t('admin.overview.tickets.emptyTitle')}</b>
+            {t('admin.overview.tickets.emptyBody')}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Ticket</th>
-                  <th className="hidem">Priority</th>
-                  <th>Status</th>
-                  <th className="hidem">Filed</th>
+                  <th>{t('admin.overview.tickets.colTicket')}</th>
+                  <th className="hidem">{t('admin.overview.tickets.colPriority')}</th>
+                  <th>{t('admin.overview.tickets.colStatus')}</th>
+                  <th className="hidem">{t('admin.overview.tickets.colFiled')}</th>
                 </tr>
               </thead>
               <tbody>
-                {newestTickets.map((t) => (
-                  <tr key={t.id}>
+                {newestTickets.map((tk) => (
+                  <tr key={tk.id}>
                     <td>
-                      <span className="strong">{t.subject}</span>
+                      <span className="strong">{tk.subject}</span>
                       <div className="muted">
-                        #{t.id} · {t.userId === null ? 'filed while signed out' : `user #${t.userId}`}
+                        #{tk.id} · {tk.userId === null ? t('admin.overview.tickets.filedSignedOut') : t('admin.overview.tickets.filedByUser', { id: tk.userId })}
                       </div>
                     </td>
                     <td className="hidem">
-                      <span className={`pill ${priorityPill(t.priority)}`}>{t.priority}</span>
+                      <span className={`pill ${priorityPill(tk.priority)}`}>{priorityText(tk.priority)}</span>
                     </td>
-                    <td><StatusChip status={t.status} /></td>
-                    <td className="muted hidem" title={new Date(t.createdAt).toLocaleString()}>{day(t.createdAt)}</td>
+                    <td><StatusChip status={tk.status} /></td>
+                    <td className="muted hidem" title={new Date(tk.createdAt).toLocaleString(locale)}>{day(tk.createdAt, locale)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -365,8 +382,10 @@ export default function AdminOverview() {
 
         {ticketItems.length > newestTickets.length && (
           <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>
-            Showing {newestTickets.length} of the {ticketItems.length.toLocaleString()} rows the API returned,
-            in the order it returned them — the ticket queue has no paging parameter.
+            {t('admin.overview.tickets.showingRows', {
+              shown: newestTickets.length.toLocaleString(locale),
+              total: ticketItems.length.toLocaleString(locale),
+            })}
           </div>
         )}
       </div>

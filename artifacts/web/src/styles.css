@@ -326,4 +326,5 @@ tbody tr:hover{background:#fbfcfe}
 }
 .ph-empty .ph-cat{font-size:11px;font-weight:600;color:var(--navy);letter-spacing:-.1px;line-height:1.3}
 .ph-empty .ph-note{font-size:9.5px;color:var(--faint);line-height:1.3}
+.ph-empty .ph-glyph{color:#93a2b6;line-height:0}
 

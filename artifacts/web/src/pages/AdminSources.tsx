@@ -9,6 +9,7 @@ import {
 } from '@workspace/api-client-react';
 import type { AdminSupplier } from '@workspace/api-zod';
 import { View, Empty, Spinner, DemoTag } from '../components';
+import { useI18n, type DictKey } from '../i18n';
 
 /**
  * AdminSources — manual, consent-based supplier intake.
@@ -27,35 +28,36 @@ import { View, Empty, Spinner, DemoTag } from '../components';
 
 type CheckKey = 'selfRegistered' | 'contactVerified' | 'detailsMatch' | 'notImported';
 
-const CHECKS: { key: CheckKey; label: string }[] = [
-  { key: 'selfRegistered', label: 'This company registered its own account on FactoryDepo — nobody added it on its behalf.' },
-  { key: 'contactVerified', label: 'I confirmed the contact email on the account reaches the company itself.' },
-  { key: 'detailsMatch', label: 'The company name, country and city match the company’s own registration documents.' },
-  { key: 'notImported', label: 'This company was not lifted from a third-party directory, marketplace listing or scraped dataset.' },
+const CHECKS: { key: CheckKey; labelKey: DictKey }[] = [
+  { key: 'selfRegistered', labelKey: 'admin.sources.checkSelfRegistered' },
+  { key: 'contactVerified', labelKey: 'admin.sources.checkContactVerified' },
+  { key: 'detailsMatch', labelKey: 'admin.sources.checkDetailsMatch' },
+  { key: 'notImported', labelKey: 'admin.sources.checkNotImported' },
 ];
 
 function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Supplier intake is an administrator action">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.sources.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. Only administrator accounts can attest a supplier.`
-          : 'Sign in with an administrator account to review supplier intake.'}
+          ? t('admin.sources.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.sources.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Back to the marketplace</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.common.backToMarketplace')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Fsources" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Fsources" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -78,65 +80,60 @@ function AttestModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   const attesting = action === 'attest';
   return (
     <div className="overlay" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{attesting ? 'Attest this supplier' : 'Reject this attestation'}</h2>
-          <button className="x" onClick={onCancel} aria-label="Close">✕</button>
+          <h2>{attesting ? t('admin.sources.modalAttestTitle') : t('admin.sources.modalRejectTitle')}</h2>
+          <button className="x" onClick={onCancel} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="strong" style={{ marginTop: 0 }}>{supplier.companyName}</p>
           <p className="muted" style={{ fontSize: 12 }}>
-            {supplier.country}{supplier.city ? ` · ${supplier.city}` : ''} · supplier #{supplier.id} ·{' '}
-            {supplier.contactEmail ?? 'no contact email on record'}
+            {supplier.country}{supplier.city ? ` · ${supplier.city}` : ''} · {t('admin.sources.supplierRef', { id: supplier.id })} ·{' '}
+            {supplier.contactEmail ?? t('admin.sources.noContactEmail')}
           </p>
 
           <p style={{ fontSize: 12.5, lineHeight: 1.7, margin: '10px 0' }}>
             {attesting ? (
               <>
-                <b>Attesting confirms that FactoryDepo has checked this company.</b> The API records
-                you as the attesting administrator and stores the attestation time on the supplier
-                row, so the decision is attributable. Attest only a company that registered itself and
-                whose documents you have reviewed.
+                <b>{t('admin.sources.attestLead')}</b> {t('admin.sources.attestBody')}
               </>
             ) : (
               <>
-                <b>Rejecting refuses the attestation.</b> No attestation time or attesting
-                administrator is recorded, so this company is not shown as attested. Its account and
-                documents are untouched.
+                <b>{t('admin.sources.rejectLead')}</b> {t('admin.sources.rejectBody')}
               </>
             )}
           </p>
 
           <div className="card">
             <div className="bd muted" style={{ fontSize: 12, lineHeight: 1.7 }}>
-              Documents on file: <b>{supplier.docsApproved}</b> approved ·{' '}
-              <b>{supplier.docsSubmitted}</b> submitted · <b>{supplier.docsRejected}</b> rejected ·{' '}
-              <b>{supplier.docsMissing}</b> not submitted.
+              {t('admin.sources.docsOnFile')} <b>{supplier.docsApproved}</b> {t('admin.common.docsApproved')} ·{' '}
+              <b>{supplier.docsSubmitted}</b> {t('admin.common.docsSubmitted')} · <b>{supplier.docsRejected}</b> {t('admin.common.docsRejected')} ·{' '}
+              <b>{supplier.docsMissing}</b> {t('admin.common.docsMissing')}.
               <div style={{ marginTop: 4 }}>
-                This action does not change any document — review them at the{' '}
-                <Link href="/admin/verification">verification desk</Link>.
+                {t('admin.sources.docsAtDeskLead')}{' '}
+                <Link href="/admin/verification">{t('nav.adminVerify')}</Link>.
               </div>
             </div>
           </div>
 
           <p className="muted" style={{ fontSize: 11.5, marginTop: 10 }}>
-            The checklist on the intake form is a deliberate step for you. The API records only who
-            attested the supplier and when — the tick boxes themselves are not stored.
+            {t('admin.sources.modalChecklistNote')}
           </p>
 
           {error && <div className="errtext">{error}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>{t('action.cancel')}</button>
           <button
             className={attesting ? 'btn btn-primary' : 'btn btn-red'}
             onClick={onConfirm}
             disabled={pending}
           >
-            {pending ? 'Working…' : attesting ? 'Attest supplier' : 'Reject attestation'}
+            {pending ? t('admin.common.working') : attesting ? t('admin.sources.confirmApprove') : t('admin.sources.confirmReject')}
           </button>
         </div>
       </div>
@@ -145,6 +142,7 @@ function AttestModal({
 }
 
 export default function AdminSources() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -178,7 +176,7 @@ export default function AdminSources() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Supply sources">
+      <View title={t('nav.sources')}>
         <Spinner />
       </View>
     );
@@ -186,8 +184,8 @@ export default function AdminSources() {
   if (!isAdmin) return <AdminOnly signedIn role={me.data?.role} />;
 
   const submitForm = () => {
-    if (!selected) { setFormError('Choose the supplier you are attesting.'); return; }
-    if (!allChecked) { setFormError('Every confirmation must be ticked before a supplier can be attested.'); return; }
+    if (!selected) { setFormError(t('admin.sources.errPickSupplier')); return; }
+    if (!allChecked) { setFormError(t('admin.sources.errTickAll')); return; }
     setFormError(null);
     setModalError(null);
     setDecision({ supplier: selected, action: 'attest' });
@@ -203,7 +201,7 @@ export default function AdminSources() {
       setSelectedId('');
       setChecks({ selfRegistered: false, contactVerified: false, detailsMatch: false, notImported: false });
     } catch (e) {
-      setModalError(errText(e, 'The attestation could not be recorded — try again.'));
+      setModalError(errText(e, t('admin.sources.errFallback')));
     }
   };
 
@@ -211,40 +209,37 @@ export default function AdminSources() {
 
   return (
     <View
-      title="Supply sources"
-      sub="Manual supplier intake: a company joins by registering itself, and an administrator attests it. No directory is imported, and no catalogue is scraped."
-      actions={<Link href="/admin/suppliers" className="btn btn-sm btn-ghost">All suppliers</Link>}
+      title={t('nav.sources')}
+      sub={t('admin.sources.sub')}
+      actions={<Link href="/admin/suppliers" className="btn btn-sm btn-ghost">{t('admin.sources.allSuppliers')}</Link>}
     >
       <div className="cols">
         <div className="card">
-          <div className="hd"><h2>How supply enters FactoryDepo</h2></div>
+          <div className="hd"><h2>{t('admin.sources.howTitle')}</h2></div>
           <div className="bd" style={{ lineHeight: 1.7 }}>
             <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <li><b>The company registers its own account.</b> A supplier row exists only because the supplier created it — there is no create-supplier endpoint, by design.</li>
-              <li><b>The supplier submits its own documents</b> from its verification screen: business licence, registration, certifications.</li>
-              <li><b>An administrator reviews each document</b> at the <Link href="/admin/verification">verification desk</Link> and approves or rejects it with a note.</li>
-              <li><b>An administrator attests the supplier here</b>, which records who confirmed the company and when.</li>
-              <li><b>The supplier posts its own stock.</b> Those listings carry <b>dataSource: platform</b> and are shown to buyers as real supply.</li>
+              <li><b>{t('admin.sources.step1Lead')}</b> {t('admin.sources.step1Body')}</li>
+              <li><b>{t('admin.sources.step2Lead')}</b> {t('admin.sources.step2Body')}</li>
+              <li><b>{t('admin.sources.step3Lead')}</b> <Link href="/admin/verification">{t('nav.adminVerify')}</Link> {t('admin.sources.step3Tail')}</li>
+              <li><b>{t('admin.sources.step4Lead')}</b>{t('admin.sources.step4Body')}</li>
+              <li><b>{t('admin.sources.step5Lead')}</b> {t('admin.sources.step5BodyLead')} <b>dataSource: platform</b> {t('admin.sources.step5BodyTail')}</li>
             </ol>
           </div>
         </div>
 
         <div className="card">
-          <div className="hd"><h2>Deliberately not offered: bulk import and scraping</h2></div>
+          <div className="hd"><h2>{t('admin.sources.notOfferedTitle')}</h2></div>
           <div className="bd" style={{ lineHeight: 1.7 }}>
             <p className="muted" style={{ marginTop: 0 }}>
-              There is no import button on this screen, and no endpoint behind one. That is a policy
-              decision, not a missing feature:
+              {t('admin.sources.notOfferedLead')}
             </p>
             <ul style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6, margin: 0 }}>
-              <li><b>Marketplace terms.</b> Alibaba, Made-in-China and IndiaMART all prohibit automated collection of their listings.</li>
-              <li><b>Image rights.</b> Product photographs belong to the suppliers or the source platforms — re-serving them from our own domain as “our” catalogue is infringement, not attribution.</li>
-              <li><b>Product honesty.</b> An imported listing shows a real company that never agreed to be here, at a price we cannot honour. That is the failure this marketplace exists to prevent.</li>
+              <li><b>{t('admin.sources.termsLead')}</b> {t('admin.sources.termsBody')}</li>
+              <li><b>{t('admin.sources.imageLead')}</b> {t('admin.sources.imageBody')}</li>
+              <li><b>{t('admin.sources.honestyLead')}</b> {t('admin.sources.honestyBody')}</li>
             </ul>
             <p className="muted" style={{ marginBottom: 0, marginTop: 8 }}>
-              The scrapers this project once shipped, their ~6,800 scraped listings and 1,788
-              downloaded product photographs were deleted and are not kept. A catalogue row can only
-              be <b>platform</b> (real, supplier-created) or <b>demo</b> (labelled seed data).
+              {t('admin.sources.notOfferedFootLead')} <b>platform</b> {t('admin.sources.notOfferedFootMid')} <b>demo</b> {t('admin.sources.notOfferedFootTail')}
             </p>
           </div>
         </div>
@@ -252,9 +247,12 @@ export default function AdminSources() {
 
       <div className="card" style={{ marginTop: 12 }}>
         <div className="hd">
-          <h2>Attest a supplier that registered itself</h2>
+          <h2>{t('admin.sources.attestTitle')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
-            {unattested.length.toLocaleString()} awaiting attestation of {items.length.toLocaleString()} listed
+            {t('admin.sources.awaitingOf', {
+              pending: unattested.length.toLocaleString(locale),
+              total: items.length.toLocaleString(locale),
+            })}
           </span>
         </div>
         <div className="bd">
@@ -262,50 +260,49 @@ export default function AdminSources() {
             <Spinner />
           ) : res.isError || !res.data ? (
             <div className="empty">
-              <b>Could not load suppliers — try again</b>
-              The supplier list did not answer, so no intake decision can be recorded.
+              <b>{t('admin.sources.loadErrorTitle')}</b>
+              {t('admin.sources.loadErrorBody')}
               <div className="row" style={{ justifyContent: 'center', marginTop: 10 }}>
-                <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>Try again</button>
+                <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>{t('action.tryAgain')}</button>
               </div>
             </div>
           ) : items.length === 0 ? (
             <div className="empty">
-              <b>No suppliers yet</b>
-              A company appears here after it registers its own account. This screen cannot create one.
+              <b>{t('admin.sources.emptyTitle')}</b>
+              {t('admin.sources.emptyBody')}
             </div>
           ) : unattested.length === 0 ? (
             <div className="empty">
-              <b>Every listed supplier is attested</b>
-              Nothing is waiting for intake review. Approve or revoke an individual attestation on the{' '}
-              <Link href="/admin/suppliers">suppliers</Link> screen.
+              <b>{t('admin.sources.allAttestedTitle')}</b>
+              {t('admin.sources.allAttestedLead')}{' '}
+              <Link href="/admin/suppliers">{t('nav.suppliers')}</Link> {t('admin.sources.allAttestedTail')}
             </div>
           ) : (
             <>
               <div className="f2">
                 <div className="field">
-                  <label htmlFor="intake-supplier">Supplier that registered itself <i>*</i></label>
+                  <label htmlFor="intake-supplier">{t('admin.sources.formSupplier')} <i>*</i></label>
                   <select
                     id="intake-supplier"
                     className="in"
                     value={selectedId}
                     onChange={(e) => { setSelectedId(e.target.value); setFormError(null); }}
                   >
-                    <option value="">Choose a supplier awaiting attestation…</option>
+                    <option value="">{t('admin.sources.chooseSupplier')}</option>
                     {unattested.map((s) => (
                       <option key={s.id} value={String(s.id)}>
                         {s.companyName} — {s.country}
-                        {s.city ? `, ${s.city}` : ''} ({s.docsApproved} docs approved)
+                        {s.city ? `, ${s.city}` : ''} ({t('admin.sources.docsApprovedCount', { n: s.docsApproved.toLocaleString(locale) })})
                       </option>
                     ))}
                   </select>
                   <div className="hint">
-                    Only suppliers without an attestation are listed. Company details come from the
-                    supplier's own registration.
+                    {t('admin.sources.supplierHint')}
                   </div>
                 </div>
 
                 <div className="field">
-                  <label>Confirm before attesting <i>*</i></label>
+                  <label>{t('admin.sources.confirmLabel')} <i>*</i></label>
                   <div className="card">
                     <div className="bd" style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                       {CHECKS.map((c) => (
@@ -316,14 +313,13 @@ export default function AdminSources() {
                             onChange={(e) => { setChecks((prev) => ({ ...prev, [c.key]: e.target.checked })); setFormError(null); }}
                             style={{ marginTop: 3 }}
                           />
-                          <span style={{ fontSize: 12.5 }}>{c.label}</span>
+                          <span style={{ fontSize: 12.5 }}>{t(c.labelKey)}</span>
                         </label>
                       ))}
                     </div>
                   </div>
                   <div className="hint">
-                    These confirmations are not stored anywhere — the API records only who attested
-                    the supplier, and when.
+                    {t('admin.sources.checksHint')}
                   </div>
                 </div>
               </div>
@@ -337,16 +333,16 @@ export default function AdminSources() {
                   disabled={!selected || !allChecked || pending}
                   title={
                     !selected
-                      ? 'Choose a supplier first'
+                      ? t('admin.sources.titlePickSupplier')
                       : !allChecked
-                        ? 'Tick every confirmation first'
-                        : 'Review the consequence in the next step'
+                        ? t('admin.sources.titleTickAll')
+                        : t('admin.sources.titleReview')
                   }
                 >
-                  Attest supplier…
+                  {t('admin.sources.attestButton')}
                 </button>
                 <span className="muted">
-                  You will see exactly what attesting records before it happens.
+                  {t('admin.sources.attestHint')}
                 </span>
               </div>
 
@@ -354,11 +350,11 @@ export default function AdminSources() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Supplier awaiting attestation</th>
-                      <th className="hidem">Contact</th>
-                      <th>Source</th>
-                      <th>Documents</th>
-                      <th className="hidem">Registered</th>
+                      <th>{t('admin.sources.colSupplierAwaiting')}</th>
+                      <th className="hidem">{t('admin.sources.colContact')}</th>
+                      <th>{t('admin.sources.colSource')}</th>
+                      <th>{t('admin.sources.colDocuments')}</th>
+                      <th className="hidem">{t('admin.sources.colRegistered')}</th>
                       <th />
                     </tr>
                   </thead>
@@ -368,7 +364,10 @@ export default function AdminSources() {
                         <td>
                           <span className="strong">{s.companyName}</span>
                           <div className="muted">
-                            {s.country}{s.city ? ` · ${s.city}` : ''} · #{s.id} · {s.productCount.toLocaleString()} listing{s.productCount === 1 ? '' : 's'}
+                            {s.country}{s.city ? ` · ${s.city}` : ''} · #{s.id} ·{' '}
+                            {s.productCount === 1
+                              ? t('admin.sources.listingCountOne', { n: s.productCount.toLocaleString(locale) })
+                              : t('admin.sources.listingCount', { n: s.productCount.toLocaleString(locale) })}
                           </div>
                         </td>
                         <td className="hidem muted">{s.contactEmail ?? '—'}</td>
@@ -376,37 +375,37 @@ export default function AdminSources() {
                           {s.dataSource === 'demo' ? (
                             <span className="row" style={{ gap: 4 }}>
                               <DemoTag />
-                              <span className="muted">seed</span>
+                              <span className="muted">{t('admin.common.seed')}</span>
                             </span>
                           ) : (
-                            <span className="pill p-green" title="Registered through the app (dataSource: platform)">
-                              Real
+                            <span className="pill p-green" title={t('admin.common.registeredThroughApp')}>
+                              {t('admin.common.real')}
                             </span>
                           )}
                         </td>
                         <td>
                           <span className="row" style={{ gap: 4, flexWrap: 'wrap' }}>
-                            <span className={`pill ${s.docsApproved > 0 ? 'p-green' : 'p-grey'}`}>{s.docsApproved} approved</span>
-                            <span className={`pill ${s.docsSubmitted > 0 ? 'p-blue' : 'p-grey'}`}>{s.docsSubmitted} submitted</span>
-                            <span className={`pill ${s.docsRejected > 0 ? 'p-red' : 'p-grey'}`}>{s.docsRejected} rejected</span>
-                            <span className="pill p-grey">{s.docsMissing} missing</span>
+                            <span className={`pill ${s.docsApproved > 0 ? 'p-green' : 'p-grey'}`}>{s.docsApproved} {t('admin.common.docsApproved')}</span>
+                            <span className={`pill ${s.docsSubmitted > 0 ? 'p-blue' : 'p-grey'}`}>{s.docsSubmitted} {t('admin.common.docsSubmitted')}</span>
+                            <span className={`pill ${s.docsRejected > 0 ? 'p-red' : 'p-grey'}`}>{s.docsRejected} {t('admin.common.docsRejected')}</span>
+                            <span className="pill p-grey">{s.docsMissing} {t('admin.common.docsMissing')}</span>
                           </span>
                         </td>
-                        <td className="hidem muted" title={new Date(s.createdAt).toLocaleString()}>{day(s.createdAt)}</td>
+                        <td className="hidem muted" title={new Date(s.createdAt).toLocaleString(locale)}>{day(s.createdAt, locale)}</td>
                         <td>
                           <span className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
                             <button
                               className="btn btn-sm btn-primary"
                               onClick={() => { setSelectedId(String(s.id)); setFormError(null); }}
-                              title="Load this supplier into the attestation form"
+                              title={t('admin.sources.selectTitle')}
                             >
-                              Select
+                              {t('admin.sources.select')}
                             </button>
                             <button
                               className="btn btn-sm btn-red"
                               onClick={() => { setModalError(null); setDecision({ supplier: s, action: 'reject' }); }}
                             >
-                              Reject
+                              {t('admin.common.reject')}
                             </button>
                           </span>
                         </td>
@@ -421,39 +420,40 @@ export default function AdminSources() {
       </div>
 
       <div className="card" style={{ marginTop: 12 }}>
-        <div className="hd"><h2>What a listing's source can be</h2></div>
+        <div className="hd"><h2>{t('admin.sources.sourceCardTitle')}</h2></div>
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
               <tr>
                 <th>dataSource</th>
-                <th>Meaning</th>
-                <th>How it is shown</th>
+                <th>{t('admin.sources.colMeaning')}</th>
+                <th>{t('admin.sources.colShown')}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><span className="pill p-green">platform</span></td>
-                <td className="muted">A real listing, created by a real supplier through the app</td>
-                <td className="muted">Shown as real supply, with the supplier's own documents behind it</td>
+                <td className="muted">{t('admin.sources.srcPlatformMeaning')}</td>
+                <td className="muted">{t('admin.sources.srcPlatformShown')}</td>
               </tr>
               <tr>
                 <td><span className="pill p-amber">demo</span></td>
-                <td className="muted">Bootstrap seed data that gives an empty database a working marketplace to demo</td>
-                <td className="muted">Always rendered with a <DemoTag /> tag, never as a real offer</td>
+                <td className="muted">{t('admin.sources.srcDemoMeaning')}</td>
+                <td className="muted">{t('admin.sources.srcDemoShownLead')} <DemoTag /> {t('admin.sources.srcDemoShownTail')}</td>
               </tr>
               <tr>
                 <td className="muted">scraped</td>
-                <td className="muted">Not a value. Scraped listings are not kept on this platform.</td>
-                <td className="muted">Nothing to show — there is no third source</td>
+                <td className="muted">{t('admin.sources.srcScrapedMeaning')}</td>
+                <td className="muted">{t('admin.sources.srcScrapedShown')}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>
-          {attestedCount.toLocaleString()} of {items.length.toLocaleString()} listed suppliers already
-          carry an attestation. Attestation state, document counts and provenance all come from the
-          API — none of it is estimated on this screen.
+          {t('admin.sources.footnote', {
+            attested: attestedCount.toLocaleString(locale),
+            total: items.length.toLocaleString(locale),
+          })}
         </div>
       </div>
 

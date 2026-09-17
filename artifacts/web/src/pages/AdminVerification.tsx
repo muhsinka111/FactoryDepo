@@ -9,6 +9,7 @@ import {
 } from '@workspace/api-client-react';
 import type { AdminSupplier, SupplierDoc } from '@workspace/api-zod';
 import { View, Empty, StatusChip, Spinner, DemoTag } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminVerification — the verification desk.
@@ -29,10 +30,10 @@ function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function fileName(key: string): string {
@@ -41,17 +42,18 @@ function fileName(key: string): string {
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Document review is an administrator action">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.verification.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. A supplier can never approve its own documents — only an administrator account can.`
-          : 'Sign in with an administrator account to review supplier documents.'}
+          ? t('admin.verification.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.verification.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Back to the marketplace</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.common.backToMarketplace')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Fverification" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Fverification" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -80,62 +82,59 @@ function ReviewModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   const approving = decision === 'approved';
   return (
     <div className="overlay" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{approving ? 'Approve document' : 'Reject document'}</h2>
-          <button className="x" onClick={onCancel} aria-label="Close">✕</button>
+          <h2>{approving ? t('admin.verification.modalApproveTitle') : t('admin.verification.modalRejectTitle')}</h2>
+          <button className="x" onClick={onCancel} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="strong" style={{ marginTop: 0 }}>{doc.docType}</p>
           <p className="muted" style={{ fontSize: 12 }}>
-            {supplier ? supplier.companyName : `Supplier #${doc.supplierId}`} · document #{doc.id}
+            {supplier ? supplier.companyName : t('admin.verification.supplierFallback', { id: doc.supplierId })} · {t('admin.verification.docRef', { id: doc.id })}
           </p>
 
           <p style={{ fontSize: 12.5, lineHeight: 1.7, margin: '10px 0' }}>
             {approving ? (
               <>
-                <b>Approving accepts this document as verification evidence.</b> The API records you
-                as the reviewer, stamps the review time and stores your note on the document.
+                <b>{t('admin.verification.approveLead')}</b> {t('admin.verification.approveBody')}
               </>
             ) : (
               <>
-                <b>Rejecting marks the document as not accepted.</b> The API records you as the
-                reviewer and stamps the review time. The supplier must submit a corrected document
-                before this document type can count towards verification.
+                <b>{t('admin.verification.rejectLead')}</b> {t('admin.verification.rejectBody')}
               </>
             )}
           </p>
 
           <div className="field">
-            <label htmlFor="review-note">Reviewer note (optional)</label>
+            <label htmlFor="review-note">{t('admin.verification.noteLabel')}</label>
             <textarea
               id="review-note"
               className="in"
               rows={3}
               maxLength={1000}
-              placeholder={approving ? 'What you checked on this document…' : 'Why this document was not accepted…'}
+              placeholder={approving ? t('admin.verification.notePlaceholderApprove') : t('admin.verification.notePlaceholderReject')}
               value={note}
               onChange={(e) => onNote(e.target.value)}
             />
             <div className="hint">
-              Stored on the document by the API and shown to the supplier. Leave blank to record the
-              decision without a note.
+              {t('admin.verification.noteHint')}
             </div>
           </div>
 
           {error && <div className="errtext">{error}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>{t('action.cancel')}</button>
           <button
             className={approving ? 'btn btn-primary' : 'btn btn-red'}
             onClick={onConfirm}
             disabled={pending}
           >
-            {pending ? 'Working…' : approving ? 'Approve document' : 'Reject document'}
+            {pending ? t('admin.common.working') : approving ? t('admin.verification.modalApproveTitle') : t('admin.verification.modalRejectTitle')}
           </button>
         </div>
       </div>
@@ -144,6 +143,7 @@ function ReviewModal({
 }
 
 export default function AdminVerification() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -185,7 +185,7 @@ export default function AdminVerification() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Verification desk">
+      <View title={t('nav.adminVerify')}>
         <Spinner />
       </View>
     );
@@ -204,7 +204,7 @@ export default function AdminVerification() {
       setTarget(null);
       setNote('');
     } catch (e) {
-      setModalError(errText(e, 'The review could not be recorded — try again.'));
+      setModalError(errText(e, t('admin.verification.errFallback')));
     }
   };
 
@@ -216,66 +216,65 @@ export default function AdminVerification() {
 
   return (
     <View
-      title="Verification desk"
-      sub="Every supplier document on the platform, with its real review state. Approving a document is what makes a verification tier mean something."
+      title={t('nav.adminVerify')}
+      sub={t('admin.verification.sub')}
       actions={
-        <Link href="/admin/suppliers" className="btn btn-sm btn-ghost">Suppliers</Link>
+        <Link href="/admin/suppliers" className="btn btn-sm btn-ghost">{t('nav.suppliers')}</Link>
       }
     >
       {docs.isLoading ? (
         <Spinner />
       ) : docs.isError || !docs.data ? (
-        <Empty title="Could not load verification documents — try again">
-          The document queue did not answer, so nothing is shown and no decision can be recorded.
+        <Empty title={t('admin.verification.loadErrorTitle')}>
+          {t('admin.verification.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-            <button className="btn btn-sm btn-primary" onClick={() => void docs.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-primary" onClick={() => void docs.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No documents submitted yet">
-          Documents appear here when a supplier submits them from its own dashboard. Suppliers
-          cannot approve their own documents.
+        <Empty title={t('admin.verification.emptyTitle')}>
+          {t('admin.verification.emptyBody')}
         </Empty>
       ) : (
         <>
           <div className="grid stats">
-            <div className="card stat" title="Documents with status 'submitted' — waiting for a decision">
+            <div className="card stat" title={t('admin.verification.statAwaitingTitle')}>
               <span className="ic" aria-hidden="true">⏳</span>
               <div>
-                <div className="v">{counts.submitted.toLocaleString()}</div>
-                <div className="l">Awaiting review</div>
+                <div className="v">{counts.submitted.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.verification.statAwaiting')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">✅</span>
               <div>
-                <div className="v">{counts.approved.toLocaleString()}</div>
-                <div className="l">Approved</div>
+                <div className="v">{counts.approved.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.verification.statApproved')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">⛔</span>
               <div>
-                <div className="v">{counts.rejected.toLocaleString()}</div>
-                <div className="l">Rejected</div>
+                <div className="v">{counts.rejected.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.verification.statRejected')}</div>
               </div>
             </div>
-            <div className="card stat" title="Document types the supplier has not submitted (status 'missing')">
+            <div className="card stat" title={t('admin.verification.statMissingTitle')}>
               <span className="ic" aria-hidden="true">📄</span>
               <div>
-                <div className="v">{counts.missing.toLocaleString()}</div>
-                <div className="l">Not submitted</div>
+                <div className="v">{counts.missing.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.verification.statMissing')}</div>
               </div>
             </div>
           </div>
 
           <div className="filters">
             {([
-              ['submitted', `Awaiting review (${counts.submitted})`],
-              ['approved', `Approved (${counts.approved})`],
-              ['rejected', `Rejected (${counts.rejected})`],
-              ['missing', `Not submitted (${counts.missing})`],
-              ['all', `All (${items.length})`],
+              ['submitted', t('admin.verification.filterSubmitted', { n: counts.submitted.toLocaleString(locale) })],
+              ['approved', t('admin.verification.filterApproved', { n: counts.approved.toLocaleString(locale) })],
+              ['rejected', t('admin.verification.filterRejected', { n: counts.rejected.toLocaleString(locale) })],
+              ['missing', t('admin.verification.filterMissing', { n: counts.missing.toLocaleString(locale) })],
+              ['all', t('admin.verification.filterAll', { n: items.length.toLocaleString(locale) })],
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -287,41 +286,47 @@ export default function AdminVerification() {
               </button>
             ))}
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              {suppliers.isError ? 'Supplier names could not be loaded — ids shown instead' : `Resolved against ${supplierById.size} supplier records`}
+              {suppliers.isError
+                ? t('admin.verification.namesError')
+                : t('admin.verification.resolvedAgainst', { n: supplierById.size.toLocaleString(locale) })}
             </span>
           </div>
 
           {filtered.length === 0 ? (
-            <Empty title={filter === 'submitted' ? 'Nothing is awaiting review' : 'No documents with that status'}>
+            <Empty title={filter === 'submitted' ? t('admin.verification.nothingAwaitingTitle') : t('admin.verification.noStatusTitle')}>
               {filter === 'submitted'
-                ? 'Every document in the queue has a decision recorded.'
-                : 'Try another status filter.'}
+                ? t('admin.verification.nothingAwaitingBody')
+                : t('admin.verification.noStatusBody')}
               <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-                <button className="btn btn-sm btn-grey" onClick={() => setFilter('all')}>Show all documents</button>
+                <button className="btn btn-sm btn-grey" onClick={() => setFilter('all')}>{t('admin.verification.showAll')}</button>
               </div>
             </Empty>
           ) : (
             <div className="card">
               <div className="hd">
-                <b>{filtered.length.toLocaleString()} document{filtered.length === 1 ? '' : 's'}</b>
+                <b>
+                  {filtered.length === 1
+                    ? t('admin.verification.docCountOne', { n: filtered.length.toLocaleString(locale) })
+                    : t('admin.verification.docCount', { n: filtered.length.toLocaleString(locale) })}
+                </b>
                 <span className="muted" style={{ marginLeft: 'auto' }}>
-                  Submitted date is the row timestamp the API returns
+                  {t('admin.verification.submittedNote')}
                 </span>
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <table>
                   <thead>
                     <tr>
-                      <th>Supplier</th>
-                      <th>Document</th>
-                      <th>Status</th>
-                      <th title="The document row's creation timestamp. A resubmission changes the status without changing this timestamp.">
-                        Submitted
+                      <th>{t('admin.verification.colSupplier')}</th>
+                      <th>{t('admin.verification.colDocument')}</th>
+                      <th>{t('admin.verification.colStatus')}</th>
+                      <th title={t('admin.verification.colSubmittedTitle')}>
+                        {t('admin.verification.colSubmitted')}
                       </th>
-                      <th className="hidem">File</th>
-                      <th className="hidem">Note</th>
-                      <th className="hidem" title="Reviewer and review time recorded by the API">
-                        Reviewed
+                      <th className="hidem">{t('admin.verification.colFile')}</th>
+                      <th className="hidem">{t('admin.verification.colNote')}</th>
+                      <th className="hidem" title={t('admin.verification.colReviewedTitle')}>
+                        {t('admin.verification.colReviewed')}
                       </th>
                       <th />
                     </tr>
@@ -333,14 +338,14 @@ export default function AdminVerification() {
                         <tr key={d.id}>
                           <td>
                             <span className="strong">
-                              {s ? s.companyName : `Supplier #${d.supplierId}`}
+                              {s ? s.companyName : t('admin.verification.supplierFallback', { id: d.supplierId })}
                             </span>
                             <div className="row" style={{ gap: 5, marginTop: 2 }}>
                               {s ? (
                                 s.dataSource === 'demo' ? (
                                   <>
                                     <DemoTag />
-                                    <span className="muted">seed supplier</span>
+                                    <span className="muted">{t('admin.verification.seedSupplier')}</span>
                                   </>
                                 ) : (
                                   <span className="muted">
@@ -348,23 +353,23 @@ export default function AdminVerification() {
                                   </span>
                                 )
                               ) : (
-                                <span className="muted">name not in the supplier list</span>
+                                <span className="muted">{t('admin.verification.nameMissing')}</span>
                               )}
                             </div>
                           </td>
                           <td>{d.docType}</td>
                           <td><StatusChip status={d.status} /></td>
-                          <td className="muted" title={new Date(d.createdAt).toLocaleString()}>
-                            {day(d.createdAt)}
+                          <td className="muted" title={new Date(d.createdAt).toLocaleString(locale)}>
+                            {day(d.createdAt, locale)}
                           </td>
                           <td className="hidem">
                             {d.fileKey ? (
                               <>
-                                <span className="pill p-blue" title={d.fileKey}>Attached</span>
+                                <span className="pill p-blue" title={d.fileKey}>{t('admin.common.attached')}</span>
                                 <div className="muted">{fileName(d.fileKey)}</div>
                               </>
                             ) : (
-                              <span className="muted" title="The supplier submitted this document without a file key">
+                              <span className="muted" title={t('admin.verification.noFileKeyTitle')}>
                                 —
                               </span>
                             )}
@@ -375,43 +380,43 @@ export default function AdminVerification() {
                                 {d.note.length > 60 ? `${d.note.slice(0, 60)}…` : d.note}
                               </span>
                             ) : (
-                              <span title="No note on this document">—</span>
+                              <span title={t('admin.verification.noNoteTitle')}>—</span>
                             )}
                           </td>
                           <td className="hidem muted">
                             {d.reviewedAt ? (
                               <>
-                                {day(d.reviewedAt)}
+                                {day(d.reviewedAt, locale)}
                                 <div className="muted">
-                                  {d.reviewedBy === null ? 'reviewer not recorded' : `by admin #${d.reviewedBy}`}
+                                  {d.reviewedBy === null ? t('admin.verification.reviewerNotRecorded') : t('admin.common.byAdmin', { id: d.reviewedBy })}
                                 </div>
                               </>
                             ) : (
-                              <span title="Not reviewed yet">—</span>
+                              <span title={t('admin.verification.notReviewed')}>—</span>
                             )}
                           </td>
                           <td>
                             {d.status === 'missing' ? (
-                              <span className="muted" title="There is no submitted document to review">
-                                Nothing to review
+                              <span className="muted" title={t('admin.verification.nothingToReviewTitle')}>
+                                {t('admin.verification.nothingToReview')}
                               </span>
                             ) : (
                               <span className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
                                 <button
                                   className="btn btn-sm btn-primary"
                                   disabled={d.status === 'approved'}
-                                  title={d.status === 'approved' ? 'Already approved' : 'Approve this document'}
+                                  title={d.status === 'approved' ? t('admin.verification.alreadyApproved') : t('admin.verification.approveTitle')}
                                   onClick={() => openModal(d, 'approved')}
                                 >
-                                  Approve
+                                  {t('admin.common.approve')}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-red"
                                   disabled={d.status === 'rejected'}
-                                  title={d.status === 'rejected' ? 'Already rejected' : 'Reject this document'}
+                                  title={d.status === 'rejected' ? t('admin.verification.alreadyRejected') : t('admin.verification.rejectTitle')}
                                   onClick={() => openModal(d, 'rejected')}
                                 >
-                                  Reject
+                                  {t('admin.common.reject')}
                                 </button>
                               </span>
                             )}
@@ -423,16 +428,15 @@ export default function AdminVerification() {
                 </table>
               </div>
               <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>
-                The API keeps one row per supplier and document type. A resubmission resets the
-                review, so an approved document that is resubmitted returns to awaiting review.
+                {t('admin.verification.footnote')}
               </div>
             </div>
           )}
 
           <div className="stripe" style={{ marginTop: 12 }}>
             <span>
-              Approving documents here and attesting the supplier on the{' '}
-              <Link href="/admin/suppliers">suppliers</Link> screen are two separate decisions.
+              {t('admin.verification.stripeLead')}{' '}
+              <Link href="/admin/suppliers">{t('nav.suppliers')}</Link> {t('admin.verification.stripeTail')}
             </span>
           </div>
         </>

@@ -146,6 +146,25 @@ productsRouter.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/products/categories — live listing counts per category.
+ *
+ * Declared BEFORE `/:id` so the literal "categories" is never parsed as a
+ * product id. The UI uses these real counts to offer only categories that
+ * actually hold stock, so no filter can lead to an empty results page.
+ */
+productsRouter.get('/categories', async (_req, res) => {
+  const rows = await db
+    .select({ category: products.category, n: sql<number>`count(*)` })
+    .from(products)
+    .groupBy(products.category)
+    .orderBy(desc(sql`count(*)`));
+  const items = rows
+    .map((r) => ({ category: r.category, count: toNum(r.n) }))
+    .filter((r) => r.count > 0);
+  respond(res, c.zCategoryCountList, { items, total: items.reduce((n, r) => n + r.count, 0) });
+});
+
+/**
  * POST /api/products — supplier creates a listing under their own supplier row.
  * The body can never name a supplier: `supplierId` comes from the caller.
  */

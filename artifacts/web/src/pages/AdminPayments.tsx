@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { getToken, useMe, usePayments, useConfirmPayment, useRejectPayment } from '@workspace/api-client-react';
 import type { Payment } from '@workspace/api-zod';
 import { View, Empty, StatusChip, Spinner } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminPayments — bank-transfer reconciliation.
@@ -22,29 +23,30 @@ function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 /** Amount as the API returned it: the currency is a separate column, never assumed. */
-function amount(value: number): string {
-  return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+function amount(value: number, locale: string): string {
+  return value.toLocaleString(locale, { maximumFractionDigits: 2 });
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Recognising a payment is an administrator action">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.payments.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. Only administrator accounts can confirm or reject a bank transfer.`
-          : 'Sign in with an administrator account to reconcile bank transfers.'}
+          ? t('admin.payments.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.payments.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/orders" className="btn btn-sm btn-grey">My orders</Link>
+            <Link href="/orders" className="btn btn-sm btn-grey">{t('admin.payments.myOrders')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Fpayments" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Fpayments" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -65,65 +67,61 @@ function DecisionModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t, locale } = useI18n();
   const p = decision.payment;
   const confirming = decision.action === 'confirm';
+  /** The API stores the method as free text; only its documented default is translated. */
+  const method = p.method === 'bank_transfer' ? t('admin.payments.methodBankTransfer') : p.method.replace(/_/g, ' ');
 
   return (
     <div className="overlay" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{confirming ? 'Confirm bank transfer' : 'Reject bank transfer'}</h2>
-          <button className="x" onClick={onCancel} aria-label="Close">✕</button>
+          <h2>{confirming ? t('admin.payments.modalConfirmTitle') : t('admin.payments.modalRejectTitle')}</h2>
+          <button className="x" onClick={onCancel} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="strong" style={{ marginTop: 0 }}>
-            {p.currency} {amount(p.amount)} against order #{p.orderId}
+            {t('admin.payments.againstOrder', { currency: p.currency, amount: amount(p.amount, locale), id: p.orderId })}
           </p>
           <p className="muted" style={{ fontSize: 12 }}>
-            Payment #{p.id} · {p.method.replace(/_/g, ' ')} · reference {p.reference ?? '—'} ·{' '}
-            {p.proofKey ? 'proof attached' : 'no proof attached'}
+            {t('admin.payments.paymentRef', { id: p.id })} · {method} · {t('admin.payments.referenceRef', { reference: p.reference ?? '—' })} ·{' '}
+            {p.proofKey ? t('admin.payments.proofAttached') : t('admin.payments.noProofAttached')}
           </p>
 
           <p style={{ fontSize: 12.5, lineHeight: 1.7, margin: '10px 0' }}>
             {confirming ? (
               <>
-                <b>Confirming this transfer marks order #{p.orderId} as paid.</b> Only confirm once
-                the funds have actually cleared in the account: the API records the payment as
-                confirmed against you, sets the order to paid with today's payment date, and notifies
-                the buyer in the same transaction. A settled payment cannot be changed afterwards —
-                the API refuses to re-open it.
+                <b>{t('admin.payments.confirmLead', { id: p.orderId })}</b> {t('admin.payments.confirmBody')}
               </>
             ) : (
               <>
-                <b>Rejecting refuses this transfer.</b> The payment is marked rejected and order #
-                {p.orderId} is returned to unpaid, so the buyer can record the correct transfer. The
-                buyer is notified. A settled payment cannot be changed afterwards.
+                <b>{t('admin.payments.rejectLead')}</b> {t('admin.payments.rejectBody', { id: p.orderId })}
               </>
             )}
           </p>
 
           <div className="card">
             <div className="bd muted" style={{ fontSize: 12, lineHeight: 1.7 }}>
-              Match the reference <b>{p.reference ?? '—'}</b> against the bank statement and the
-              proforma invoice for order #{p.orderId} before you act. Recorded{' '}
-              {new Date(p.createdAt).toLocaleString()}.
+              {t('admin.payments.matchLead')} <b>{p.reference ?? '—'}</b>{' '}
+              {t('admin.payments.matchTail', { id: p.orderId, when: new Date(p.createdAt).toLocaleString(locale) })}
             </div>
           </div>
 
           {error && <div className="errtext" style={{ marginTop: 10 }}>{error}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>{t('action.cancel')}</button>
           <button
             className={confirming ? 'btn btn-gold' : 'btn btn-red'}
             onClick={onConfirm}
             disabled={pending}
           >
             {pending
-              ? 'Working…'
+              ? t('admin.common.working')
               : confirming
-                ? `Confirm — mark order #${p.orderId} paid`
-                : 'Reject this payment'}
+                ? t('admin.payments.confirmButton', { id: p.orderId })
+                : t('admin.payments.rejectButton')}
           </button>
         </div>
       </div>
@@ -132,6 +130,7 @@ function DecisionModal({
 }
 
 export default function AdminPayments() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -165,7 +164,7 @@ export default function AdminPayments() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Payments">
+      <View title={t('nav.adminPayments')}>
         <Spinner />
       </View>
     );
@@ -180,89 +179,88 @@ export default function AdminPayments() {
       else await reject.mutateAsync({ id: decision.payment.id });
       setDecision(null);
     } catch (e) {
-      setModalError(errText(e, 'The payment could not be settled — try again.'));
+      setModalError(errText(e, t('admin.payments.errFallback')));
     }
   };
 
   const pending = confirm.isPending || reject.isPending;
+  const buyerColumnTitle = t('admin.payments.colBuyerTitle');
 
   return (
     <View
-      title="Payment reconciliation"
-      sub="Bank transfer only — FactoryDepo does not process cards. Confirming a transfer marks the order paid; nothing is marked paid automatically."
-      actions={<Link href="/admin" className="btn btn-sm btn-ghost">Overview</Link>}
+      title={t('admin.payments.title')}
+      sub={t('admin.payments.sub')}
+      actions={<Link href="/admin" className="btn btn-sm btn-ghost">{t('nav.overview')}</Link>}
     >
       {res.isLoading ? (
         <Spinner />
       ) : res.isError || !res.data ? (
-        <Empty title="Could not load payments — try again">
-          The payments endpoint did not answer, so no transfers are shown and none can be settled.
+        <Empty title={t('admin.payments.loadErrorTitle')}>
+          {t('admin.payments.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No payments recorded yet">
-          A buyer records a bank transfer against an order from the order screen; it then appears
-          here awaiting confirmation.
+        <Empty title={t('admin.payments.emptyTitle')}>
+          {t('admin.payments.emptyBody')}
         </Empty>
       ) : (
         <>
           <div className="grid stats">
-            <div className="card stat" title="Transfers recorded by buyers and not yet settled">
+            <div className="card stat" title={t('admin.payments.statAwaitingTitle')}>
               <span className="ic" aria-hidden="true">⏳</span>
               <div>
-                <div className="v">{counts.awaiting.toLocaleString()}</div>
-                <div className="l">Awaiting confirmation</div>
+                <div className="v">{counts.awaiting.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.payments.statAwaiting')}</div>
               </div>
             </div>
-            <div className="card stat" title="Sum of the awaiting rows on this screen. The API returns one currency per row and this platform does not convert, so a mixed-currency sum is only indicative.">
+            <div className="card stat" title={t('admin.payments.statAwaitingTotalTitle')}>
               <span className="ic" aria-hidden="true">💱</span>
               <div>
-                <div className="v">{amount(awaitingValue)}</div>
-                <div className="l">Awaiting total · all currencies</div>
+                <div className="v">{amount(awaitingValue, locale)}</div>
+                <div className="l">{t('admin.payments.statAwaitingTotal')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">✅</span>
               <div>
-                <div className="v">{counts.confirmed.toLocaleString()}</div>
-                <div className="l">Confirmed</div>
+                <div className="v">{counts.confirmed.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.payments.statConfirmed')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">⛔</span>
               <div>
-                <div className="v">{counts.rejected.toLocaleString()}</div>
-                <div className="l">Rejected</div>
+                <div className="v">{counts.rejected.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.payments.statRejected')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">↩️</span>
               <div>
-                <div className="v">{counts.refunded.toLocaleString()}</div>
-                <div className="l">Refunded</div>
+                <div className="v">{counts.refunded.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.payments.statRefunded')}</div>
               </div>
             </div>
           </div>
 
           <div className="stripe">
             <span>
-              <b>Confirming a payment marks its order paid</b> — one transaction, and it cannot be
-              undone from this screen.
+              <b>{t('admin.payments.stripeConfirmLead')}</b> {t('admin.payments.stripeConfirmTail')}
             </span>
             <span>
-              The buyer is notified by the API when a payment is confirmed or rejected.
+              {t('admin.payments.stripeNotified')}
             </span>
           </div>
 
           <div className="filters">
             {([
-              ['all', `All (${items.length})`],
-              ['awaiting', `Awaiting (${counts.awaiting})`],
-              ['confirmed', `Confirmed (${counts.confirmed})`],
-              ['rejected', `Rejected (${counts.rejected})`],
-              ['refunded', `Refunded (${counts.refunded})`],
+              ['all', t('admin.payments.filterAll', { n: items.length.toLocaleString(locale) })],
+              ['awaiting', t('admin.payments.filterAwaiting', { n: counts.awaiting.toLocaleString(locale) })],
+              ['confirmed', t('admin.payments.filterConfirmed', { n: counts.confirmed.toLocaleString(locale) })],
+              ['rejected', t('admin.payments.filterRejected', { n: counts.rejected.toLocaleString(locale) })],
+              ['refunded', t('admin.payments.filterRefunded', { n: counts.refunded.toLocaleString(locale) })],
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -274,84 +272,92 @@ export default function AdminPayments() {
               </button>
             ))}
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              Showing {filtered.length.toLocaleString()} of {items.length.toLocaleString()}
+              {t('admin.common.showingOf', {
+                shown: filtered.length.toLocaleString(locale),
+                total: items.length.toLocaleString(locale),
+              })}
             </span>
           </div>
 
           {filtered.length === 0 ? (
-            <Empty title="No payments with that status">
-              Try another status filter.
+            <Empty title={t('admin.payments.noStatusTitle')}>
+              {t('admin.payments.noStatusBody')}
             </Empty>
           ) : (
             <div className="card">
               <div className="hd">
-                <b>{filtered.length.toLocaleString()} payment{filtered.length === 1 ? '' : 's'}</b>
-                <span className="muted" style={{ marginLeft: 'auto' }}>In the order the API returned them</span>
+                <b>
+                  {filtered.length === 1
+                    ? t('admin.payments.paymentCountOne', { n: filtered.length.toLocaleString(locale) })
+                    : t('admin.payments.paymentCount', { n: filtered.length.toLocaleString(locale) })}
+                </b>
+                <span className="muted" style={{ marginLeft: 'auto' }}>{t('admin.common.inApiOrder')}</span>
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <table>
                   <thead>
                     <tr>
-                      <th>Payment</th>
-                      <th>Order</th>
-                      <th title="The payments endpoint returns the order id only — the buyer is not part of this response.">
-                        Buyer
+                      <th>{t('admin.payments.colPayment')}</th>
+                      <th>{t('admin.payments.colOrder')}</th>
+                      <th title={buyerColumnTitle}>
+                        {t('admin.payments.colBuyer')}
                       </th>
-                      <th style={{ textAlign: 'right' }}>Amount</th>
-                      <th>Currency</th>
-                      <th>Reference</th>
-                      <th className="hidem">Proof</th>
-                      <th>Status</th>
-                      <th className="hidem">Recorded</th>
-                      <th className="hidem">Settled</th>
+                      <th style={{ textAlign: 'right' }}>{t('admin.payments.colAmount')}</th>
+                      <th>{t('admin.payments.colCurrency')}</th>
+                      <th>{t('admin.payments.colReference')}</th>
+                      <th className="hidem">{t('admin.payments.colProof')}</th>
+                      <th>{t('admin.payments.colStatus')}</th>
+                      <th className="hidem">{t('admin.payments.colRecorded')}</th>
+                      <th className="hidem">{t('admin.payments.colSettled')}</th>
                       <th />
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((p) => {
                       const settled = p.status === 'confirmed' || p.status === 'rejected' || p.status === 'refunded';
+                      const method = p.method === 'bank_transfer' ? t('admin.payments.methodBankTransfer') : p.method.replace(/_/g, ' ');
                       return (
                         <tr key={p.id}>
                           <td className="muted">#{p.id}</td>
                           <td>
                             <span className="strong">#{p.orderId}</span>
-                            <div className="muted">{p.method.replace(/_/g, ' ')}</div>
+                            <div className="muted">{method}</div>
                           </td>
-                          <td className="muted" title="The payments endpoint returns the order id only — the buyer is not part of this response.">
+                          <td className="muted" title={buyerColumnTitle}>
                             —
                           </td>
-                          <td style={{ textAlign: 'right' }} className="strong">{amount(p.amount)}</td>
+                          <td style={{ textAlign: 'right' }} className="strong">{amount(p.amount, locale)}</td>
                           <td>{p.currency}</td>
-                          <td className="muted" title={p.reference ?? 'No reference recorded — matching this transfer depends on the proof and the statement'}>
+                          <td className="muted" title={p.reference ?? t('admin.payments.noReferenceTitle')}>
                             {p.reference ?? '—'}
                           </td>
                           <td className="hidem">
                             {p.proofKey ? (
-                              <span className="pill p-blue" title={p.proofKey}>Attached</span>
+                              <span className="pill p-blue" title={p.proofKey}>{t('admin.common.attached')}</span>
                             ) : (
-                              <span className="muted" title="No proof file key on this payment">—</span>
+                              <span className="muted" title={t('admin.payments.noProofTitle')}>—</span>
                             )}
                           </td>
                           <td><StatusChip status={p.status} /></td>
-                          <td className="hidem muted" title={new Date(p.createdAt).toLocaleString()}>
-                            {day(p.createdAt)}
+                          <td className="hidem muted" title={new Date(p.createdAt).toLocaleString(locale)}>
+                            {day(p.createdAt, locale)}
                           </td>
                           <td className="hidem muted">
                             {p.confirmedAt ? (
                               <>
-                                {day(p.confirmedAt)}
+                                {day(p.confirmedAt, locale)}
                                 <div className="muted">
-                                  {p.confirmedBy === null ? 'administrator not recorded' : `by admin #${p.confirmedBy}`}
+                                  {p.confirmedBy === null ? t('admin.payments.adminNotRecorded') : t('admin.common.byAdmin', { id: p.confirmedBy })}
                                 </div>
                               </>
                             ) : (
-                              <span title="Not settled yet">—</span>
+                              <span title={t('admin.payments.notSettled')}>—</span>
                             )}
                           </td>
                           <td>
                             {settled ? (
-                              <span className="muted" title="The API refuses to change a settled payment">
-                                Final
+                              <span className="muted" title={t('admin.payments.finalTitle')}>
+                                {t('admin.payments.final')}
                               </span>
                             ) : (
                               <span className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
@@ -359,13 +365,13 @@ export default function AdminPayments() {
                                   className="btn btn-sm btn-gold"
                                   onClick={() => { setModalError(null); setDecision({ payment: p, action: 'confirm' }); }}
                                 >
-                                  Confirm
+                                  {t('admin.payments.confirm')}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-red"
                                   onClick={() => { setModalError(null); setDecision({ payment: p, action: 'reject' }); }}
                                 >
-                                  Reject
+                                  {t('admin.common.reject')}
                                 </button>
                               </span>
                             )}
@@ -377,8 +383,7 @@ export default function AdminPayments() {
                 </table>
               </div>
               <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>
-                Amounts are shown exactly as the API returns them; the platform does not convert
-                between currencies, so a total across rows is only meaningful within one currency.
+                {t('admin.payments.footnote')}
               </div>
             </div>
           )}

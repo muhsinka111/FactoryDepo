@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { getToken, useMe, useAdminListings } from '@workspace/api-client-react';
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
 import { View, Empty, StatusChip, Spinner, DemoTag } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminListings — every listing, including seed rows.
@@ -16,27 +17,28 @@ import { View, Empty, StatusChip, Spinner, DemoTag } from '../components';
  * nothing is filtered in the browser, so the counts match the server.
  */
 
-function money(currency: string, value: number): string {
-  return `${currency === 'USD' ? '$' : `${currency} `}${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+function money(currency: string, value: number, locale: string): string {
+  return `${currency === 'USD' ? '$' : `${currency} `}${value.toLocaleString(locale, { maximumFractionDigits: 2 })}`;
 }
 
-function day(iso: string): string {
+function day(iso: string, locale: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Listing provenance is administrator-only information">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.listings.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. The provenance view is limited to administrator accounts.`
-          : 'Sign in with an administrator account to inspect every listing and its source.'}
+          ? t('admin.listings.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.listings.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Browse public stock</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.listings.browsePublic')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Flistings" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Flistings" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -45,6 +47,7 @@ function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
 }
 
 export default function AdminListings() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -72,7 +75,7 @@ export default function AdminListings() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Listings">
+      <View title={t('nav.adminListings')}>
         <Spinner />
       </View>
     );
@@ -96,46 +99,45 @@ export default function AdminListings() {
 
   return (
     <View
-      title="Listings"
-      sub="Every listing on the platform, with the source the API stores for it. Filtering and paging are the server's, so these counts are the server's."
-      actions={<button className="btn btn-sm btn-grey" onClick={clear}>Clear filters</button>}
+      title={t('nav.adminListings')}
+      sub={t('admin.listings.sub')}
+      actions={<button className="btn btn-sm btn-grey" onClick={clear}>{t('action.clearFilters')}</button>}
     >
       <div className="stripe">
         <span>
-          <b>Real</b> = created by a real supplier inside the app (<b>dataSource: platform</b>).
+          <b>{t('admin.common.real')}</b> {t('admin.listings.stripeRealLead')} <b>dataSource: platform</b>{t('admin.listings.stripeRealTail')}
         </span>
         <span>
-          <b>Demo</b> = bootstrap seed data (<b>dataSource: demo</b>), shown with a Demo tag and
-          never presented as a real offer.
+          <b>{t('admin.common.demo')}</b> {t('admin.listings.stripeSeedLead')} <b>dataSource: demo</b>{t('admin.listings.stripeSeedTail')}
         </span>
-        <span>Scraped catalogues are not kept on this platform.</span>
+        <span>{t('admin.listings.stripeScraped')}</span>
       </div>
 
       <div className="filters">
         <input
           className="in"
           style={{ width: 220 }}
-          placeholder="Listing name…"
+          placeholder={t('admin.listings.searchPlaceholder')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && apply(1)}
-          aria-label="Search listings"
+          aria-label={t('admin.listings.searchAria')}
         />
-        <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>Search</button>
+        <button className="btn btn-sm btn-primary" onClick={() => apply(1)}>{t('action.search')}</button>
         <select
           value={category}
           onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-          aria-label="Category"
+          aria-label={t('admin.listings.categoryAria')}
         >
-          <option value="">All categories</option>
+          <option value="">{t('admin.common.allCategories')}</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select
           value={country}
           onChange={(e) => { setCountry(e.target.value); setPage(1); }}
-          aria-label="Origin country"
+          aria-label={t('admin.listings.countryAria')}
         >
-          <option value="">All origin countries</option>
+          <option value="">{t('admin.listings.allOriginCountries')}</option>
           {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <button
@@ -143,37 +145,36 @@ export default function AdminListings() {
           onClick={() => { setHasImageOnly((v) => !v); setPage(1); }}
           aria-pressed={hasImageOnly}
         >
-          With a photo only
+          {t('admin.listings.withPhoto')}
         </button>
         <select
           value={String(limit)}
           onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-          aria-label="Rows per page"
+          aria-label={t('admin.listings.rowsPerPageAria')}
         >
-          <option value="20">20 per page</option>
-          <option value="50">50 per page</option>
-          <option value="100">100 per page</option>
+          <option value="20">{t('admin.listings.perPage', { n: 20 })}</option>
+          <option value="50">{t('admin.listings.perPage', { n: 50 })}</option>
+          <option value="100">{t('admin.listings.perPage', { n: 100 })}</option>
         </select>
         <span className="muted" style={{ marginLeft: 'auto' }}>
-          {typeof total === 'number' ? `${total.toLocaleString()} matching` : '—'}
+          {typeof total === 'number' ? t('admin.listings.matching', { n: total.toLocaleString(locale) }) : '—'}
         </span>
       </div>
 
       {res.isLoading ? (
         <Spinner />
       ) : res.isError || !res.data ? (
-        <Empty title="Could not load listings — try again">
-          The listing endpoint did not answer. No rows are shown, because a partial catalogue would
-          misrepresent what is real.
+        <Empty title={t('admin.listings.loadErrorTitle')}>
+          {t('admin.listings.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title={hasFilters ? 'No listings match those filters' : 'No listings yet'}>
+        <Empty title={hasFilters ? t('admin.listings.noMatchTitle') : t('admin.listings.emptyTitle')}>
           {hasFilters
-            ? 'Try a broader category, a different origin country, or clear the filters.'
-            : 'Listings appear here once a supplier posts stock. Seed data appears only when the database is seeded.'}
+            ? t('admin.listings.noMatchBody')
+            : t('admin.listings.emptyBody')}
         </Empty>
       ) : (
         <>
@@ -181,54 +182,62 @@ export default function AdminListings() {
             <div className="card stat">
               <span className="ic" aria-hidden="true">📦</span>
               <div>
-                <div className="v">{typeof total === 'number' ? total.toLocaleString() : '—'}</div>
-                <div className="l">Listings matching these filters</div>
+                <div className="v">{typeof total === 'number' ? total.toLocaleString(locale) : '—'}</div>
+                <div className="l">{t('admin.listings.statMatching')}</div>
               </div>
             </div>
-            <div className="card stat" title="Rows on this page only — the API does not return a provenance split">
+            <div className="card stat" title={t('admin.listings.statPageOnlyTitle')}>
               <span className="ic" aria-hidden="true">✅</span>
               <div>
-                <div className="v">{pageReal.toLocaleString()}</div>
-                <div className="l">Real rows on this page</div>
+                <div className="v">{pageReal.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.listings.statReal')}</div>
               </div>
             </div>
-            <div className="card stat" title="Rows on this page only — the API does not return a provenance split">
+            <div className="card stat" title={t('admin.listings.statPageOnlyTitle')}>
               <span className="ic" aria-hidden="true">🧪</span>
               <div>
-                <div className="v">{pageDemo.toLocaleString()}</div>
-                <div className="l">Seed rows on this page</div>
+                <div className="v">{pageDemo.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.listings.statSeed')}</div>
               </div>
             </div>
             <div className="card stat">
               <span className="ic" aria-hidden="true">📄</span>
               <div>
                 <div className="v">
-                  {res.data.page ?? page} / {pages}
+                  {(res.data.page ?? page).toLocaleString(locale)} / {pages.toLocaleString(locale)}
                 </div>
-                <div className="l">Page of {pages === 1 ? '1 page' : `${pages} pages`}</div>
+                <div className="l">
+                  {pages === 1
+                    ? t('admin.listings.pageOf', { pages: t('admin.listings.onePage') })
+                    : t('admin.listings.pageOf', { pages: t('admin.listings.nPages', { n: pages.toLocaleString(locale) }) })}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="card">
             <div className="hd">
-              <b>{items.length.toLocaleString()} row{items.length === 1 ? '' : 's'} on this page</b>
+              <b>
+                {items.length === 1
+                  ? t('admin.listings.rowsOnPageOne', { n: items.length.toLocaleString(locale) })
+                  : t('admin.listings.rowsOnPage', { n: items.length.toLocaleString(locale) })}
+              </b>
               <span className="muted" style={{ marginLeft: 'auto' }}>
-                In the order the API returned them
+                {t('admin.common.inApiOrder')}
               </span>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table>
                 <thead>
                   <tr>
-                    <th>Listing</th>
-                    <th className="hidem">Supplier</th>
-                    <th className="hidem">Category</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th style={{ textAlign: 'right' }} className="hidem">Available</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th className="hidem">Created</th>
+                    <th>{t('admin.listings.colListing')}</th>
+                    <th className="hidem">{t('admin.listings.colSupplier')}</th>
+                    <th className="hidem">{t('admin.listings.colCategory')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('admin.listings.colPrice')}</th>
+                    <th style={{ textAlign: 'right' }} className="hidem">{t('admin.listings.colAvailable')}</th>
+                    <th>{t('admin.listings.colSource')}</th>
+                    <th>{t('admin.listings.colStatus')}</th>
+                    <th className="hidem">{t('admin.listings.colCreated')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -237,8 +246,12 @@ export default function AdminListings() {
                       <td>
                         <Link href={`/products/${p.id}`} className="strong">{p.name}</Link>
                         <div className="muted">
-                          #{p.id} · MOQ {p.moq.toLocaleString()} {p.unit}
-                          {p.verified ? ' · verified' : ''}
+                          {t('admin.listings.moqLine', {
+                            id: p.id,
+                            moq: p.moq.toLocaleString(locale),
+                            unit: p.unit,
+                          })}
+                          {p.verified ? ` · ${t('admin.listings.verified')}` : ''}
                         </div>
                       </td>
                       <td className="hidem">
@@ -247,27 +260,27 @@ export default function AdminListings() {
                       </td>
                       <td className="hidem muted">{p.category}</td>
                       <td style={{ textAlign: 'right' }} className="strong">
-                        {money(p.currency, p.price)}
+                        {money(p.currency, p.price, locale)}
                         <div className="muted">/ {p.unit}</div>
                       </td>
                       <td style={{ textAlign: 'right' }} className="hidem">
-                        {p.quantityAvailable.toLocaleString()} {p.unit}
+                        {p.quantityAvailable.toLocaleString(locale)} {p.unit}
                       </td>
                       <td>
                         {p.dataSource === 'demo' ? (
                           <span className="row" style={{ gap: 4 }}>
                             <DemoTag />
-                            <span className="muted">seed</span>
+                            <span className="muted">{t('admin.common.seed')}</span>
                           </span>
                         ) : (
-                          <span className="pill p-green" title="Posted by a real supplier through the app">
-                            Real
+                          <span className="pill p-green" title={t('admin.listings.realTitle')}>
+                            {t('admin.common.real')}
                           </span>
                         )}
                       </td>
                       <td><StatusChip status={p.status} /></td>
-                      <td className="hidem muted" title={new Date(p.createdAt).toLocaleString()}>
-                        {day(p.createdAt)}
+                      <td className="hidem muted" title={new Date(p.createdAt).toLocaleString(locale)}>
+                        {day(p.createdAt, locale)}
                       </td>
                     </tr>
                   ))}
@@ -276,19 +289,21 @@ export default function AdminListings() {
             </div>
             {pages > 1 && (
               <div className="row" style={{ justifyContent: 'center', gap: 6, padding: '10px 12px', borderTop: '1px solid var(--line-2)' }}>
-                <button className="btn btn-sm btn-grey" disabled={page <= 1} onClick={() => setPage(page - 1)}>← Prev</button>
+                <button className="btn btn-sm btn-grey" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t('admin.listings.prev')}</button>
                 <span className="muted" style={{ fontSize: 12, alignSelf: 'center' }}>
-                  Page {res.data.page ?? page} of {pages}
+                  {t('admin.listings.pageOfPages', {
+                    page: (res.data.page ?? page).toLocaleString(locale),
+                    pages: pages.toLocaleString(locale),
+                  })}
                 </span>
-                <button className="btn btn-sm btn-grey" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next →</button>
+                <button className="btn btn-sm btn-grey" disabled={page >= pages} onClick={() => setPage(page + 1)}>{t('admin.listings.next')}</button>
               </div>
             )}
           </div>
 
           <div className="stripe" style={{ marginTop: 12 }}>
             <span>
-              The API has no provenance filter, so the Real/Demo figures above are counted over this
-              page of rows only — not over the whole matching set.
+              {t('admin.listings.stripeProvenance')}
             </span>
           </div>
         </>

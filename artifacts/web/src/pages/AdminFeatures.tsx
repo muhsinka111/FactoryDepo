@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { getToken, useMe, useFeatureFlags, useUpdateFeatureFlag } from '@workspace/api-client-react';
 import type { FeatureFlag } from '@workspace/api-zod';
 import { View, Empty, Spinner } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminFeatures — feature flags.
@@ -23,24 +24,25 @@ function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Feature flags are administrator-only">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.features.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. Turning a feature on or off for the whole platform is restricted to administrator accounts.`
-          : 'Sign in with an administrator account to manage feature flags.'}
+          ? t('admin.features.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.features.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Back to the marketplace</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.common.backToMarketplace')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Ffeatures" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Ffeatures" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -61,6 +63,7 @@ function ToggleModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   const { flag, next } = toggle;
   const turningOn = next;
 
@@ -68,13 +71,16 @@ function ToggleModal({
     <div className="overlay" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{turningOn ? 'Turn this feature on' : 'Turn this feature off'}</h2>
-          <button className="x" onClick={onCancel} aria-label="Close">✕</button>
+          <h2>{turningOn ? t('admin.features.modalOnTitle') : t('admin.features.modalOffTitle')}</h2>
+          <button className="x" onClick={onCancel} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
           <p className="strong" style={{ marginTop: 0 }}>{flag.label}</p>
           <p className="muted" style={{ fontSize: 12 }}>
-            key {flag.key} · currently {flag.enabled ? 'on' : 'off'}
+            {t('admin.features.flagMeta', {
+              key: flag.key,
+              state: flag.enabled ? t('admin.features.stateOn') : t('admin.features.stateOff'),
+            })}
           </p>
           {flag.description && (
             <p className="muted" style={{ fontSize: 12.5 }}>{flag.description}</p>
@@ -83,35 +89,31 @@ function ToggleModal({
           <p style={{ fontSize: 12.5, lineHeight: 1.7, margin: '10px 0' }}>
             {turningOn ? (
               <>
-                <b>Turning this flag on makes the feature available to every user immediately.</b> The
-                API stores the new state against the flag key and the app reads it on the next
-                request.
+                <b>{t('admin.features.onLead')}</b> {t('admin.features.onBody')}
               </>
             ) : (
               <>
-                <b>Turning this flag off withdraws the feature from every user immediately.</b> The
-                API stops offering it and the app stops showing it. The flag is a switch, not a
-                delete: turning it back on restores the feature.
+                <b>{t('admin.features.offLead')}</b> {t('admin.features.offBody')}
               </>
             )}
           </p>
 
           <div className="card">
             <div className="bd muted" style={{ fontSize: 12 }}>
-              This changes the flag for the whole platform, not just your account.
+              {t('admin.features.modalNote')}
             </div>
           </div>
 
           {error && <div className="errtext" style={{ marginTop: 10 }}>{error}</div>}
         </div>
         <div className="mf">
-          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>Cancel</button>
+          <button className="btn btn-grey" onClick={onCancel} disabled={pending}>{t('action.cancel')}</button>
           <button
             className={turningOn ? 'btn btn-primary' : 'btn btn-red'}
             onClick={onConfirm}
             disabled={pending}
           >
-            {pending ? 'Working…' : turningOn ? 'Turn the feature on' : 'Turn the feature off'}
+            {pending ? t('admin.common.working') : turningOn ? t('admin.features.modalConfirmOn') : t('admin.features.modalConfirmOff')}
           </button>
         </div>
       </div>
@@ -120,6 +122,7 @@ function ToggleModal({
 }
 
 export default function AdminFeatures() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -149,7 +152,7 @@ export default function AdminFeatures() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Features">
+      <View title={t('nav.features')}>
         <Spinner />
       </View>
     );
@@ -163,29 +166,28 @@ export default function AdminFeatures() {
       await update.mutateAsync({ key: toggle.flag.key, enabled: toggle.next });
       setToggle(null);
     } catch (e) {
-      setModalError(errText(e, 'The flag could not be changed — try again.'));
+      setModalError(errText(e, t('admin.features.errFallback')));
     }
   };
 
   return (
     <View
-      title="Feature flags"
-      sub="Switches the API exposes for the whole platform. Turning one off withdraws the feature from every user; the flag never deletes data."
-      actions={<Link href="/admin" className="btn btn-sm btn-ghost">Overview</Link>}
+      title={t('admin.features.title')}
+      sub={t('admin.features.sub')}
+      actions={<Link href="/admin" className="btn btn-sm btn-ghost">{t('nav.overview')}</Link>}
     >
       {res.isLoading ? (
         <Spinner />
       ) : res.isError || !res.data ? (
-        <Empty title="Could not load feature flags — try again">
-          The feature-flag endpoint did not answer, so no switches are shown and none can be changed
-          from here.
+        <Empty title={t('admin.features.loadErrorTitle')}>
+          {t('admin.features.loadErrorBody')}
           <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>Try again</button>
+            <button className="btn btn-sm btn-primary" onClick={() => void res.refetch()}>{t('action.tryAgain')}</button>
           </div>
         </Empty>
       ) : items.length === 0 ? (
-        <Empty title="No feature flags are configured">
-          This API exposes no flags yet, so there is nothing to switch on or off.
+        <Empty title={t('admin.features.emptyTitle')}>
+          {t('admin.features.emptyBody')}
         </Empty>
       ) : (
         <>
@@ -193,22 +195,22 @@ export default function AdminFeatures() {
             <div className="card stat">
               <span className="ic" aria-hidden="true">⚙️</span>
               <div>
-                <div className="v">{res.data.total.toLocaleString()}</div>
-                <div className="l">Flags exposed by the API</div>
+                <div className="v">{res.data.total.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.features.statFlags')}</div>
               </div>
             </div>
-            <div className="card stat" title="Flags whose stored state is enabled">
+            <div className="card stat" title={t('admin.features.statOnTitle')}>
               <span className="ic" aria-hidden="true">🟢</span>
               <div>
-                <div className="v">{onCount.toLocaleString()}</div>
-                <div className="l">On</div>
+                <div className="v">{onCount.toLocaleString(locale)}</div>
+                <div className="l">{t('admin.features.statOn')}</div>
               </div>
             </div>
-            <div className="card stat" title="Flags whose stored state is disabled">
+            <div className="card stat" title={t('admin.features.statOffTitle')}>
               <span className="ic" aria-hidden="true">⚪</span>
               <div>
-                <div className="v">{(items.length - onCount).toLocaleString()}</div>
-                <div className="l">Off</div>
+                <div className="v">{(items.length - onCount).toLocaleString(locale)}</div>
+                <div className="l">{t('admin.features.statOff')}</div>
               </div>
             </div>
           </div>
@@ -217,36 +219,39 @@ export default function AdminFeatures() {
             <input
               className="in"
               style={{ width: 260 }}
-              placeholder="Label, key or description…"
+              placeholder={t('admin.features.searchPlaceholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              aria-label="Search feature flags"
+              aria-label={t('admin.features.searchAria')}
             />
             <span className="muted" style={{ marginLeft: 'auto' }}>
-              Showing {filtered.length.toLocaleString()} of {items.length.toLocaleString()}
+              {t('admin.common.showingOf', {
+                shown: filtered.length.toLocaleString(locale),
+                total: items.length.toLocaleString(locale),
+              })}
             </span>
           </div>
 
           {filtered.length === 0 ? (
-            <Empty title="No flags match that search">
-              Try a shorter label or clear the search box.
+            <Empty title={t('admin.features.noMatchTitle')}>
+              {t('admin.features.noMatchBody')}
             </Empty>
           ) : (
             <div className="card">
               <div className="hd">
-                <b>Platform switches</b>
+                <b>{t('admin.features.switchesTitle')}</b>
                 <span className="muted" style={{ marginLeft: 'auto' }}>
-                  On = available to every user · Off = withdrawn
+                  {t('admin.features.switchesNote')}
                 </span>
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <table>
                   <thead>
                     <tr>
-                      <th>Feature</th>
-                      <th className="hidem">Key</th>
-                      <th>State</th>
-                      <th className="hidem">Last changed</th>
+                      <th>{t('admin.features.colFeature')}</th>
+                      <th className="hidem">{t('admin.features.colKey')}</th>
+                      <th>{t('admin.features.colState')}</th>
+                      <th className="hidem">{t('admin.features.colLastChanged')}</th>
                       <th />
                     </tr>
                   </thead>
@@ -255,18 +260,18 @@ export default function AdminFeatures() {
                       <tr key={f.key}>
                         <td>
                           <span className="strong">{f.label}</span>
-                          <div className="muted">{f.description ?? 'No description on this flag'}</div>
+                          <div className="muted">{f.description ?? t('admin.features.noDescription')}</div>
                         </td>
                         <td className="hidem muted" title={f.key}>{f.key}</td>
                         <td>
                           {f.enabled ? (
-                            <span className="pill p-green" title="The API reports this flag as enabled">On</span>
+                            <span className="pill p-green" title={t('admin.features.onTitle')}>{t('admin.features.stateOn')}</span>
                           ) : (
-                            <span className="pill p-grey" title="The API reports this flag as disabled">Off</span>
+                            <span className="pill p-grey" title={t('admin.features.offTitle')}>{t('admin.features.stateOff')}</span>
                           )}
                         </td>
-                        <td className="hidem muted" title={new Date(f.updatedAt).toLocaleString()}>
-                          {day(f.updatedAt)}
+                        <td className="hidem muted" title={new Date(f.updatedAt).toLocaleString(locale)}>
+                          {day(f.updatedAt, locale)}
                         </td>
                         <td>
                           <span className="row" style={{ justifyContent: 'flex-end' }}>
@@ -276,11 +281,11 @@ export default function AdminFeatures() {
                               disabled={update.isPending}
                               title={
                                 f.enabled
-                                  ? 'Withdraw this feature from every user'
-                                  : 'Make this feature available to every user'
+                                  ? t('admin.features.turnOffTitle')
+                                  : t('admin.features.turnOnTitle')
                               }
                             >
-                              {f.enabled ? 'Turn off' : 'Turn on'}
+                              {f.enabled ? t('admin.features.turnOff') : t('admin.features.turnOn')}
                             </button>
                           </span>
                         </td>
@@ -290,8 +295,7 @@ export default function AdminFeatures() {
                 </table>
               </div>
               <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>
-                Labels, keys and descriptions come from the API and are not editable here. A flag the
-                API does not expose cannot be switched on from this console.
+                {t('admin.features.footnote')}
               </div>
             </div>
           )}

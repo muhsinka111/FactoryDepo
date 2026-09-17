@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { useProducts, useRfqs, useSuppliers, useMe } from '@workspace/api-client-react';
-import { View, ProductCard, Spinner, Empty, RAIL_CATEGORIES } from '../components';
+import { View, ProductCard, Spinner, Empty } from '../components';
+import { useCategoryCounts } from '@workspace/api-client-react';
 import { COUNTRIES } from '@workspace/api-spec';
 import { useI18n } from '../i18n';
 
@@ -20,6 +21,8 @@ function readParam(key: string): string {
 
 export default function Feed() {
   const { t, locale } = useI18n();
+  // Live per-category counts, used to offer only categories that have stock.
+  const { data: catData } = useCategoryCounts();
   const { data: user } = useMe();
 
   const [q, setQ] = useState(() => readParam('q'));
@@ -110,13 +113,15 @@ export default function Feed() {
             >
               {t('feed.allIndustries')}
             </button>
-            {RAIL_CATEGORIES.map((c) => (
+            {/* Live counts: only categories that actually contain stock, so a
+                chip can never filter the feed down to nothing. */}
+            {(catData?.items ?? []).map((c) => (
               <button
-                key={c}
-                className={`chip ${category === c ? 'on' : ''}`}
-                onClick={() => pickCategory(c)}
+                key={c.category}
+                className={`chip ${category === c.category ? 'on' : ''}`}
+                onClick={() => pickCategory(c.category)}
               >
-                {c}
+                {c.category}
               </button>
             ))}
           </div>

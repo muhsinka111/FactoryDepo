@@ -10,6 +10,7 @@ import {
 } from '@workspace/api-client-react';
 import type { CreateBannerInput, CreateFaqInput } from '@workspace/api-client-react';
 import { View, Empty, Spinner } from '../components';
+import { useI18n } from '../i18n';
 
 /**
  * AdminGrowth — the two growth surfaces the API actually exposes: banner
@@ -25,24 +26,25 @@ function errText(e: unknown, fallback: string): string {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-function day(iso: string | null | undefined): string {
+function day(iso: string | null | undefined, locale: string): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale);
 }
 
 function AdminOnly({ signedIn, role }: { signedIn: boolean; role?: string }) {
+  const { t } = useI18n();
   return (
-    <View title="Admins only" sub="Banner and help-centre content is administrator-only">
-      <Empty title={signedIn ? 'Your account is not an administrator' : 'You are not signed in'}>
+    <View title={t('admin.common.adminsOnly')} sub={t('admin.growth.adminOnlySub')}>
+      <Empty title={signedIn ? t('admin.common.notAdmin') : t('admin.common.notSignedIn')}>
         {signedIn
-          ? `You are signed in as ${role ?? 'a non-admin role'}. Publishing banners and FAQs is restricted to administrator accounts.`
-          : 'Sign in with an administrator account to manage banners and FAQs.'}
+          ? t('admin.growth.signedInBody', { role: role ?? t('admin.common.nonAdminRole') })
+          : t('admin.growth.signedOutBody')}
         <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
           {signedIn ? (
-            <Link href="/explore" className="btn btn-sm btn-grey">Back to the marketplace</Link>
+            <Link href="/explore" className="btn btn-sm btn-grey">{t('admin.common.backToMarketplace')}</Link>
           ) : (
-            <Link href="/sign-in?next=%2Fadmin%2Fgrowth" className="btn btn-sm btn-primary">Sign in</Link>
+            <Link href="/sign-in?next=%2Fadmin%2Fgrowth" className="btn btn-sm btn-primary">{t('action.signIn')}</Link>
           )}
         </div>
       </Empty>
@@ -75,6 +77,7 @@ const EMPTY_BANNER: BannerForm = {
 const EMPTY_FAQ: FaqForm = { category: '', question: '', answer: '', position: '0' };
 
 export default function AdminGrowth() {
+  const { t, locale } = useI18n();
   const me = useMe();
   const signedIn = !!getToken();
   const isAdmin = me.data?.role === 'admin';
@@ -97,7 +100,7 @@ export default function AdminGrowth() {
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
     return (
-      <View title="Banners and promos">
+      <View title={t('nav.growth')}>
         <Spinner />
       </View>
     );
@@ -110,15 +113,15 @@ export default function AdminGrowth() {
 
     const title = bForm.title.trim();
     const placement = bForm.placement.trim();
-    if (title.length < 2) { setBError('A banner needs a title of at least 2 characters.'); return; }
-    if (!placement) { setBError('A placement key is required — “home” is the default the app reads.'); return; }
+    if (title.length < 2) { setBError(t('admin.growth.errTitleShort')); return; }
+    if (!placement) { setBError(t('admin.growth.errPlacement')); return; }
 
     const starts = bForm.startsAt ? new Date(bForm.startsAt) : null;
     const ends = bForm.endsAt ? new Date(bForm.endsAt) : null;
-    if (starts && Number.isNaN(starts.getTime())) { setBError('The start date and time is not valid.'); return; }
-    if (ends && Number.isNaN(ends.getTime())) { setBError('The end date and time is not valid.'); return; }
+    if (starts && Number.isNaN(starts.getTime())) { setBError(t('admin.growth.errStartInvalid')); return; }
+    if (ends && Number.isNaN(ends.getTime())) { setBError(t('admin.growth.errEndInvalid')); return; }
     if (starts && ends && ends.getTime() <= starts.getTime()) {
-      setBError('The end of the window must be after its start.');
+      setBError(t('admin.growth.errWindow'));
       return;
     }
 
@@ -133,12 +136,12 @@ export default function AdminGrowth() {
       await createBanner.mutateAsync(input);
       setBOk(
         bForm.active
-          ? 'Banner created and marked active.'
-          : 'Banner created inactive. There is no banner-update endpoint, so it cannot be switched on from this console.',
+          ? t('admin.growth.okBannerActive')
+          : t('admin.growth.okBannerInactive'),
       );
       setBForm(EMPTY_BANNER);
     } catch (e) {
-      setBError(errText(e, 'The banner could not be created — try again.'));
+      setBError(errText(e, t('admin.growth.errBannerFallback')));
     }
   };
 
@@ -148,8 +151,8 @@ export default function AdminGrowth() {
 
     const question = fForm.question.trim();
     const answer = fForm.answer.trim();
-    if (question.length < 3) { setFError('A FAQ needs a question of at least 3 characters.'); return; }
-    if (!answer) { setFError('A FAQ needs an answer.'); return; }
+    if (question.length < 3) { setFError(t('admin.growth.errQuestionShort')); return; }
+    if (!answer) { setFError(t('admin.growth.errAnswer')); return; }
     const position = Number(fForm.position);
 
     const input: CreateFaqInput = { question, answer, position: Number.isFinite(position) && position >= 0 ? Math.trunc(position) : 0 };
@@ -157,24 +160,28 @@ export default function AdminGrowth() {
 
     try {
       await createFaq.mutateAsync(input);
-      setFOk('FAQ published to the help centre.');
+      setFOk(t('admin.growth.okFaq'));
       setFForm(EMPTY_FAQ);
     } catch (e) {
-      setFError(errText(e, 'The FAQ could not be created — try again.'));
+      setFError(errText(e, t('admin.growth.errFaqFallback')));
     }
   };
 
   return (
     <View
-      title="Banners and promos"
-      sub="Banner placements and help-centre FAQs, created straight through the API. Both are write-once here: the API has no update endpoint for either."
+      title={t('nav.growth')}
+      sub={t('admin.growth.sub')}
     >
       {/* ------------------------------- banners ------------------------------- */}
       <div className="card">
         <div className="hd">
-          <h2>Banners</h2>
+          <h2>{t('admin.growth.bannersTitle')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
-            {banners.data ? `${banners.data.total.toLocaleString()} banner${banners.data.total === 1 ? '' : 's'}` : '—'}
+            {banners.data
+              ? banners.data.total === 1
+                ? t('admin.growth.bannerCountOne', { n: banners.data.total.toLocaleString(locale) })
+                : t('admin.growth.bannerCount', { n: banners.data.total.toLocaleString(locale) })
+              : '—'}
           </span>
         </div>
         <div className="bd">
@@ -183,18 +190,18 @@ export default function AdminGrowth() {
 
           <div className="f2">
             <div className="field">
-              <label htmlFor="bn-title">Title <i>*</i></label>
+              <label htmlFor="bn-title">{t('admin.growth.labelTitle')} <i>*</i></label>
               <input
                 id="bn-title"
                 className="in"
                 maxLength={160}
-                placeholder="Verified stock, ready to ship"
+                placeholder={t('admin.growth.placeholderTitle')}
                 value={bForm.title}
                 onChange={(e) => setBForm({ ...bForm, title: e.target.value })}
               />
             </div>
             <div className="field">
-              <label htmlFor="bn-placement">Placement key <i>*</i></label>
+              <label htmlFor="bn-placement">{t('admin.growth.labelPlacement')} <i>*</i></label>
               <input
                 id="bn-placement"
                 className="in"
@@ -206,18 +213,18 @@ export default function AdminGrowth() {
               <datalist id="bn-placements">
                 <option value="home" />
               </datalist>
-              <div className="hint">The key the app reads to place the banner. “home” is the API's default.</div>
+              <div className="hint">{t('admin.growth.hintPlacement')}</div>
             </div>
           </div>
 
           <div className="field">
-            <label htmlFor="bn-body">Body</label>
+            <label htmlFor="bn-body">{t('admin.growth.labelBody')}</label>
             <textarea
               id="bn-body"
               className="in"
               rows={2}
               maxLength={1000}
-              placeholder="One or two lines shown with the banner image."
+              placeholder={t('admin.growth.placeholderBody')}
               value={bForm.body}
               onChange={(e) => setBForm({ ...bForm, body: e.target.value })}
             />
@@ -225,7 +232,7 @@ export default function AdminGrowth() {
 
           <div className="f2">
             <div className="field">
-              <label htmlFor="bn-image">Image path</label>
+              <label htmlFor="bn-image">{t('admin.growth.labelImage')}</label>
               <input
                 id="bn-image"
                 className="in"
@@ -235,12 +242,11 @@ export default function AdminGrowth() {
                 onChange={(e) => setBForm({ ...bForm, imageKey: e.target.value })}
               />
               <div className="hint">
-                A path to imagery FactoryDepo owns or has permission to use. Do not paste a
-                third-party or scraped image URL.
+                {t('admin.growth.hintImage')}
               </div>
             </div>
             <div className="field">
-              <label htmlFor="bn-href">Link</label>
+              <label htmlFor="bn-href">{t('admin.growth.labelLink')}</label>
               <input
                 id="bn-href"
                 className="in"
@@ -254,7 +260,7 @@ export default function AdminGrowth() {
 
           <div className="f2">
             <div className="field">
-              <label htmlFor="bn-starts">Starts</label>
+              <label htmlFor="bn-starts">{t('admin.growth.labelStarts')}</label>
               <input
                 id="bn-starts"
                 className="in"
@@ -264,7 +270,7 @@ export default function AdminGrowth() {
               />
             </div>
             <div className="field">
-              <label htmlFor="bn-ends">Ends</label>
+              <label htmlFor="bn-ends">{t('admin.growth.labelEnds')}</label>
               <input
                 id="bn-ends"
                 className="in"
@@ -282,45 +288,44 @@ export default function AdminGrowth() {
                 checked={bForm.active}
                 onChange={(e) => setBForm({ ...bForm, active: e.target.checked })}
               />
-              <span>Active — show this banner to visitors</span>
+              <span>{t('admin.growth.labelActive')}</span>
             </label>
             <div className="hint">
-              New banners default to inactive. There is no banner-update endpoint, so a banner saved
-              inactive cannot be switched on from this console — set it correctly now.
+              {t('admin.growth.hintActive')}
             </div>
           </div>
 
           <button className="btn btn-primary" onClick={() => void submitBanner()} disabled={createBanner.isPending}>
-            {createBanner.isPending ? 'Creating…' : 'Create banner'}
+            {createBanner.isPending ? t('admin.growth.creating') : t('admin.growth.createBanner')}
           </button>
         </div>
 
         {banners.isLoading ? (
-          <div className="empty">Loading banners…</div>
+          <div className="empty">{t('admin.growth.loadingBanners')}</div>
         ) : banners.isError ? (
           <div className="empty">
-            <b>Could not load banners — try again</b>
-            The banner list did not answer. Creating is unaffected.
+            <b>{t('admin.growth.bannerLoadErrorTitle')}</b>
+            {t('admin.growth.bannerLoadErrorBody')}
             <div className="row" style={{ justifyContent: 'center', marginTop: 10 }}>
-              <button className="btn btn-sm btn-primary" onClick={() => void banners.refetch()}>Try again</button>
+              <button className="btn btn-sm btn-primary" onClick={() => void banners.refetch()}>{t('action.tryAgain')}</button>
             </div>
           </div>
         ) : bannerItems.length === 0 ? (
           <div className="empty">
-            <b>No banners yet</b>
-            Nothing is scheduled to appear on the storefront. Create the first placement above.
+            <b>{t('admin.growth.bannerEmptyTitle')}</b>
+            {t('admin.growth.bannerEmptyBody')}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th>Banner</th>
-                  <th>Placement</th>
-                  <th>State</th>
-                  <th className="hidem">Window</th>
-                  <th className="hidem">Link</th>
-                  <th className="hidem">Created</th>
+                  <th>{t('admin.growth.colBanner')}</th>
+                  <th>{t('admin.growth.colPlacement')}</th>
+                  <th>{t('admin.growth.colState')}</th>
+                  <th className="hidem">{t('admin.growth.colWindow')}</th>
+                  <th className="hidem">{t('admin.growth.colLink')}</th>
+                  <th className="hidem">{t('admin.growth.colCreated')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,19 +341,19 @@ export default function AdminGrowth() {
                     <td><span className="pill p-navy">{b.placement}</span></td>
                     <td>
                       {b.active ? (
-                        <span className="pill p-green" title="Shown to visitors">Active</span>
+                        <span className="pill p-green" title={t('admin.growth.activeTitle')}>{t('admin.growth.active')}</span>
                       ) : (
-                        <span className="pill p-grey" title="Saved but not shown">Inactive</span>
+                        <span className="pill p-grey" title={t('admin.growth.inactiveTitle')}>{t('admin.growth.inactive')}</span>
                       )}
                     </td>
                     <td className="hidem muted">
-                      {b.startsAt ? day(b.startsAt) : '—'} → {b.endsAt ? day(b.endsAt) : '—'}
+                      {b.startsAt ? day(b.startsAt, locale) : '—'} → {b.endsAt ? day(b.endsAt, locale) : '—'}
                       <div className="muted">
-                        {!b.startsAt && !b.endsAt ? 'no window set' : ''}
+                        {!b.startsAt && !b.endsAt ? t('admin.growth.noWindow') : ''}
                       </div>
                     </td>
-                    <td className="hidem muted" title={b.href ?? 'No link on this banner'}>{b.href ?? '—'}</td>
-                    <td className="hidem muted" title={new Date(b.createdAt).toLocaleString()}>{day(b.createdAt)}</td>
+                    <td className="hidem muted" title={b.href ?? t('admin.growth.noLinkTitle')}>{b.href ?? '—'}</td>
+                    <td className="hidem muted" title={new Date(b.createdAt).toLocaleString(locale)}>{day(b.createdAt, locale)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -360,11 +365,15 @@ export default function AdminGrowth() {
       {/* -------------------------------- faqs -------------------------------- */}
       <div className="card" style={{ marginTop: 12 }}>
         <div className="hd">
-          <h2>Help-centre FAQs</h2>
+          <h2>{t('admin.growth.faqTitle')}</h2>
           <span className="muted" style={{ marginLeft: 'auto' }}>
-            {faqs.data ? `${faqs.data.total.toLocaleString()} FAQ${faqs.data.total === 1 ? '' : 's'}` : '—'}
+            {faqs.data
+              ? faqs.data.total === 1
+                ? t('admin.growth.faqCountOne', { n: faqs.data.total.toLocaleString(locale) })
+                : t('admin.growth.faqCount', { n: faqs.data.total.toLocaleString(locale) })
+              : '—'}
           </span>
-          <Link href="/help" className="link">View help centre</Link>
+          <Link href="/help" className="link">{t('nav.helpCentre')}</Link>
         </div>
         <div className="bd">
           {fError && <div className="errtext" style={{ marginBottom: 10 }}>{fError}</div>}
@@ -372,29 +381,29 @@ export default function AdminGrowth() {
 
           <div className="f3">
             <div className="field">
-              <label htmlFor="faq-question">Question <i>*</i></label>
+              <label htmlFor="faq-question">{t('admin.growth.labelQuestion')} <i>*</i></label>
               <input
                 id="faq-question"
                 className="in"
                 maxLength={300}
-                placeholder="How is a supplier verified?"
+                placeholder={t('admin.growth.placeholderQuestion')}
                 value={fForm.question}
                 onChange={(e) => setFForm({ ...fForm, question: e.target.value })}
               />
             </div>
             <div className="field">
-              <label htmlFor="faq-category">Category</label>
+              <label htmlFor="faq-category">{t('admin.growth.labelCategory')}</label>
               <input
                 id="faq-category"
                 className="in"
                 maxLength={60}
-                placeholder="Verification"
+                placeholder={t('admin.growth.placeholderCategory')}
                 value={fForm.category}
                 onChange={(e) => setFForm({ ...fForm, category: e.target.value })}
               />
             </div>
             <div className="field">
-              <label htmlFor="faq-position">Position</label>
+              <label htmlFor="faq-position">{t('admin.growth.labelPosition')}</label>
               <input
                 id="faq-position"
                 className="in"
@@ -402,59 +411,58 @@ export default function AdminGrowth() {
                 value={fForm.position}
                 onChange={(e) => setFForm({ ...fForm, position: e.target.value })}
               />
-              <div className="hint">Ordering value the API stores. Lower first.</div>
+              <div className="hint">{t('admin.growth.hintPosition')}</div>
             </div>
           </div>
 
           <div className="field">
-            <label htmlFor="faq-answer">Answer <i>*</i></label>
+            <label htmlFor="faq-answer">{t('admin.growth.labelAnswer')} <i>*</i></label>
             <textarea
               id="faq-answer"
               className="in"
               rows={4}
               maxLength={4000}
-              placeholder="Plain language, and only what the platform actually does today."
+              placeholder={t('admin.growth.placeholderAnswer')}
               value={fForm.answer}
               onChange={(e) => setFForm({ ...fForm, answer: e.target.value })}
             />
             <div className="hint">
-              Describe the platform as it is. An FAQ that promises an unbuilt feature is a lie on the
-              help page.
+              {t('admin.growth.hintAnswer')}
             </div>
           </div>
 
           <button className="btn btn-primary" onClick={() => void submitFaq()} disabled={createFaq.isPending}>
-            {createFaq.isPending ? 'Publishing…' : 'Publish FAQ'}
+            {createFaq.isPending ? t('admin.growth.publishing') : t('admin.growth.publishFaq')}
           </button>
           <div className="hint">
-            The API has no FAQ-update endpoint: a published answer cannot be edited here.
+            {t('admin.growth.faqNoUpdateHint')}
           </div>
         </div>
 
         {faqs.isLoading ? (
-          <div className="empty">Loading FAQs…</div>
+          <div className="empty">{t('admin.growth.loadingFaqs')}</div>
         ) : faqs.isError ? (
           <div className="empty">
-            <b>Could not load FAQs — try again</b>
-            The FAQ list did not answer. Publishing is unaffected.
+            <b>{t('admin.growth.faqLoadErrorTitle')}</b>
+            {t('admin.growth.faqLoadErrorBody')}
             <div className="row" style={{ justifyContent: 'center', marginTop: 10 }}>
-              <button className="btn btn-sm btn-primary" onClick={() => void faqs.refetch()}>Try again</button>
+              <button className="btn btn-sm btn-primary" onClick={() => void faqs.refetch()}>{t('action.tryAgain')}</button>
             </div>
           </div>
         ) : faqItems.length === 0 ? (
           <div className="empty">
-            <b>No FAQs yet</b>
-            The help centre has no answered questions. Publish the first one above.
+            <b>{t('admin.growth.faqEmptyTitle')}</b>
+            {t('admin.growth.faqEmptyBody')}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'right' }}>Pos</th>
-                  <th>Question</th>
-                  <th className="hidem">Category</th>
-                  <th>Answer</th>
+                  <th style={{ textAlign: 'right' }}>{t('admin.growth.colPos')}</th>
+                  <th>{t('admin.growth.colQuestion')}</th>
+                  <th className="hidem">{t('admin.growth.colCategory')}</th>
+                  <th>{t('admin.growth.colAnswer')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -476,8 +484,7 @@ export default function AdminGrowth() {
 
       <div className="stripe" style={{ marginTop: 12 }}>
         <span>
-          Banners and FAQs are marketing copy, not trade data — nothing on this screen counts or
-          estimates marketplace activity.
+          {t('admin.growth.stripe')}
         </span>
       </div>
     </View>

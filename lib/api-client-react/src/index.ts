@@ -137,6 +137,19 @@ export function useProduct(id: number | undefined) {
   });
 }
 
+/**
+ * Live listing counts per category. Used by the category rail and the browse
+ * filters so only categories that actually contain stock are offered.
+ */
+export function useCategoryCounts(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['product-categories'],
+    queryFn: () => apiFetch<c.CategoryCountList>('/products/categories'),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useSuppliers(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['suppliers'],

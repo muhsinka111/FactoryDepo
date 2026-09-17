@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useProducts } from '@workspace/api-client-react';
+import { useProducts, useCategoryCounts } from '@workspace/api-client-react';
 import { View, ProductCard, Spinner, Empty } from '../components';
-import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
+import { COUNTRIES } from '@workspace/api-spec';
 import { useI18n } from '../i18n';
 
 function readParam(key: string): string {
@@ -45,6 +45,10 @@ export default function Explore() {
     limit: 24,
   });
 
+  // Only categories that actually contain stock, so no option yields nothing.
+  const { data: catData } = useCategoryCounts();
+  const categoryOptions = catData?.items ?? [];
+
   const apply = (p = 1) => { setAppliedQ(q); setPage(p); };
   const clear = () => {
     setQ(''); setAppliedQ(''); setCategory(''); setCountry('');
@@ -79,7 +83,12 @@ export default function Explore() {
         />
         <select value={category} onChange={(e) => { setCategory(e.target.value); apply(1); }} aria-label={t('explore.categoryAria')}>
           <option value="">{t('explore.allCategories')}</option>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {/* Live counts, so every option in this list returns stock. */}
+          {categoryOptions.map((c) => (
+            <option key={c.category} value={c.category}>
+              {c.category} ({c.count.toLocaleString(locale)})
+            </option>
+          ))}
         </select>
         <select value={country} onChange={(e) => { setCountry(e.target.value); apply(1); }} aria-label={t('explore.originAria')}>
           <option value="">{t('explore.allCountries')}</option>
