@@ -7,6 +7,7 @@ import {
 } from './components';
 // Eager: everything an anonymous visitor needs for first paint.
 import Explore from './pages/Explore';
+import Categories from './pages/Categories';
 import ProductDetail from './pages/ProductDetail';
 import Suppliers from './pages/Suppliers';
 import SupplierDetail from './pages/SupplierDetail';
@@ -47,7 +48,7 @@ const AdminGrowth = lazy(() => import('./pages/AdminGrowth'));
 const AdminFeatures = lazy(() => import('./pages/AdminFeatures'));
 
 /** Views that show the category rail, matching the reference template. */
-const RAIL_VIEWS = ['/explore', '/feed', '/suppliers'];
+const RAIL_VIEWS = ['/explore', '/feed', '/suppliers', '/categories'];
 const GUEST_ONLY = ['/sign-in', '/sign-up'];
 
 /**
@@ -101,6 +102,7 @@ function Shell() {
             <Switch>
             {/* ---------- public marketplace ---------- */}
             <Route path="/explore" component={Explore} />
+            <Route path="/categories" component={Categories} />
             <Route path="/products/:id" component={ProductDetail} />
             <Route path="/suppliers/:id" component={SupplierDetail} />
             <Route path="/suppliers" component={Suppliers} />

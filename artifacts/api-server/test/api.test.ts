@@ -237,3 +237,56 @@ test('the printable proforma is party-only', { skip }, async () => {
   const r = await call('GET', '/api/orders/1/proforma', undefined, outsider.token);
   assert.ok(r.status === 403 || r.status === 404, `expected 403/404 for a non-party, got ${r.status}`);
 });
+
+test('the listingType facet filters and is always present', { skip }, async () => {
+  // A known value is accepted…
+  const ok = await call('GET', '/api/products?listingType=surplus&limit=1');
+  assert.equal(ok.status, 200);
+  const list = ok.body as { items: { listingType: string }[]; total: number };
+  assert.ok(Array.isArray(list.items));
+  for (const p of list.items) {
+    assert.equal(p.listingType, 'surplus', 'a filtered row must carry the filtered value');
+  }
+
+  // …an unknown one is REJECTED rather than silently ignored. Silently ignoring
+  // it would show a full catalogue under a filter that claims to be applied.
+  const bad = await call('GET', '/api/products?listingType=nonsense&limit=1');
+  assert.equal(bad.status, 400, `expected 400 for an unknown stock type, got ${bad.status}`);
+
+  // Every unfiltered row still carries the field, so the UI can label it.
+  const all = await call('GET', '/api/products?limit=5');
+  const any = all.body as { items: { listingType: string }[] };
+  for (const p of any.items) assert.equal(typeof p.listingType, 'string');
+});
+
+test('a buyer can become a supplier, once, and can then list stock', { skip }, async () => {
+  const buyer = await register('buyer', `bs${uniq()}`);
+
+  const up = await call('POST', '/api/me/become-supplier', undefined, buyer.token);
+  assert.equal(up.status, 200, `expected 200, got ${up.status}`);
+  assert.equal((up.body as { role: string }).role, 'supplier');
+
+  // The supplier profile that listings hang off must now exist, or the upgrade
+  // would be cosmetic.
+  const created = await call('POST', '/api/products', {
+    name: 'IT surplus coil lot',
+    category: 'Steel',
+    price: 120,
+    unit: 't',
+    moq: 1,
+    originCountry: 'Türkiye',
+    quantityAvailable: 5,
+    listingType: 'surplus',
+  }, buyer.token);
+  assert.equal(created.status, 201, `expected 201 creating a listing, got ${created.status}: ${created.text}`);
+  assert.equal((created.body as { listingType: string }).listingType, 'surplus');
+
+  // Idempotent: a second call must not 500 or duplicate the profile.
+  const again = await call('POST', '/api/me/become-supplier', undefined, buyer.token);
+  assert.equal(again.status, 200);
+  assert.equal((again.body as { role: string }).role, 'supplier');
+
+  // And the escalation stays one-way: role must not be self-settable via PATCH.
+  const escalate = await call('PATCH', '/api/me', { role: 'admin' }, buyer.token);
+  assert.equal(escalate.status, 400, 'PATCH /api/me must reject a role field outright');
+});

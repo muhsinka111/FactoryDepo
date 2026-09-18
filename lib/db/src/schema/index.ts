@@ -98,6 +98,9 @@ export const products = pgTable('products', {
   status: text('status').notNull().default('active'),
   // platform (real listing) | demo (bootstrap seed data)
   dataSource: text('dataSource').notNull().default('platform'),
+  /* stock | surplus | overstock | liquidation | seconds | container
+     See lib/api-zod zListingType and migrations/019_listing_type.sql. */
+  listingType: text('listingType').notNull().default('stock'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
@@ -114,6 +117,8 @@ export const rfqs = pgTable('rfqs', {
   targetCountry: text('targetCountry'),
   // open | quoted | closed
   status: text('status').default('open'),
+  // platform (a real buyer request) | demo (bootstrap seed data)
+  dataSource: text('dataSource').notNull().default('platform'),
   deadline: timestamp('deadline', { withTimezone: true, mode: 'date' }),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });

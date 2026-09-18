@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useRoute, Link } from 'wouter';
 import {
-  useProduct, useSupplier, useMe, useCreateOrder, useCreateRfq,
+  useProduct, useSupplier, useMe, useCreateOrder, useCreateRfq, useProducts,
 } from '@workspace/api-client-react';
 import type { ApiError } from '@workspace/api-client-react';
-import { View, Empty, StatusChip, DemoTag, Verified, Stars, requireAuthGate } from '../components';
-import { useI18n } from '../i18n';
+import {
+  View, Empty, StatusChip, DemoTag, Verified, Stars, requireAuthGate,
+  ProductCard, StockTypeBadge,
+} from '../components';
+import { useI18n, type DictKey } from '../i18n';
 
 /** Price with its currency symbol, keeping the raw currency for anything non-USD. */
 function money(amount: number, currency: string): string {
@@ -300,6 +303,12 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
   const { data: me } = useMe();
   const [checkout, setCheckout] = useState(false);
   const [rfq, setRfq] = useState(false);
+  /**
+   * Same-category stock for the rail at the foot of the page. Fetched from the
+   * public endpoint (never invented), with images only, and the current listing
+   * filtered out.
+   */
+  const same = useProducts({ category: p?.category, hasImage: 1, limit: 9 }, { enabled: !!p?.category });
 
   if (isLoading) {
     const what = t('product.loadingThis');
@@ -321,15 +330,16 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
 
   const outOfStock = p.status === 'sold_out' || p.quantityAvailable <= 0;
   const s = supplier.data;
+  const others = (same.data?.items ?? []).filter((x) => x.id !== p.id).slice(0, 8);
 
   return (
     <View
       title={p.name}
       sub={
         <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          <span>{p.category}</span>
+          <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
           <span>·</span>
-          <span>{p.originCountry}</span>
+          <Link href={`/explore?country=${encodeURIComponent(p.originCountry)}`}>{p.originCountry}</Link>
           <Link href="/explore" style={{ fontSize: 12.5 }}>← {t('product.backToExplore')}</Link>
         </span>
       }
@@ -338,6 +348,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
           {p.verified && <Verified />}
           {p.purityGrade && <span className="pill p-blue">{p.purityGrade}</span>}
           <StatusChip status={p.status} />
+          {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
           {p.dataSource === 'demo' && <DemoTag />}
         </span>
       }
@@ -355,11 +366,6 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
               <div className="empty" style={{ paddingTop: 90 }}>{t('product.noPhoto')}</div>
             )}
           </div>
-          {p.imageKey && (
-            <div className="galstrip">
-              <span className="galthumb on"><img src={p.imageKey} alt="" /></span>
-            </div>
-          )}
 
           <div className="stats grid" style={{ marginTop: 12 }}>
             <div className="card stat">
@@ -378,6 +384,12 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
               <div>
                 <div className="v">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</div>
                 <div className="l">{t('product.availableNow')}</div>
+              </div>
+            </div>
+            <div className="card stat">
+              <div>
+                <div className="v">{t(`type.${p.listingType}` as DictKey)}</div>
+                <div className="l">{t('product.factStockType')}</div>
               </div>
             </div>
             <div className="card stat">
@@ -540,11 +552,35 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                     </tr>
                   );
                 })}
-                <tr><td>{t('product.spec.category')}</td><td className="strong">{p.category}</td></tr>
+                <tr>
+                  <td>{t('product.spec.category')}</td>
+                  <td className="strong">
+                    <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
+                  </td>
+                </tr>
                 <tr><td>{t('product.spec.unit')}</td><td className="strong">{p.unit}</td></tr>
                 <tr><td>{t('product.spec.purity')}</td><td className="strong">{p.purityGrade ?? '—'}</td></tr>
               </tbody>
             </table>
+          )}
+        </div>
+      </div>
+
+      {/* ---------- more stock in this category ---------- */}
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="hd">
+          <h2>{t('product.moreInCategory', { category: p.category })}</h2>
+          <Link href={`/explore?category=${encodeURIComponent(p.category)}`} className="link">
+            {t('categories.all')}
+          </Link>
+        </div>
+        <div className="bd">
+          {others.length === 0 ? (
+            <span className="muted">{t('product.noneElse')}</span>
+          ) : (
+            <div className="feedgrid">
+              {others.map((x) => <ProductCard key={x.id} p={x} />)}
+            </div>
           )}
         </div>
       </div>

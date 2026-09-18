@@ -53,6 +53,20 @@ export default function Help() {
         </div>
       </div>
 
+      {/* Every public destination, so Help is a real hub rather than a dead end.
+          /supplier/post gates on auth itself, so a signed-out seller can follow
+          it and be asked to sign up. */}
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="hd"><h2>{t('help.goTitle')}</h2></div>
+        <div className="bd row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <Link href="/categories" className="btn btn-sm btn-grey">{t('nav.categories')}</Link>
+          <Link href="/explore" className="btn btn-sm btn-grey">{t('nav.explore')}</Link>
+          <Link href="/suppliers" className="btn btn-sm btn-grey">{t('nav.suppliers')}</Link>
+          <Link href="/rfqs" className="btn btn-sm btn-grey">{t('nav.rfqs')}</Link>
+          <Link href="/supplier/post" className="btn btn-sm btn-gold">{t('nav.sellStock')}</Link>
+        </div>
+      </div>
+
       <div className="row" style={{ marginTop: 12, gap: 8 }}>
         <Link href="/explore" className="btn btn-primary">{t('help.exploreCta')}</Link>
         <Link href="/rfqs" className="btn btn-grey">{t('help.rfqCta')}</Link>

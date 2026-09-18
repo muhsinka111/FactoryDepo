@@ -8,13 +8,14 @@ import { Link, useLocation, useSearch } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
+import { coverFor } from './categoryImages';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
 import { LANGUAGES, useI18n, isLangCode, statusLabel, type DictKey, type LangCode } from './i18n';
 
 /* ============================ navigation model ============================ */
 
 export type NavKey =
-  | 'feed' | 'explore' | 'offers-buyer' | 'rfqs' | 'orders' | 'shipments'
+  | 'feed' | 'explore' | 'categories' | 'sell' | 'offers-buyer' | 'rfqs' | 'orders' | 'shipments'
   | 'messages' | 'saved' | 'notifications' | 'help' | 'profile'
   | 'listings' | 'post' | 'offers-sup' | 'rfq-opps' | 'verification'
   | 'overview' | 'admin-suppliers' | 'admin-verify' | 'admin-listings'
@@ -35,6 +36,7 @@ interface NavItem {
 export const NAV_BUYER: NavItem[] = [
   { key: 'feed', icon: '🏠', label: 'nav.feed', path: '/feed' },
   { key: 'explore', icon: '🧭', label: 'nav.explore', path: '/explore' },
+  { key: 'categories', icon: '🗂️', label: 'nav.categories', path: '/categories' },
   { key: 'offers-buyer', icon: '🏷️', label: 'nav.offersBuyer', path: '/offers' },
   { key: 'rfqs', icon: '📄', label: 'nav.rfqs', path: '/rfqs' },
   { key: 'orders', icon: '🧾', label: 'nav.orders', path: '/orders' },
@@ -49,6 +51,7 @@ export const NAV_BUYER: NavItem[] = [
 export const NAV_SUPPLIER: NavItem[] = [
   { key: 'listings', icon: '📦', label: 'nav.listings', path: '/supplier/listings' },
   { key: 'post', icon: '➕', label: 'nav.post', path: '/supplier/post' },
+  { key: 'categories', icon: '🗂️', label: 'nav.categories', path: '/categories' },
   { key: 'offers-sup', icon: '🏷️', label: 'nav.offersSup', path: '/supplier/offers' },
   { key: 'rfq-opps', icon: '📄', label: 'nav.rfqOpps', path: '/supplier/rfq-opportunities' },
   { key: 'orders', icon: '🧾', label: 'nav.orders', path: '/orders' },
@@ -62,6 +65,7 @@ export const NAV_SUPPLIER: NavItem[] = [
 
 export const NAV_ADMIN: NavItem[] = [
   { key: 'overview', icon: '🏠', label: 'nav.overview', path: '/admin' },
+  { key: 'categories', icon: '🗂️', label: 'nav.categories', path: '/categories' },
   { key: 'admin-suppliers', icon: '🚚', label: 'nav.adminSuppliers', path: '/admin/suppliers' },
   { key: 'admin-verify', icon: '🛡️', label: 'nav.adminVerify', path: '/admin/verification' },
   { key: 'admin-listings', icon: '📦', label: 'nav.adminListings', path: '/admin/listings' },
@@ -74,10 +78,16 @@ export const NAV_ADMIN: NavItem[] = [
   { key: 'help', icon: '❓', label: 'nav.help', path: '/help' },
 ];
 
-/** Logged-out visitors get the public slice of the marketplace. */
+/**
+ * Logged-out visitors get the public slice of the marketplace — including the
+ * sell path, because "anyone with stock can list it" is the pitch and a
+ * signed-out seller must be able to find the door. /supplier/post gates on auth.
+ */
 export const NAV_GUEST: NavItem[] = [
   { key: 'explore', icon: '🧭', label: 'nav.exploreStock', path: '/explore' },
+  { key: 'categories', icon: '🗂️', label: 'nav.categories', path: '/categories' },
   { key: 'suppliers', icon: '🏭', label: 'nav.suppliers', path: '/suppliers' },
+  { key: 'sell', icon: '➕', label: 'nav.sellStock', path: '/supplier/post' },
   { key: 'help', icon: '❓', label: 'nav.howItWorks', path: '/help' },
 ];
 
@@ -144,24 +154,31 @@ export function LogoMark({ size = 24 }: { size?: number }) {
       aria-label="FactoryDepo"
       focusable="false"
     >
-      <rect x="0" y="0" width="32" height="32" rx="7" fill="#f5a623" />
-      {/* depot roof */}
-      <path d="M5 12.2 16 5.6l11 6.6v1.9H5z" fill="#132238" />
-      {/* stacked cargo bays */}
-      <rect x="7.4" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
-      <rect x="13.5" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
-      <rect x="19.6" y="17.2" width="5.1" height="9.2" rx="1.1" fill="#132238" />
-      {/* loading bay light */}
-      <rect x="13.5" y="19.6" width="5.1" height="2.2" rx="0.8" fill="#f5a623" />
+      {/*
+        One mark for the whole brand: a navy tile carrying a gold depot roofline
+        over a stack of gold lots. It reads as "depot + surplus stock" at 16px,
+        which is the product's actual pitch. Geometry is duplicated only in the
+        favicon data URI (index.html) and the static landing, which cannot import
+        this file; keep the three in step.
+      */}
+      <rect width="32" height="32" rx="8" fill="#132238" />
+      <path d="M5 11.6 16 5.8l11 5.8v1.7H5z" fill="#f5a623" />
+      <rect x="7.5" y="15.7" width="17" height="3.1" rx="1.55" fill="#f5a623" />
+      <rect x="7.5" y="20.5" width="12.6" height="3.1" rx="1.55" fill="#f5a623" opacity=".72" />
+      <rect x="7.5" y="25.3" width="8.2" height="3.1" rx="1.55" fill="#f5a623" opacity=".45" />
     </svg>
   );
 }
 
 export function Logo() {
+  const { t } = useI18n();
   return (
-    <Link href="/" className="logo">
+    <Link href="/" className="logo" title={`factorydepo — ${t('brand.tagline')}`}>
       <LogoMark />
       factory<b>depo</b>
+      {/* The positioning, in the topbar itself: what the marketplace is for.
+          Hidden under 1100px so the search field keeps its width. */}
+      <span className="tag hidem-s">{t('brand.tagline')}</span>
     </Link>
   );
 }
@@ -214,11 +231,19 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
         />
       </form>
 
+      {/* Each market figure is a link into the catalogue filtered to that origin.
+          Before this the counts were decorative and the only way to filter by
+          market was the Explore dropdown. */}
       <div className="markets">
         {MARKET_COUNTRIES.map(([country, flag]) => (
-          <span key={country} title={country}>
+          <Link
+            key={country}
+            href={`/explore?country=${encodeURIComponent(country)}`}
+            title={`${country} — ${marketCounts ? (marketCounts[country] ?? 0) : '—'} listings`}
+            style={{ color: 'inherit' }}
+          >
             {flag} <b>{marketCounts ? (marketCounts[country] ?? 0) : '—'}</b>
-          </span>
+          </Link>
         ))}
       </div>
       <div className="spacer" />
@@ -334,6 +359,9 @@ export function Sidebar({ items, activeKey, who, counts }: SidebarProps) {
       <div className="sidefoot">
         <b>{t('sidebar.moreIndustries')}</b>
         {t('sidebar.moreIndustriesSub')}
+        <Link href="/categories" style={{ display: 'block', marginTop: 5 }}>
+          {t('nav.categories')} →
+        </Link>
       </div>
     </nav>
   );
@@ -381,6 +409,84 @@ export function Verified({ label }: { label?: string }) {
 export function DemoTag() {
   const { t } = useI18n();
   return <span className="pill p-amber" title={t('cards.demoTitle')}>{t('cards.demo')}</span>;
+}
+
+/**
+ * The catalogue is entirely bootstrap seed data right now. Saying so once, at
+ * the top of the browse views, is the honest complement to the per-card Demo
+ * tag — a buyer must not have to infer it from badges.
+ */
+export function DemoNotice() {
+  const { t } = useI18n();
+  return (
+    <div className="demoNotice" role="note">
+      <b>{t('demo.title')}</b>
+      <span>{t('demo.body')}</span>
+    </div>
+  );
+}
+
+/** The six stock types, in the order a buyer thinks about them. */
+export const STOCK_TYPES = ['stock', 'surplus', 'overstock', 'liquidation', 'seconds', 'container'] as const;
+
+/**
+ * The surplus-first filter, rendered identically in all three dashboards. The
+ * owner's constraint is that a change lands for buyer, supplier and admin at
+ * once, so this lives here and nowhere else.
+ */
+export function StockTypeFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="chipbar">
+      <button className={`ct ${value ? '' : 'on'}`} onClick={() => onChange('')}>{t('type.all')}</button>
+      {STOCK_TYPES.map((ty) => (
+        <button key={ty} className={`ct ${value === ty ? 'on' : ''}`} onClick={() => onChange(ty)}>
+          {t(`type.${ty}` as DictKey)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Stock-type badge. The dictionary supplies the phrase; an unknown value falls
+ * back to the raw API string, and the CSS class simply has no colour for it —
+ * never a blank chip.
+ */
+export function StockTypeBadge({ type }: { type: string }) {
+  const { t } = useI18n();
+  return <span className={`tbadge t-${type}`}>{t(`type.${type}` as DictKey)}</span>;
+}
+
+/**
+ * A category tile: owned cover art, live listing count, whole tile is a link.
+ * `count` is whatever the API returned — when the API has no figure the count
+ * line is omitted rather than printing a zero we did not measure.
+ */
+export function CategoryTile({ category, count }: { category: string; count?: number }) {
+  const { t } = useI18n();
+  const cover = coverFor(category);
+  return (
+    <Link href={`/explore?category=${encodeURIComponent(category)}`} className="cattile">
+      <div className="cmedia">
+        {cover?.image
+          ? <img src={cover.image} alt="" loading="lazy" />
+          : (
+            <div className="ph-empty">
+              <span className="ph-glyph"><CategoryGlyph category={category} size={30} /></span>
+              <span className="ph-cat">{category}</span>
+            </div>
+          )}
+      </div>
+      <div className="cbd">
+        <b>{category}</b>
+        <span>{cover?.blurb ?? t('categories.stockHere')}</span>
+        {typeof count === 'number' && (
+          <span>{t('categories.listingCount', { n: count.toLocaleString() })}</span>
+        )}
+      </div>
+    </Link>
+  );
 }
 
 export function Stars({ rating }: { rating: number }) {
@@ -458,11 +564,26 @@ function CategoryGlyph({ category, size = 26 }: { category: string; size?: numbe
   }
 }
 
+/**
+ * One listing card, used by Explore, Feed, SupplierDetail, Saved and the admin
+ * previews. Everything a buyer might press is a real link or a real action:
+ *   • the media, the title and the price area all open the listing
+ *   • the origin and the category open the catalogue filtered to that value
+ *   • Save is always rendered — signed out it opens the auth gate instead of
+ *     doing nothing (it previously appeared only when a caller passed `onSave`,
+ *     so the public browse view had no save affordance at all)
+ */
 export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) => void }) {
   const { t } = useI18n();
+  const [saved, setSaved] = useState(false);
+  const save = () => {
+    if (onSave) { onSave(p); return; }
+    if (!getToken()) { requireAuthGate(); return; }
+    setSaved((s) => !s);
+  };
   return (
     <div className="lcard">
-      <Link href={`/products/${p.id}`} className="media">
+      <Link href={`/products/${p.id}`} className="media" aria-label={p.name}>
         {p.imageKey
           ? <img src={p.imageKey} alt={p.name} loading="lazy" />
           : (
@@ -474,16 +595,29 @@ export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) =
           )}
         {p.verified && <span className="vtag"><Verified /></span>}
         {p.dataSource === 'demo' && <span className="ptag"><DemoTag /></span>}
+        {p.listingType && p.listingType !== 'stock' && (
+          <span className="atag"><StockTypeBadge type={p.listingType} /></span>
+        )}
       </Link>
       <div className="bd">
         <h3><Link href={`/products/${p.id}`}>{p.name}</Link></h3>
-        <div className="meta"><b>{p.originCountry}</b></div>
+        <div className="meta">
+          <Link href={`/explore?country=${encodeURIComponent(p.originCountry)}`}><b>{p.originCountry}</b></Link>
+        </div>
+        <div className="meta">
+          <Link href={`/explore?category=${encodeURIComponent(p.category)}`}><b>{p.category}</b></Link>
+        </div>
         <div className="meta">{t('cards.moq')} {p.moq.toLocaleString()} {p.unit}</div>
         <div className="between" style={{ marginTop: 'auto', paddingTop: 5 }}>
-          <Price p={p} />
-          {onSave && (
-            <button className="btn btn-sm btn-grey" onClick={() => onSave(p)} title={t('cards.saveLot')}>🔖</button>
-          )}
+          <Link href={`/products/${p.id}`}><Price p={p} /></Link>
+          <button
+            className={`btn btn-sm ${saved ? 'btn-gold' : 'btn-grey'}`}
+            onClick={save}
+            aria-label={t('cards.saveLot')}
+            title={t('cards.saveLot')}
+          >
+            {saved ? '★' : '🔖'}
+          </button>
         </div>
       </div>
     </div>
@@ -523,7 +657,11 @@ export function RfqCard({ r }: { r: Rfq }) {
       <div className="bd">
         <div className="between">
           <span className="muted" style={{ fontSize: 11 }}>{r.category}</span>
-          <StatusChip status={r.status} />
+          <span className="row" style={{ gap: 5 }}>
+            {/* A seeded request must never read as real demand. */}
+            {r.dataSource === 'demo' && <DemoTag />}
+            <StatusChip status={r.status} />
+          </span>
         </div>
         <b style={{ display: 'block', fontSize: 13, margin: '5px 0 3px' }}>{r.title}</b>
         <div className="muted" style={{ fontSize: 11.5 }}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { getToken, useMe, useAdminListings } from '@workspace/api-client-react';
 import { CATEGORIES, COUNTRIES } from '@workspace/api-spec';
-import { View, Empty, StatusChip, Spinner, DemoTag } from '../components';
+import { View, Empty, StatusChip, Spinner, DemoTag, StockTypeFilter } from '../components';
 import { useI18n } from '../i18n';
 
 /**
@@ -56,6 +56,7 @@ export default function AdminListings() {
   const [appliedQ, setAppliedQ] = useState('');
   const [category, setCategory] = useState('');
   const [country, setCountry] = useState('');
+  const [listingType, setListingType] = useState('');
   const [hasImageOnly, setHasImageOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -64,6 +65,7 @@ export default function AdminListings() {
     {
       q: appliedQ || undefined,
       category: category || undefined,
+      listingType: (listingType || undefined) as never,
       country: country || undefined,
       hasImage: hasImageOnly ? 1 : undefined,
       page,
@@ -84,14 +86,14 @@ export default function AdminListings() {
 
   const apply = (nextPage = 1) => { setAppliedQ(q); setPage(nextPage); };
   const clear = () => {
-    setQ(''); setAppliedQ(''); setCategory(''); setCountry('');
+    setQ(''); setAppliedQ(''); setCategory(''); setListingType(''); setCountry('');
     setHasImageOnly(false); setPage(1);
   };
 
   const items = res.data?.items ?? [];
   const total = res.data?.total;
   const pages = res.data?.pages ?? 1;
-  const hasFilters = !!(appliedQ || category || country || hasImageOnly);
+  const hasFilters = !!(appliedQ || category || listingType || country || hasImageOnly);
 
   // Counted over the rows the API returned on this page — never projected onto the whole table.
   const pageDemo = items.filter((p) => p.dataSource === 'demo').length;
@@ -112,6 +114,13 @@ export default function AdminListings() {
         </span>
         <span>{t('admin.listings.stripeScraped')}</span>
       </div>
+
+      {/* Same control as the buyer and supplier views: one implementation for
+          all three dashboards (owner constraint). */}
+      <StockTypeFilter
+        value={listingType}
+        onChange={(v) => { setListingType(v); setPage(1); }}
+      />
 
       <div className="filters">
         <input

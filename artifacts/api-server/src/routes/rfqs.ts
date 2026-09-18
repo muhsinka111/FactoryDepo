@@ -21,6 +21,7 @@ const quoteCounts = db
 
 /** Columns for list/detail (quoteCount via subquery). */
 const rfqCols = {
+  dataSource: rfqs.dataSource,
   id: rfqs.id,
   buyerId: rfqs.buyerId,
   title: rfqs.title,
@@ -101,7 +102,8 @@ rfqsRouter.post('/', requireAuth, requireRole('buyer'), async (req, res) => {
     .returning();
 
   res.status(201);
-  respond(res, c.zRfq, mapRfq({ ...inserted, quoteCount: 0 }));
+  // A request posted through the API is real demand, never demo.
+  respond(res, c.zRfq, mapRfq({ ...inserted, dataSource: 'platform', quoteCount: 0 }));
 });
 
 /** GET /api/rfqs/:id — RFQ + its quotes (supplierName + trustScore joined). */

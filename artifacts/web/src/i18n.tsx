@@ -1754,6 +1754,32 @@ export interface Dict {
   'admin.verification.submittedNote': string;
   'admin.verification.supplierFallback': string;
   'admin.overview.tickets.openOnly': string;
+  'demo.title': string;
+  'demo.body': string;
+  'brand.tagline': string;
+  'type.all': string;
+  'type.stock': string;
+  'type.surplus': string;
+  'type.overstock': string;
+  'type.liquidation': string;
+  'type.seconds': string;
+  'type.container': string;
+  'categories.title': string;
+  'categories.sub': string;
+  'categories.loading': string;
+  'categories.all': string;
+  'categories.stockHere': string;
+  'categories.listingCount': string;
+  'categories.sellPrompt': string;
+  'categories.listStock': string;
+  'nav.categories': string;
+  'nav.sellStock': string;
+  'product.factStockType': string;
+  'product.factMoq': string;
+  'product.moreInCategory': string;
+  'product.noneElse': string;
+  'product.spec.origin': string;
+  'help.goTitle': string;
 }
 
 /**
@@ -1762,6 +1788,33 @@ export interface Dict {
  * a translation key fails the build rather than silently falling back.
  */
 const en: Dict = {
+
+  'demo.title': 'Demo catalogue',
+  'demo.body': 'Every listing on this site right now is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.',
+  'brand.tagline': 'Surplus & ready stock',
+  'type.all': 'All stock types',
+  'type.stock': 'Ready stock',
+  'type.surplus': 'Surplus',
+  'type.overstock': 'Overstock',
+  'type.liquidation': 'Liquidation',
+  'type.seconds': 'Factory seconds',
+  'type.container': 'Container-ready',
+  'categories.title': 'All categories',
+  'categories.sub': '{n} listings across every category — each one holds live stock.',
+  'categories.loading': 'Counting live stock…',
+  'categories.all': 'All categories',
+  'categories.stockHere': 'Stock listed in this category',
+  'categories.listingCount': '{n} listings',
+  'categories.sellPrompt': 'Do you have stock sitting in a warehouse?',
+  'categories.listStock': 'List your stock',
+  'nav.categories': 'Categories',
+  'nav.sellStock': 'Sell your stock',
+  'product.factStockType': 'Stock type',
+  'product.factMoq': 'Minimum order',
+  'product.moreInCategory': 'More stock in {category}',
+  'product.noneElse': 'No other lot in this category is listed yet.',
+  'product.spec.origin': 'Origin',
+  'help.goTitle': 'Go straight there',
   'status.open': 'Open',
   'status.quoted': 'Quoted',
   'status.closed': 'Closed',
@@ -3375,6 +3428,33 @@ export type DictKey = keyof Dict;
 /* ============================ translations ============================== */
 
 const tr: Partial<Record<DictKey, string>> = {
+
+  'demo.title': 'Demo katalog',
+  'demo.body': 'Şu an sitedeki her ilan demo verisidir, gerçek bir teklif değildir. Gerçek tedarikçi ilanları eklendikçe yerini alacaktır.',
+  'brand.tagline': 'Fazla üretim ve hazır stok',
+  'type.all': 'Tüm stok tipleri',
+  'type.stock': 'Hazır stok',
+  'type.surplus': 'Fazla üretim',
+  'type.overstock': 'Aşırı stok',
+  'type.liquidation': 'Tasfiye',
+  'type.seconds': 'İkinci kalite',
+  'type.container': 'Konteyner dolusu',
+  'categories.title': 'Tüm kategoriler',
+  'categories.sub': 'Tüm kategorilerde {n} ilan — her birinde canlı stok var.',
+  'categories.loading': 'Canlı stok sayılıyor…',
+  'categories.all': 'Tüm kategoriler',
+  'categories.stockHere': 'Bu kategoride listelenen stok',
+  'categories.listingCount': '{n} ilan',
+  'categories.sellPrompt': 'Deponuzda bekleyen stok mu var?',
+  'categories.listStock': 'Stoğunuzu listeleyin',
+  'nav.categories': 'Kategoriler',
+  'nav.sellStock': 'Stoğunuzu satın',
+  'product.factStockType': 'Stok tipi',
+  'product.factMoq': 'Minimum sipariş',
+  'product.moreInCategory': '{category} kategorisinde daha fazla stok',
+  'product.noneElse': 'Bu kategoride henüz başka ilan yok.',
+  'product.spec.origin': 'Menşe',
+  'help.goTitle': 'Doğrudan git',
   'status.open': 'Açık',
   'status.quoted': 'Teklif verildi',
   'status.closed': 'Kapalı',
@@ -4981,6 +5061,33 @@ const tr: Partial<Record<DictKey, string>> = {
 };
 
 const ar: Partial<Record<DictKey, string>> = {
+
+  'demo.title': 'كتالوج تجريبي',
+  'demo.body': 'كل الإعلانات على الموقع الآن بيانات تجريبية وليست عروضًا حقيقية. سيتم استبدالها بإعلانات موردين حقيقيين عند إضافتهم.',
+  'brand.tagline': 'فائض ومخزون جاهز',
+  'type.all': 'كل أنواع المخزون',
+  'type.stock': 'مخزون جاهز',
+  'type.surplus': 'فائض الإنتاج',
+  'type.overstock': 'مخزون راكد',
+  'type.liquidation': 'تصفية',
+  'type.seconds': 'منتج من الدرجة الثانية',
+  'type.container': 'جاهز للحاوية',
+  'categories.title': 'كل الفئات',
+  'categories.sub': '{n} إعلانًا في كل الفئات — كل فئة تحتوي مخزونًا حقيقيًا.',
+  'categories.loading': 'جارٍ حساب المخزون…',
+  'categories.all': 'كل الفئات',
+  'categories.stockHere': 'مخزون مدرج في هذه الفئة',
+  'categories.listingCount': '{n} إعلانًا',
+  'categories.sellPrompt': 'هل لديك مخزون راكد في المستودع؟',
+  'categories.listStock': 'أدرج مخزونك',
+  'nav.categories': 'الفئات',
+  'nav.sellStock': 'بِع مخزونك',
+  'product.factStockType': 'نوع المخزون',
+  'product.factMoq': 'الحد الأدنى للطلب',
+  'product.moreInCategory': 'مزيد من المخزون في {category}',
+  'product.noneElse': 'لا يوجد إعلان آخر في هذه الفئة بعد.',
+  'product.spec.origin': 'المنشأ',
+  'help.goTitle': 'اذهب مباشرة',
   'status.open': 'مفتوح',
   'status.quoted': 'تم تقديم عرض',
   'status.closed': 'مغلق',
@@ -6582,6 +6689,33 @@ const ar: Partial<Record<DictKey, string>> = {
 };
 
 const ru: Partial<Record<DictKey, string>> = {
+
+  'demo.title': 'Демо-каталог',
+  'demo.body': 'Все объявления на сайте сейчас — демонстрационные данные, а не реальное предложение. По мере подключения поставщиков их заменят настоящие.',
+  'brand.tagline': 'Излишки и готовый склад',
+  'type.all': 'Все типы запасов',
+  'type.stock': 'Готовый склад',
+  'type.surplus': 'Излишки',
+  'type.overstock': 'Сверхзапас',
+  'type.liquidation': 'Ликвидация',
+  'type.seconds': 'Второй сорт',
+  'type.container': 'Готово в контейнер',
+  'categories.title': 'Все категории',
+  'categories.sub': '{n} объявлений по всем категориям — в каждой есть реальный запас.',
+  'categories.loading': 'Считаем запасы…',
+  'categories.all': 'Все категории',
+  'categories.stockHere': 'Запасы в этой категории',
+  'categories.listingCount': '{n} объявлений',
+  'categories.sellPrompt': 'Есть запасы, стоящие на складе?',
+  'categories.listStock': 'Разместить запасы',
+  'nav.categories': 'Категории',
+  'nav.sellStock': 'Продать запасы',
+  'product.factStockType': 'Тип запаса',
+  'product.factMoq': 'Минимальный заказ',
+  'product.moreInCategory': 'Больше запасов в {category}',
+  'product.noneElse': 'Других объявлений в этой категории пока нет.',
+  'product.spec.origin': 'Происхождение',
+  'help.goTitle': 'Перейти сразу',
   'status.open': 'Открыт',
   'status.quoted': 'Есть предложение',
   'status.closed': 'Закрыт',
@@ -8180,6 +8314,33 @@ const ru: Partial<Record<DictKey, string>> = {
 };
 
 const zh: Partial<Record<DictKey, string>> = {
+
+  'demo.title': '演示目录',
+  'demo.body': '本站当前所有商品均为演示数据，并非真实报价。随着真实供应商入驻，将逐步替换。',
+  'brand.tagline': '余料与现货',
+  'type.all': '全部库存类型',
+  'type.stock': '现货',
+  'type.surplus': '剩余库存',
+  'type.overstock': '积压库存',
+  'type.liquidation': '清仓',
+  'type.seconds': '次品',
+  'type.container': '整柜现货',
+  'categories.title': '全部分类',
+  'categories.sub': '全部分类共 {n} 条商品 — 每个分类都有真实库存。',
+  'categories.loading': '正在统计库存…',
+  'categories.all': '全部分类',
+  'categories.stockHere': '该分类已上架库存',
+  'categories.listingCount': '{n} 条商品',
+  'categories.sellPrompt': '仓库里有积压库存？',
+  'categories.listStock': '发布库存',
+  'nav.categories': '分类',
+  'nav.sellStock': '出售您的库存',
+  'product.factStockType': '库存类型',
+  'product.factMoq': '最小起订量',
+  'product.moreInCategory': '{category} 的更多库存',
+  'product.noneElse': '该分类暂无其他商品。',
+  'product.spec.origin': '产地',
+  'help.goTitle': '直接前往',
   'status.open': '开放中',
   'status.quoted': '已报价',
   'status.closed': '已关闭',
@@ -9751,6 +9912,33 @@ const zh: Partial<Record<DictKey, string>> = {
 };
 
 const es: Partial<Record<DictKey, string>> = {
+
+  'demo.title': 'Catálogo de demostración',
+  'demo.body': 'Ahora mismo todos los anuncios del sitio son datos de demostración, no ofertas reales. Se sustituirán por anuncios de proveedores reales.',
+  'brand.tagline': 'Excedentes y stock disponible',
+  'type.all': 'Todos los tipos',
+  'type.stock': 'Stock disponible',
+  'type.surplus': 'Excedente',
+  'type.overstock': 'Sobrestock',
+  'type.liquidation': 'Liquidación',
+  'type.seconds': 'Segunda calidad',
+  'type.container': 'Listo para contenedor',
+  'categories.title': 'Todas las categorías',
+  'categories.sub': '{n} anuncios en todas las categorías — cada una tiene stock real.',
+  'categories.loading': 'Contando el stock…',
+  'categories.all': 'Todas las categorías',
+  'categories.stockHere': 'Stock publicado en esta categoría',
+  'categories.listingCount': '{n} anuncios',
+  'categories.sellPrompt': '¿Tiene stock parado en el almacén?',
+  'categories.listStock': 'Publicar su stock',
+  'nav.categories': 'Categorías',
+  'nav.sellStock': 'Venda su stock',
+  'product.factStockType': 'Tipo de stock',
+  'product.factMoq': 'Pedido mínimo',
+  'product.moreInCategory': 'Más stock en {category}',
+  'product.noneElse': 'Aún no hay otros anuncios en esta categoría.',
+  'product.spec.origin': 'Origen',
+  'help.goTitle': 'Ir directamente',
   'status.open': 'Abierta',
   'status.quoted': 'Con oferta',
   'status.closed': 'Cerrada',

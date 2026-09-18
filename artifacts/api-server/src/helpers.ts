@@ -128,6 +128,7 @@ export const productColumns = {
   quantityAvailable: products.quantityAvailable,
   status: products.status,
   dataSource: products.dataSource,
+  listingType: products.listingType,
   createdAt: products.createdAt,
 };
 
@@ -157,6 +158,7 @@ export type ProductRow = {
   quantityAvailable: string;
   status: string;
   dataSource: string;
+  listingType: string;
   createdAt: Date | null;
 };
 

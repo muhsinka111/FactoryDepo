@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useSearch } from 'wouter';
 import { useProducts, useRfqs, useSuppliers, useMe } from '@workspace/api-client-react';
-import { View, ProductCard, Spinner, Empty } from '../components';
+import { View, ProductCard, Spinner, Empty, DemoNotice, StockTypeFilter } from '../components';
 import { useCategoryCounts } from '@workspace/api-client-react';
 import { COUNTRIES } from '@workspace/api-spec';
 import { useI18n } from '../i18n';
@@ -28,27 +28,34 @@ export default function Feed() {
   const [q, setQ] = useState(() => readParam('q'));
   const [appliedQ, setAppliedQ] = useState(() => readParam('q'));
   const [category, setCategory] = useState(() => readParam('category'));
+  const [listingType, setListingType] = useState(() => readParam('listingType'));
   const [country, setCountry] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(1);
 
-  // Keep in step with the topbar search and the category rail, which both
-  // navigate to /feed?q=… and /feed?category=… .
+  const search = useSearch();
+  /**
+   * Keep in step with the topbar search, the category rail and the topbar market
+   * links, which navigate to /feed?q=… , ?category=… and ?country=… .
+   *
+   * Keyed on wouter's `useSearch()`. A `popstate` listener looked equivalent and
+   * was not: the router navigates with pushState, which never fires popstate, so
+   * clicking a category on this page changed the URL and nothing else.
+   */
   useEffect(() => {
-    const onPop = () => {
-      setQ(readParam('q'));
-      setAppliedQ(readParam('q'));
-      setCategory(readParam('category'));
-      setPage(1);
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
+    setQ(readParam('q'));
+    setAppliedQ(readParam('q'));
+    setCategory(readParam('category'));
+    setListingType(readParam('listingType'));
+    setCountry(readParam('country'));
+    setPage(1);
+  }, [search]);
 
   const products = useProducts({
     q: appliedQ || undefined,
     category: category || undefined,
+    listingType: (listingType || undefined) as never,
     country: country || undefined,
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
@@ -64,10 +71,10 @@ export default function Feed() {
   const verifiedSuppliers = (suppliers.data?.items ?? []).filter((s) => s.verifiedLevel >= 2).length;
   const openRequests = (rfqs.data?.items ?? []).filter((r) => r.status === 'open').length;
 
-  const hasFilters = !!(appliedQ || category || country || minPrice || maxPrice);
+  const hasFilters = !!(appliedQ || category || listingType || country || minPrice || maxPrice);
   const apply = (p = 1) => { setAppliedQ(q); setPage(p); };
   const clear = () => {
-    setQ(''); setAppliedQ(''); setCategory(''); setCountry('');
+    setQ(''); setAppliedQ(''); setCategory(''); setListingType(''); setCountry('');
     setMinPrice(''); setMaxPrice(''); setPage(1);
   };
   // The empty string is the "no category" sentinel the API understands; only the
@@ -102,6 +109,14 @@ export default function Feed() {
           <b>{rfqs.isLoading ? '—' : openRequests.toLocaleString(locale)}</b> {t('feed.openRequests')}
         </span>
       </div>
+
+      <DemoNotice />
+
+      {/* Surplus-first, shared verbatim with Explore and the admin console. */}
+      <StockTypeFilter
+        value={listingType}
+        onChange={(v) => { setListingType(v); setPage(1); }}
+      />
 
       {/* category filter — same vocabulary as the category rail */}
       <div className="card" style={{ marginBottom: 11 }}>

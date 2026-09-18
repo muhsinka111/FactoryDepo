@@ -24,8 +24,9 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/api/auth/register', auth: 'public', input: c.zRegisterInput, output: c.zAuthResponse, desc: 'Create account (buyer/supplier/inspector/lab/logistics/admin)' },
   { method: 'POST', path: '/api/auth/login', auth: 'public', input: c.zLoginInput, output: c.zAuthResponse, desc: 'Login → Bearer token' },
   { method: 'GET', path: '/api/me', auth: 'user', output: c.zUser, desc: 'Current user profile' },
+  { method: 'POST', path: '/api/me/become-supplier', auth: 'user', output: c.zUser, desc: 'Buyer upgrades to supplier so they can list stock (one-way; role is not patchable via PATCH /api/me)' },
 
-  { method: 'GET', path: '/api/products', auth: 'public', input: c.zProductListQuery, output: c.zProductList, desc: 'Search products: q, category, country, min/maxPrice, page, limit' },
+  { method: 'GET', path: '/api/products', auth: 'public', input: c.zProductListQuery, output: c.zProductList, desc: 'Search products: q, category, listingType, country, min/maxPrice, page, limit' },
   { method: 'GET', path: '/api/products/categories', auth: 'public', output: c.zCategoryCountList, desc: 'Live listing count per category — the UI offers only categories that hold stock' },
   { method: 'GET', path: '/api/products/:id', auth: 'public', output: c.zProduct, desc: 'Product detail' },
 

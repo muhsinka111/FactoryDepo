@@ -110,8 +110,14 @@ a.skip:focus{left:0}
 
 /* ---------- logo (gold clip-path mark, as in the app topbar) ---------- */
 .logo{display:flex;align-items:center;gap:7px;font-weight:700;font-size:17px;letter-spacing:-.4px;color:#fff;white-space:nowrap}
-.logo .mark{width:22px;height:22px;background:var(--gold);flex:none;clip-path:polygon(50% 0,100% 34%,100% 100%,0 100%,0 34%);position:relative}
-.logo .mark:after{content:"";position:absolute;left:5px;right:5px;top:9px;bottom:3px;background:var(--navy)}
+/* Demo-catalogue band: the same statement the SPA makes, so the two surfaces
+   cannot disagree about what the catalogue is. */
+.demo-band{background:#fdf3e0;border-bottom:1px solid #f2dcb3;color:#5e3f00;
+  font-size:12px;line-height:1.5;padding:7px 14px;text-align:center}
+.demo-band b{font-weight:600}
+/* The mark is an inline SVG (see the header and footer markup) so all three
+   surfaces carry identical geometry; the old CSS clip-path roof is gone. */
+.logo .mark{flex:none;display:block;border-radius:6px}
 .logo b{color:var(--gold);font-weight:700}
 
 /* ---------- topbar ---------- */
@@ -356,12 +362,15 @@ a.skip:focus{left:0}
 </style>
 </head>
 <body>
+<!-- The catalogue is 100% bootstrap demo data right now. Stated up front so a
+     US/EU buyer is never led to believe these are live offers. -->
+<div class="demo-band" data-t="notice.demo"><b>Demo catalogue</b> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.</div>
 <a class="skip" href="#listings" data-t="skip">Skip to listings</a>
 
 <!-- ============================ top bar ============================ -->
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
+    <a class="logo" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#132238"/><path d="M5 11.6 16 5.8l11 5.8v1.7H5z" fill="#f5a623"/><rect x="7.5" y="15.7" width="17" height="3.1" rx="1.55" fill="#f5a623"/><rect x="7.5" y="20.5" width="12.6" height="3.1" rx="1.55" fill="#f5a623" opacity=".72"/><rect x="7.5" y="25.3" width="8.2" height="3.1" rx="1.55" fill="#f5a623" opacity=".45"/></svg>factory<b>depo</b></a>
     <form class="searchwrap" id="searchForm" role="search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
       <input id="q" type="search" placeholder="Search lots, materials, machinery…" aria-label="Search listings" data-t-attr="placeholder:search.placeholder,aria-label:search.aria">
@@ -415,9 +424,9 @@ a.skip:focus{left:0}
   <div class="hero-shade"></div>
   <div class="hero-in">
     <div>
-      <span class="eyebrow" data-t="hero.eyebrow">Industrial sourcing, one chain of custody</span>
-      <h1><span data-t="hero.titleLead">Request quotes on</span> <span class="g" data-t="hero.titleAccent">real industrial supply</span><span data-t="hero.titleEnd">.</span></h1>
-      <p><span data-t="hero.sub1">Post a request for quotation and receive offers from listed suppliers — or buy ready stock directly.</span><br><span data-t="hero.sub2">Factory inspection, laboratory testing and logistics can be added to the same order.</span></p>
+      <span class="eyebrow" data-t="hero.surplusEyebrow">Industrial sourcing, one chain of custody</span>
+      <h1><span data-t="hero.surplusLead">Sell your surplus stock,</span> <span class="g" data-t="hero.surplusAccent">buy the lot in one place</span><span data-t="hero.titleEnd">.</span></h1>
+      <p><span data-t="hero.surplusSub1">Factories and distributors in Türkiye, China, the USA and Europe list overproduction runs, slow-moving stock, factory seconds and container-ready lots.</span><br><span data-t="hero.surplusSub2">Anyone with stock can list it — no middlemen. Make an offer, or buy the whole lot at the listed price.</span></p>
       <div class="hero-ctas">
         <a class="btn btn-lg btn-gold" href="/rfq" data-t="hero.ctaRfq">Post a request for quotation</a>
         <a class="btn btn-lg btn-ghost" href="/products" data-t="hero.ctaBrowse">Browse the catalogue →</a>
@@ -507,7 +516,7 @@ a.skip:focus{left:0}
         <h2 data-t="cat.h2">Categories</h2>
         <p><span data-t="cat.subA">Each tile shows the number of lots the catalogue currently returns for that category (</span><span class="mono">total</span> <span data-t="cat.subB">from</span> <span class="mono">GET /api/products?category=…</span><span data-t="cat.subC">). A dash means the count could not be read.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/products" data-t="cat.cta">View all listings →</a>
+      <a class="btn btn-ghost" href="/categories" data-t="cat.ctaAll">All 25 categories →</a>
     </div>
     <div class="cats" id="catGrid"></div>
   </div>
@@ -636,7 +645,7 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="logo" href="/"><span class="mark" aria-hidden="true"></span>factory<b>depo</b></a>
+        <a class="logo" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#132238"/><path d="M5 11.6 16 5.8l11 5.8v1.7H5z" fill="#f5a623"/><rect x="7.5" y="15.7" width="17" height="3.1" rx="1.55" fill="#f5a623"/><rect x="7.5" y="20.5" width="12.6" height="3.1" rx="1.55" fill="#f5a623" opacity=".72"/><rect x="7.5" y="25.3" width="8.2" height="3.1" rx="1.55" fill="#f5a623" opacity=".45"/></svg>factory<b>depo</b></a>
         <p data-t="foot.tagline">Industrial sourcing with the paperwork and the inspections attached. Catalogue figures shown anywhere on this page are read from the live API at page load.</p>
       </div>
       <div class="foot-col">
@@ -722,6 +731,26 @@ a.skip:focus{left:0}
   var I18N = {
     /* ---------------- English (source of truth) ---------------- */
     en: {
+      'notice.demo': '<b>Demo catalogue</b> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.',
+      'hero.surplusEyebrow': 'Surplus, overstock and container-ready factory stock',
+      'hero.surplusLead': 'Sell your surplus stock,',
+      'hero.surplusAccent': 'buy the lot in one place',
+      'hero.surplusSub1': 'Factories and distributors in Türkiye, China, the USA and Europe list overproduction runs, slow-moving stock, factory seconds and container-ready lots.',
+      'hero.surplusSub2': 'Anyone with stock can list it — no middlemen. Make an offer, or buy the whole lot at the listed price.',
+      'cat.ctaAll': 'All 25 categories →',
+      'cat.agriculture': 'Agriculture',
+      'cat.power': 'Energy',
+      'cat.mining': 'Mining & Ore',
+      'cat.paper': 'Paper & Pulp',
+      'cat.rubber': 'Rubber',
+      'cat.ceramics': 'Ceramics & Glass',
+      'cat.furniture': 'Furniture & Wood',
+      'cat.medical': 'Medical Supplies',
+      'cat.safety': 'Safety & PPE',
+      'cat.food': 'Food Processing',
+      'cat.marine': 'Marine & Offshore',
+      'cat.aerospace': 'Aerospace',
+      'cat.hardware': 'Hardware & Fasteners',
       'doc.title': 'FactoryDepo — Global Industrial Marketplace',
       'doc.description': 'Source industrial products and request quotes from factories worldwide. Inspections, laboratory testing and logistics — one verified supply chain.',
       'skip': 'Skip to listings',
@@ -919,6 +948,26 @@ a.skip:focus{left:0}
 
     /* ---------------- Türkçe ---------------- */
     tr: {
+      'notice.demo': '<b>Demo katalog</b> — gösterilen her ilan demo verisidir, gerçek bir teklif değildir. Gerçek tedarikçi ilanları eklendikçe yerini alacaktır.',
+      'hero.surplusEyebrow': 'Fazla üretim, aşırı stok ve konteyner dolusu fabrika stoğu',
+      'hero.surplusLead': 'Fazla stoğunuzu satın,',
+      'hero.surplusAccent': 'tek yerden lot alın',
+      'hero.surplusSub1': 'Türkiye, Çin, ABD ve Avrupa\'daki fabrikalar ve distribütörler fazla üretim partilerini, yavaş dönen stoğu, ikinci kalite ürünleri ve konteyner dolusu lotları burada listeler.',
+      'hero.surplusSub2': 'Stoğu olan herkes ilan verebilir — aracı yok. Teklif verin ya da listelenen fiyattan tüm lotu satın alın.',
+      'cat.ctaAll': '25 kategorinin tamamı →',
+      'cat.agriculture': 'Tarım',
+      'cat.power': 'Enerji',
+      'cat.mining': 'Madencilik ve Cevher',
+      'cat.paper': 'Kağıt ve Selüloz',
+      'cat.rubber': 'Kauçuk',
+      'cat.ceramics': 'Seramik ve Cam',
+      'cat.furniture': 'Mobilya ve Ahşap',
+      'cat.medical': 'Medikal Malzemeler',
+      'cat.safety': 'İş Güvenliği ve KKD',
+      'cat.food': 'Gıda İşleme',
+      'cat.marine': 'Denizcilik ve Açık Deniz',
+      'cat.aerospace': 'Havacılık ve Uzay',
+      'cat.hardware': 'Hırdavat ve Bağlantı Elemanları',
       'doc.title': 'FactoryDepo — Küresel Endüstriyel Pazar Yeri',
       'doc.description': 'Dünya genelindeki fabrikalardan endüstriyel ürün tedarik edin ve teklif isteyin. Denetim, laboratuvar testi ve lojistik — tek doğrulanmış tedarik zinciri.',
       'skip': 'İlanlara geç',
@@ -1116,6 +1165,26 @@ a.skip:focus{left:0}
 
     /* ---------------- العربية (RTL) ---------------- */
     ar: {
+      'notice.demo': '<b>كتالوج تجريبي</b> — كل إعلان معروض بيانات تجريبية وليس عرضًا حقيقيًا. سيتم استبداله بإعلانات موردين حقيقيين عند إضافتهم.',
+      'hero.surplusEyebrow': 'فائض الإنتاج والمخزون الراكد والجاهز للحاوية',
+      'hero.surplusLead': 'بِع مخزونك الفائض،',
+      'hero.surplusAccent': 'واشترِ الشحنة من مكان واحد',
+      'hero.surplusSub1': 'تُدرج المصانع والموزعون في تركيا والصين والولايات المتحدة وأوروبا دفعات الإنتاج الزائد والمخزون الراكد ومنتجات الدرجة الثانية والشحنات الجاهزة للحاوية.',
+      'hero.surplusSub2': 'يمكن لأي شخص لديه مخزون أن يُدرجه — بلا وسطاء. قدّم عرضًا أو اشترِ الشحنة كاملة بالسعر المعلن.',
+      'cat.ctaAll': 'كل الفئات الـ25 ←',
+      'cat.agriculture': 'الزراعة',
+      'cat.power': 'الطاقة',
+      'cat.mining': 'التعدين والخامات',
+      'cat.paper': 'الورق واللب',
+      'cat.rubber': 'المطاط',
+      'cat.ceramics': 'السيراميك والزجاج',
+      'cat.furniture': 'الأثاث والخشب',
+      'cat.medical': 'المستلزمات الطبية',
+      'cat.safety': 'السلامة ومعدات الوقاية',
+      'cat.food': 'تصنيع الأغذية',
+      'cat.marine': 'البحرية والمنصات البحرية',
+      'cat.aerospace': 'الفضاء والطيران',
+      'cat.hardware': 'العدد والمثبتات',
       'doc.title': 'FactoryDepo — سوق صناعي عالمي',
       'doc.description': 'ورّد منتجات صناعية واطلب عروض أسعار من مصانع حول العالم. تفتيش واختبار مختبري وخدمات لوجستية — سلسلة توريد موثّقة واحدة.',
       'skip': 'تخطَّ إلى الإعلانات',
@@ -1313,6 +1382,26 @@ a.skip:focus{left:0}
 
     /* ---------------- Русский ---------------- */
     ru: {
+      'notice.demo': '<b>Демо-каталог</b> — все показанные объявления являются демонстрационными данными, а не реальным предложением. По мере подключения поставщиков их заменят настоящие.',
+      'hero.surplusEyebrow': 'Излишки, сверхзапас и готовые к отгрузке складские запасы',
+      'hero.surplusLead': 'Продайте излишки,',
+      'hero.surplusAccent': 'покупайте партию в одном месте',
+      'hero.surplusSub1': 'Заводы и дистрибьюторы в Турции, Китае, США и Европе размещают здесь излишки производства, неликвид, второй сорт и партии под контейнер.',
+      'hero.surplusSub2': 'Разместить запасы может любой — без посредников. Сделайте предложение или купите всю партию по указанной цене.',
+      'cat.ctaAll': 'Все 25 категорий →',
+      'cat.agriculture': 'Сельское хозяйство',
+      'cat.power': 'Энергетика',
+      'cat.mining': 'Горная добыча и руда',
+      'cat.paper': 'Бумага и целлюлоза',
+      'cat.rubber': 'Резина',
+      'cat.ceramics': 'Керамика и стекло',
+      'cat.furniture': 'Мебель и древесина',
+      'cat.medical': 'Медицинские товары',
+      'cat.safety': 'Охрана труда и СИЗ',
+      'cat.food': 'Пищевая промышленность',
+      'cat.marine': 'Морская техника и шельф',
+      'cat.aerospace': 'Аэрокосмос',
+      'cat.hardware': 'Метизы и крепёж',
       'doc.title': 'FactoryDepo — глобальная промышленная площадка',
       'doc.description': 'Закупайте промышленную продукцию и запрашивайте предложения у заводов по всему миру. Инспекции, лабораторные испытания и логистика — одна проверенная цепочка поставок.',
       'skip': 'Перейти к объявлениям',
@@ -1510,6 +1599,26 @@ a.skip:focus{left:0}
 
     /* ---------------- 中文 (简体) ---------------- */
     zh: {
+      'notice.demo': '<b>演示目录</b> — 展示的所有商品均为演示数据，并非真实报价。随着真实供应商入驻将逐步替换。',
+      'hero.surplusEyebrow': '余料、积压库存与整柜现货',
+      'hero.surplusLead': '出售您的余料库存，',
+      'hero.surplusAccent': '一站式采购整批货物',
+      'hero.surplusSub1': '土耳其、中国、美国和欧洲的工厂与经销商在此发布超产批次、滞销库存、次品与整柜现货。',
+      'hero.surplusSub2': '有库存即可发布 — 没有中间商。您可以报价，或按标价整批购买。',
+      'cat.ctaAll': '全部 25 个分类 →',
+      'cat.agriculture': '农业',
+      'cat.power': '能源',
+      'cat.mining': '采矿与矿石',
+      'cat.paper': '造纸与纸浆',
+      'cat.rubber': '橡胶',
+      'cat.ceramics': '陶瓷与玻璃',
+      'cat.furniture': '家具与木材',
+      'cat.medical': '医疗用品',
+      'cat.safety': '安全与防护',
+      'cat.food': '食品加工',
+      'cat.marine': '船舶与海工',
+      'cat.aerospace': '航空航天',
+      'cat.hardware': '五金与紧固件',
       'doc.title': 'FactoryDepo — 全球工业交易平台',
       'doc.description': '从全球工厂采购工业产品并索取报价。验厂、实验室检测与物流——一条经过验证的供应链。',
       'skip': '跳转到货源列表',
@@ -1707,6 +1816,26 @@ a.skip:focus{left:0}
 
     /* ---------------- Español ---------------- */
     es: {
+      'notice.demo': '<b>Catálogo de demostración</b> — todos los anuncios mostrados son datos de demostración, no ofertas reales. Se sustituirán por anuncios de proveedores reales.',
+      'hero.surplusEyebrow': 'Excedentes, sobrestock y stock listo para contenedor',
+      'hero.surplusLead': 'Venda su excedente,',
+      'hero.surplusAccent': 'compre el lote en un solo lugar',
+      'hero.surplusSub1': 'Fábricas y distribuidores de Türkiye, China, EE. UU. y Europa publican aquí excedentes de producción, stock de baja rotación, segunda calidad y lotes listos para contenedor.',
+      'hero.surplusSub2': 'Cualquiera con stock puede publicarlo — sin intermediarios. Haga una oferta o compre el lote completo al precio indicado.',
+      'cat.ctaAll': 'Las 25 categorías →',
+      'cat.agriculture': 'Agricultura',
+      'cat.power': 'Energía',
+      'cat.mining': 'Minería y mineral',
+      'cat.paper': 'Papel y pulpa',
+      'cat.rubber': 'Caucho',
+      'cat.ceramics': 'Cerámica y vidrio',
+      'cat.furniture': 'Muebles y madera',
+      'cat.medical': 'Suministros médicos',
+      'cat.safety': 'Seguridad y EPP',
+      'cat.food': 'Procesamiento de alimentos',
+      'cat.marine': 'Marino y offshore',
+      'cat.aerospace': 'Aeroespacial',
+      'cat.hardware': 'Ferretería y fijaciones',
       'doc.title': 'FactoryDepo — Marketplace industrial global',
       'doc.description': 'Compra productos industriales y solicita cotizaciones a fábricas de todo el mundo. Inspecciones, ensayos de laboratorio y logística: una cadena de suministro verificada.',
       'skip': 'Saltar a las publicaciones',
@@ -2366,17 +2495,30 @@ a.skip:focus{left:0}
      sent to /api/products?category=… stays the catalogue's English name. */
   var CATEGORIES = [
     ['Metals & Minerals', 'cat.metals', '/assets/products/copper-cathode.jpg'],
-    ['Steel', 'cat.steel', '/assets/products/steel-coil.jpg'],
-    ['Chemicals', 'cat.chemicals', '/assets/products/lithium-carbonate.jpg'],
+    ['Steel', 'cat.steel', '/assets/products/hot-rolled-coil.jpg'],
+    ['Chemicals', 'cat.chemicals', '/assets/products/caustic-soda.jpg'],
     ['Machinery', 'cat.machinery', '/assets/products/cnc-machine.jpg'],
     ['Industrial Equipment', 'cat.equipment', '/assets/products/industrial-pump.jpg'],
-    ['Renewable Energy', 'cat.energy', '/assets/products/solar-panel.jpg'],
     ['Electronics', 'cat.electronics', '/assets/products/plc-controller.jpg'],
-    ['Automotive', 'cat.automotive', '/assets/products/alloy-wheel.jpg'],
+    ['Automotive', 'cat.automotive', '/assets/products/brake-disc.jpg'],
     ['Construction Materials', 'cat.construction', '/assets/products/cement-bags.jpg'],
+    ['Renewable Energy', 'cat.energy', '/assets/products/wind-blade.jpg'],
     ['Packaging', 'cat.packaging', '/assets/products/corrugated-boxes.jpg'],
     ['Plastic & Rubber', 'cat.plastic', '/assets/products/plastic-granules.jpg'],
-    ['Textiles', 'cat.textiles', '/assets/products/polyester-yarn.jpg']
+    ['Textiles', 'cat.textiles', '/assets/products/polyester-yarn.jpg'],
+    ['Agriculture', 'cat.agriculture', '/assets/products/cat-agriculture.jpg'],
+    ['Energy', 'cat.power', '/assets/products/battery-pack.jpg'],
+    ['Mining & Ore', 'cat.mining', '/assets/products/antimony-ore.jpg'],
+    ['Paper & Pulp', 'cat.paper', '/assets/products/kraft-paper.jpg'],
+    ['Rubber', 'cat.rubber', '/assets/products/rubber-seals.jpg'],
+    ['Ceramics & Glass', 'cat.ceramics', '/assets/products/cat-ceramics.jpg'],
+    ['Furniture & Wood', 'cat.furniture', '/assets/products/cat-furniture.jpg'],
+    ['Medical Supplies', 'cat.medical', '/assets/products/cat-medical.jpg'],
+    ['Safety & PPE', 'cat.safety', '/assets/products/cat-ppe.jpg'],
+    ['Food Processing', 'cat.food', '/assets/products/cat-food.jpg'],
+    ['Marine & Offshore', 'cat.marine', '/assets/products/cat-marine.jpg'],
+    ['Aerospace', 'cat.aerospace', '/assets/products/cat-aerospace.jpg'],
+    ['Hardware & Fasteners', 'cat.hardware', '/assets/products/cat-fasteners.jpg']
   ];
   function renderCats() {
     if (!catGrid) return;

@@ -21,33 +21,12 @@ import * as c from '@workspace/api-zod';
 import { db, products, productViews, suppliers, users } from '../db.js';
 import { requireAuth, requireRole, verifyToken } from '../auth.js';
 import { HttpError, mapProduct, parseId, respond, toNum } from '../http.js';
-import { callerContext } from '../helpers.js';
+import { callerContext, productColumns } from '../helpers.js';
 
 export const productsRouter = Router();
 
 /** Columns for list + detail (supplierName via suppliers, trustScore via users). */
-const productCols = {
-  id: products.id,
-  supplierId: products.supplierId,
-  supplierName: suppliers.companyName,
-  name: products.name,
-  category: products.category,
-  description: products.description,
-  spec: products.spec,
-  price: products.price,
-  currency: products.currency,
-  unit: products.unit,
-  moq: products.moq,
-  originCountry: products.originCountry,
-  purityGrade: products.purityGrade,
-  verified: products.verified,
-  trustScore: users.trustScore,
-  imageKey: products.imageKey,
-  quantityAvailable: products.quantityAvailable,
-  status: products.status,
-  dataSource: products.dataSource,
-  createdAt: products.createdAt,
-};
+const productCols = productColumns;
 
 /**
  * Resolve the caller's own supplier row for a listing mutation. Returns null
@@ -78,7 +57,7 @@ productsRouter.get('/', async (req, res) => {
   if (!parsed.success) {
     throw new HttpError(400, { error: 'validation_error', details: parsed.error.message });
   }
-  const { q, category, country, minPrice, maxPrice, hasImage, mine, page, limit } = parsed.data;
+  const { q, category, listingType, country, minPrice, maxPrice, hasImage, mine, page, limit } = parsed.data;
 
   // `mine` is validated by the same schema as everything else; it arrives in
   // parsed.data, not as a raw string.
@@ -112,6 +91,7 @@ productsRouter.get('/', async (req, res) => {
     );
   }
   if (category) conds.push(eq(products.category, category));
+  if (listingType) conds.push(eq(products.listingType, listingType));
   if (country) conds.push(eq(products.originCountry, country));
   if (minPrice != null) conds.push(gte(products.price, String(minPrice)));
   if (maxPrice != null) conds.push(lte(products.price, String(maxPrice)));
@@ -193,6 +173,7 @@ productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) 
     imageKey,
     quantityAvailable,
     status,
+    listingType,
   } = input.data;
 
   // Origin defaults to the supplier's own registered country — never invented.
@@ -222,6 +203,7 @@ productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) 
       imageKey: imageKey ?? null,
       quantityAvailable: String(quantityAvailable),
       status,
+      listingType,
       // Real user-created supply. Only seed/import code writes 'demo'.
       dataSource: 'platform',
     })
@@ -307,6 +289,7 @@ productsRouter.patch('/:id', requireAuth, requireRole('supplier'), async (req, r
   if (d.imageKey !== undefined) patch.imageKey = d.imageKey;
   if (d.quantityAvailable !== undefined) patch.quantityAvailable = String(d.quantityAvailable);
   if (d.status !== undefined) patch.status = d.status;
+  if (d.listingType !== undefined) patch.listingType = d.listingType;
   // Never patchable here: supplierId, dataSource, verified (admin/seed only).
 
   if (Object.keys(patch).length > 0) {

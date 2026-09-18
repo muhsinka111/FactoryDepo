@@ -118,6 +118,9 @@ export function mapProduct(p: Record<string, unknown>): c.Product {
     quantityAvailable: toNum(p.quantityAvailable),
     status: p.status as c.Product['status'],
     dataSource: p.dataSource as c.Product['dataSource'],
+    // A row written before migration 019 has no listingType; the DB default is
+    // 'stock', and this fallback keeps old rows readable instead of throwing.
+    listingType: (p.listingType ?? 'stock') as c.Product['listingType'],
     createdAt: toIso(p.createdAt),
   };
 }
@@ -153,6 +156,9 @@ export function mapRfq(r: Record<string, unknown>): c.Rfq {
     targetCountry: r.targetCountry == null ? null : String(r.targetCountry),
     status: r.status as c.Rfq['status'],
     quoteCount: toNum(r.quoteCount),
+    // Rows written before migration 020 default to 'platform' in the DB; the
+    // fallback keeps an older row readable instead of throwing.
+    dataSource: (r.dataSource ?? 'platform') as c.Rfq['dataSource'],
     deadline: toIsoOrNull(r.deadline),
     createdAt: toIso(r.createdAt),
   };

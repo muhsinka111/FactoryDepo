@@ -125,7 +125,6 @@ meRouter.patch('/', requireAuth, async (req, res) => {
   const patch: Record<string, unknown> = {};
   if (input.data.name !== undefined) patch.name = input.data.name;
   if (input.data.company !== undefined) patch.company = input.data.company;
-  if (input.data.country !== undefined) patch.country = input.data.country;
   if (input.data.lang !== undefined) patch.lang = input.data.lang;
 
   if (Object.keys(patch).length > 0) {
@@ -135,4 +134,55 @@ meRouter.patch('/', requireAuth, async (req, res) => {
   const [row] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
   if (!row) throw new HttpError(401, { error: 'auth_required' });
   respond(res, c.zUser, mapUser(row));
+});
+
+/**
+ * POST /api/me/become-supplier — anyone may start selling.
+ *
+ * The owner's requirement is that any account can list stock, so a buyer needs a
+ * way up. This is the ONLY endpoint that changes a role, and it moves one way
+ * only: buyer -> supplier. `role` is deliberately NOT writable through PATCH
+ * /api/me, which would otherwise let a buyer self-assign 'admin'.
+ *
+ * Idempotent: calling it twice leaves one supplier profile, not two.
+ */
+meRouter.post('/become-supplier', requireAuth, async (req, res) => {
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const [me] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
+  if (!me) throw new HttpError(401, { error: 'auth_required' });
+
+  if (me.role !== 'supplier' && me.role !== 'admin') {
+    await db.update(users).set({ role: 'supplier' }).where(eq(users.id, uid));
+  }
+
+  // Listings hang off a supplier profile; create it once, exactly as register
+  // does for a signup that chose the supplier role.
+  const [existing] = await db
+    .select({ id: suppliers.id })
+    .from(suppliers)
+    .where(eq(suppliers.userId, uid))
+    .limit(1);
+  if (!existing) {
+    await db.insert(suppliers).values({
+      userId: uid,
+      companyName: me.company ?? me.name,
+      country: me.country ?? '',
+      city: null,
+      description: null,
+      verifiedLevel: 0,
+      rating: '0',
+      inspectionsCount: 0,
+      fulfillmentRate: '0',
+      tags: [],
+      since: null,
+      // A real account created it; the directory profile is not demo data.
+      dataSource: 'platform',
+    });
+  }
+
+  const [fresh] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
+  if (!fresh) throw new HttpError(401, { error: 'auth_required' });
+  respond(res, c.zUser, mapUser(fresh));
 });

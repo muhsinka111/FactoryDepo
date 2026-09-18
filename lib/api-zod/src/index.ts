@@ -51,6 +51,14 @@ export type AuthResponse = z.infer<typeof zAuthResponse>;
 export const zProductStatus = z.enum(['active', 'sold_out']);
 export const zDataSource = z.enum(['platform', 'demo']);
 
+/**
+ * Surplus-first stock facet. Orthogonal to `category` — a lot is steel AND
+ * surplus — so a listing carries both. Validated here because a stray value
+ * would render an unlabelled badge and a filter that silently matches nothing.
+ */
+export const zListingType = z.enum(['stock', 'surplus', 'overstock', 'liquidation', 'seconds', 'container']);
+export type ListingType = z.infer<typeof zListingType>;
+
 export const zProduct = z.object({
   id: z.number(),
   supplierId: z.number(),
@@ -71,6 +79,7 @@ export const zProduct = z.object({
   quantityAvailable: z.number(),
   status: zProductStatus,
   dataSource: zDataSource,
+  listingType: zListingType,
   createdAt: z.string(),
 });
 export type Product = z.infer<typeof zProduct>;
@@ -78,6 +87,7 @@ export type Product = z.infer<typeof zProduct>;
 export const zProductListQuery = z.object({
   q: z.string().max(120).optional(),
   category: z.string().max(60).optional(),
+  listingType: zListingType.optional(),
   country: z.string().max(60).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
@@ -152,6 +162,7 @@ export const zRfq = z.object({
   targetCountry: z.string().nullable(),
   status: zRfqStatus,
   quoteCount: z.number(),
+  dataSource: zDataSource,
   deadline: z.string().nullable(),
   createdAt: z.string(),
 });
@@ -715,6 +726,8 @@ export const zCreateProductInput = z.object({
   imageKey: z.string().max(300).optional(),
   quantityAvailable: z.coerce.number().nonnegative().default(0),
   status: zProductStatus.default('active'),
+  /* Sellers choose the stock type when listing; defaults to ordinary stock. */
+  listingType: zListingType.default('stock'),
 });
 export type CreateProductInput = z.infer<typeof zCreateProductInput>;
 

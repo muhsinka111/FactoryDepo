@@ -15,6 +15,7 @@ import {
   DemoTag,
   Spinner,
   requireAuthGate,
+  StockTypeFilter,
 } from '../components';
 import { ListingForm } from './SupplierPost';
 import { useI18n } from '../i18n';
@@ -157,9 +158,15 @@ export default function SupplierListings() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const [notice, setNotice] = useState('');
+  /**
+   * Stock-type filter over the seller's OWN listings: "which of my lots are
+   * surplus vs ordinary stock" is the question a seller actually asks. The value
+   * goes to the same public query contract, scoped by `mine=1`.
+   */
+  const [listingType, setListingType] = useState('');
 
   const res = useProducts(
-    { mine: 1, page, limit: PAGE_SIZE },
+    { mine: 1, listingType: (listingType || undefined) as never, page, limit: PAGE_SIZE },
     { enabled: loggedIn && isSupplier },
   );
 
@@ -237,6 +244,11 @@ export default function SupplierListings() {
           <button className="x" onClick={() => setNotice('')} aria-label={t('action.dismiss')}>✕</button>
         </div>
       )}
+
+      <StockTypeFilter
+        value={listingType}
+        onChange={(v) => { setListingType(v); setPage(1); }}
+      />
 
       <div className="stripe">
         <span>
