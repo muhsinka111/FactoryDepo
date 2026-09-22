@@ -3,6 +3,60 @@ import { useSupplier, useProducts, useMe } from '@workspace/api-client-react';
 import { View, Empty, ProductCard, Verified, DemoTag, Stars, requireAuthGate } from '../components';
 import { useI18n } from '../i18n';
 
+/*
+ * Two strings on this page have no dictionary key yet, so they stay English and
+ * are reported for translation instead of being invented as keys:
+ *
+ *   'supplierDetail.importedRecord'
+ *     EN: Supplier record origin: imported from a third-party B2B directory
+ *         record. The company details are as published there; the source
+ *         directory and its store URL are not published on this page.
+ *     TR: Tedarikçi kaydının kaynağı: üçüncü taraf bir B2B dizin kaydından içe
+ *         aktarıldı. Şirket bilgileri o dizindeki haliyle verilmiştir; kaynak
+ *         dizin ve mağaza adresi bu sayfada yayımlanmaz.
+ *
+ *   'supplierDetail.demoMetricsNote'
+ *     EN: This is seed data. No rating, inspection or fulfilment figure exists
+ *         for it, so those rows read “—”.
+ *     TR: Bu bir örnek veri satırıdır. Ona ait puan, denetim veya teslim
+ *         performansı kaydı yoktur; ilgili satırlar “—” gösterir.
+ */
+const IMPORTED_RECORD_NOTE =
+  'Supplier record origin: imported from a third-party B2B directory record. The company details are as published there; the source directory and its store URL are not published on this page.';
+const DEMO_METRICS_NOTE =
+  'This is seed data. No rating, inspection or fulfilment figure exists for it, so those rows read “—”.';
+
+/**
+ * Imported records are detectable by the note the importer wrote into
+ * `description` (“Imported from <directory> — … Store: https://…”). The note is
+ * NOT shown to buyers: it names a competitor directory and hands out its
+ * storefront URL, and it is not the company's own words. Such a description is
+ * replaced by one neutral origin line — the real source is neither renamed nor
+ * replaced with an invented one, it is simply not published.
+ */
+const IMPORT_NOTE = /^\s*imported\s+from\b/i;
+const DIRECTORY_HOST = /(?:made-in-china|alibaba|1688|globalsources|indiamart|aliexpress|tradekey|dhgate)\.(?:com|cn|net|co\.uk|de|ru|fr|it|es)/i;
+const DIRECTORY_URL = /https?:\/\/[^\s]*?(?:made-in-china|alibaba|1688|globalsources|indiamart|aliexpress|tradekey|dhgate)\.[a-z.]+[^\s]*/gi;
+const DIRECTORY_HOST_ANY = /\b[a-z0-9-]*(?:made-in-china|alibaba|1688|globalsources|indiamart|aliexpress|tradekey|dhgate)\.[a-z.]+\b/gi;
+
+/** True when this description is an importer's note rather than the company's own text. */
+function isImportedRecord(description: string): boolean {
+  return IMPORT_NOTE.test(description) || DIRECTORY_HOST.test(description);
+}
+
+/**
+ * Belt-and-braces for a description we DO show: no directory URL or host ever
+ * reaches a buyer, whatever the note that happens to carry it says.
+ */
+function scrubSource(text: string): string {
+  return text
+    .replace(DIRECTORY_URL, '')
+    .replace(DIRECTORY_HOST_ANY, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+([.,;])/g, '$1')
+    .trim();
+}
+
 /** Metrics we can only show when the API actually computes them. */
 function metric(value: number | null | undefined): string {
   return value === null || value === undefined || value <= 0 ? '—' : String(value);
@@ -14,9 +68,13 @@ function rate(value: number | null | undefined): string {
 
 /**
  * Supplier profile — verification tier, the honest trading record, the
- * capability tags the supplier declared, and their live lots. A figure the
- * platform does not compute yet prints as an em dash rather than a 0.0 that
- * would read as a real score.
+ * capability tags the supplier declared, and their live lots.
+ *
+ * Trust figures (rating, inspections, fulfilment, trust score) are rendered only
+ * for a row that is not seed data AND whose value is genuinely present: a seeded
+ * rating is not a measurement, and an absent one is an em dash rather than a 0.0
+ * that would read as a real score. Genuine platform rows render exactly as
+ * before.
  */
 export default function SupplierDetail({ params }: { params?: { id?: string } }) {
   const { t, locale } = useI18n();
@@ -46,6 +104,13 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
   }
 
   const mine = products.data?.items.filter((p) => p.supplierId === s.id) ?? [];
+  const isDemo = s.dataSource === 'demo';
+  const about = (s.description ?? '').trim();
+  const imported = about !== '' && isImportedRecord(about);
+  const rating = !isDemo && s.rating > 0 ? s.rating : 0;
+  const inspections = isDemo ? 0 : s.inspectionsCount;
+  const fulfilment = isDemo ? 0 : s.fulfillmentRate;
+  const trust = isDemo ? 0 : s.trustScore;
 
   return (
     <View
@@ -67,23 +132,23 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
       <div className="stats grid">
         <div className="card stat">
           <div>
-            <div className="v">{s.rating > 0 ? <Stars rating={s.rating} /> : '—'}</div>
+            <div className="v">{rating > 0 ? <Stars rating={rating} /> : '—'}</div>
             <div className="l">
-              {s.rating > 0
-                ? `${t('supplierDetail.buyerRating')} ${s.rating.toFixed(1)} / 5`
+              {rating > 0
+                ? `${t('supplierDetail.buyerRating')} ${rating.toFixed(1)} / 5`
                 : `${t('supplierDetail.buyerRating')} — ${t('supplierDetail.notRated')}`}
             </div>
           </div>
         </div>
         <div className="card stat">
           <div>
-            <div className="v">{metric(s.inspectionsCount)}</div>
+            <div className="v">{metric(inspections)}</div>
             <div className="l">{t('supplierDetail.inspections')}</div>
           </div>
         </div>
         <div className="card stat">
           <div>
-            <div className="v">{rate(s.fulfillmentRate)}</div>
+            <div className="v">{rate(fulfilment)}</div>
             <div className="l">{t('supplierDetail.fulfilment')}</div>
           </div>
         </div>
@@ -101,7 +166,7 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
         </div>
         <div className="card stat">
           <div>
-            <div className="v">{s.trustScore > 0 ? Math.round(s.trustScore) : '—'}</div>
+            <div className="v">{trust > 0 ? Math.round(trust) : '—'}</div>
             <div className="l">{t('supplierDetail.trustScore')}</div>
           </div>
         </div>
@@ -111,9 +176,16 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
         <div className="card">
           <div className="hd"><h2>{t('supplierDetail.about', { company: s.companyName })}</h2></div>
           <div className="bd">
-            <p style={{ margin: 0 }}>
-              {s.description ?? t('supplierDetail.noDescription')}
-            </p>
+            {/* An importer's note is replaced by one neutral origin line: it is not
+                the company's own words and it carries a competitor directory's
+                storefront URL, which a buyer-facing page must not publish. */}
+            {imported ? (
+              <p style={{ margin: 0 }}>{IMPORTED_RECORD_NOTE}</p>
+            ) : (
+              <p style={{ margin: 0 }}>
+                {about !== '' ? scrubSource(about) : t('supplierDetail.noDescription')}
+              </p>
+            )}
             {s.tags.length > 0 && (
               <>
                 <div className="muted" style={{ margin: '12px 0 5px' }}>{t('supplierDetail.capabilities')}</div>
@@ -135,15 +207,15 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
               </tr>
               <tr>
                 <td className="muted">{t('supplierDetail.ratingLabel')}</td>
-                <td style={{ textAlign: 'right' }}>{s.rating > 0 ? `${s.rating.toFixed(1)} / 5` : '—'}</td>
+                <td style={{ textAlign: 'right' }}>{rating > 0 ? `${rating.toFixed(1)} / 5` : '—'}</td>
               </tr>
               <tr>
                 <td className="muted">{t('supplierDetail.inspectionsDone')}</td>
-                <td style={{ textAlign: 'right' }}>{metric(s.inspectionsCount)}</td>
+                <td style={{ textAlign: 'right' }}>{metric(inspections)}</td>
               </tr>
               <tr>
                 <td className="muted">{t('supplierDetail.fulfilment')}</td>
-                <td style={{ textAlign: 'right' }}>{rate(s.fulfillmentRate)}</td>
+                <td style={{ textAlign: 'right' }}>{rate(fulfilment)}</td>
               </tr>
               <tr>
                 <td className="muted">{t('product.tradingSince')}</td>
@@ -155,6 +227,11 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
               </tr>
             </tbody>
           </table>
+          {/* A seeded row has no measured figure to show. Saying why the cells are
+              empty is the honest complement to the Demo tag in the header. */}
+          {isDemo && (
+            <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>{DEMO_METRICS_NOTE}</div>
+          )}
         </div>
 
         <div className="grid" style={{ gridTemplateColumns: '1fr' }}>

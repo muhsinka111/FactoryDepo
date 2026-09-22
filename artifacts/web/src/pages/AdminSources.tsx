@@ -9,22 +9,73 @@ import {
 } from '@workspace/api-client-react';
 import type { AdminSupplier } from '@workspace/api-zod';
 import { View, Empty, Spinner, DemoTag } from '../components';
+import { Pager } from '../dash';
 import { useI18n, type DictKey } from '../i18n';
 
 /**
- * AdminSources — manual, consent-based supplier intake.
+ * AdminSources — supplier intake, stated truthfully.
  *
- * This screen is the opposite of an importer. The project's data-provenance
- * policy (docs/DATA_PROVENANCE.md) removed the platform scrapers and the images
- * they downloaded, for three independent reasons: the source marketplaces
- * prohibit automated collection, their photographs are not ours to re-serve, and
- * listing companies that never agreed to be here at prices we cannot honour is
- * the exact dishonesty this marketplace exists to prevent.
+ * This screen used to say “No directory is imported, and no catalogue is
+ * scraped.” That is not true of this platform: its supplier table holds records
+ * imported from third-party B2B directories — hundreds of rows carry a `source`
+ * value, and many carry the importer's own note in `description`. Imported rows
+ * are exactly what the honesty rules on this platform exist for, so the copy
+ * below states the real behaviour instead of a policy the data contradicts.
  *
- * So intake is a deliberate, attributable act: a supplier registers itself, an
- * administrator confirms the company and attests it. There is no bulk import to
- * offer — and no import endpoint exists to call, even if this screen wanted one.
+ * Intake itself is still manual and attributable: a company registers itself, an
+ * administrator confirms it and attests it. There is no bulk-import button and no
+ * import endpoint behind one (that part of the old copy was accurate, and stays).
+ *
+ * Three strings need dictionary keys and are kept in honest English until they
+ * land (reported, not invented):
+ *
+ *   'admin.sources.sub'
+ *     EN: Two paths fill this list: companies that registered themselves
+ *         (attested individually below) and records imported from third-party
+ *         B2B directory sources. An imported row keeps its source label, is shown
+ *         to buyers as an imported directory record — never with the source
+ *         directory's store URL — and is never presented as a company that
+ *         signed up. No bulk-import or scraping endpoint exists.
+ *     TR: Bu listeyi iki yol doldurur: kendi hesabını açan şirketler (aşağıda tek
+ *         tek onaylanır) ve üçüncü taraf B2B dizin kaynaklarından içe aktarılan
+ *         kayıtlar. İçe aktarılan satır kaynak etiketini taşır, alıcıya kaynak
+ *         dizinin mağaza adresiyle değil “içe aktarılmış dizin kaydı” olarak
+ *         gösterilir ve kendini kaydetmiş bir şirket gibi sunulmaz. Toplu içe
+ *         aktarma veya kazıma uç noktası yoktur.
+ *
+ *   'admin.sources.step1Body'
+ *     EN: Most supplier rows are created by the supplier itself — there is no
+ *         create-supplier endpoint, by design. Rows imported from a B2B directory
+ *         source carry that source instead.
+ *     TR: Tedarikçi satırlarının çoğunu tedarikçinin kendisi oluşturur — tasarım
+ *         gereği tedarikçi oluşturma uç noktası yoktur. B2B dizin kaynağından
+ *         içe aktarılan satırlar ise o kaynağı taşır.
+ *
+ *   'admin.sources.supplierHint'
+ *     EN: Only suppliers without an attestation are listed. Company details come
+ *         from the supplier's own registration, or from the directory record the
+ *         row was imported from.
+ *     TR: Yalnızca onayı olmayan tedarikçiler listelenir. Şirket bilgileri
+ *         tedarikçinin kendi kaydından veya satırın içe aktarıldığı dizin
+ *         kaydından gelir.
  */
+const TRUE_INTAKE_SUB =
+  'Two paths fill this list: companies that registered themselves (attested individually below) and records imported from third-party B2B directory sources. An imported row keeps its source label, is shown to buyers as an imported directory record — never with the source directory’s store URL — and is never presented as a company that signed up. No bulk-import or scraping endpoint exists.';
+const TRUE_STEP1_BODY =
+  'Most supplier rows are created by the supplier itself — there is no create-supplier endpoint, by design. Rows imported from a B2B directory source carry that source instead.';
+const TRUE_SUPPLIER_HINT =
+  'Only suppliers without an attestation are listed. Company details come from the supplier’s own registration, or from the directory record the row was imported from.';
+
+/**
+ * The intake table renders one page at a time. GET /api/admin/suppliers returns
+ * every row plus a `total` and takes no limit/offset, so paging is client-side
+ * over the rows already in memory; rendering all ~1,600 rows at once was the
+ * whole cost of this screen. The supplier picker below the table is a form
+ * control, not a list: it keeps one option per unattested supplier so any of them
+ * can still be selected.
+ */
+const PAGE_SIZE = 25;
+
 
 type CheckKey = 'selfRegistered' | 'contactVerified' | 'detailsMatch' | 'notImported';
 
@@ -161,6 +212,7 @@ export default function AdminSources() {
   const [decision, setDecision] = useState<{ supplier: AdminSupplier; action: 'attest' | 'reject' } | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const items = useMemo(() => res.data?.items ?? [], [res.data]);
 
@@ -172,6 +224,12 @@ export default function AdminSources() {
 
   const selected = unattested.find((s) => String(s.id) === selectedId);
   const allChecked = CHECKS.every((c) => checks[c.key]);
+
+  // One page of the intake table at a time (see PAGE_SIZE above). The picker keeps
+  // the full `unattested` list, so any supplier can still be chosen.
+  const pageCount = Math.max(1, Math.ceil(unattested.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const shown = unattested.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
@@ -210,7 +268,7 @@ export default function AdminSources() {
   return (
     <View
       title={t('nav.sources')}
-      sub={t('admin.sources.sub')}
+      sub={TRUE_INTAKE_SUB}
       actions={<Link href="/admin/suppliers" className="btn btn-sm btn-ghost">{t('admin.sources.allSuppliers')}</Link>}
     >
       <div className="cols">
@@ -218,7 +276,7 @@ export default function AdminSources() {
           <div className="hd"><h2>{t('admin.sources.howTitle')}</h2></div>
           <div className="bd" style={{ lineHeight: 1.7 }}>
             <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <li><b>{t('admin.sources.step1Lead')}</b> {t('admin.sources.step1Body')}</li>
+              <li><b>{t('admin.sources.step1Lead')}</b> {TRUE_STEP1_BODY}</li>
               <li><b>{t('admin.sources.step2Lead')}</b> {t('admin.sources.step2Body')}</li>
               <li><b>{t('admin.sources.step3Lead')}</b> <Link href="/admin/verification">{t('nav.adminVerify')}</Link> {t('admin.sources.step3Tail')}</li>
               <li><b>{t('admin.sources.step4Lead')}</b>{t('admin.sources.step4Body')}</li>
@@ -297,7 +355,7 @@ export default function AdminSources() {
                     ))}
                   </select>
                   <div className="hint">
-                    {t('admin.sources.supplierHint')}
+                    {TRUE_SUPPLIER_HINT}
                   </div>
                 </div>
 
@@ -359,7 +417,7 @@ export default function AdminSources() {
                     </tr>
                   </thead>
                   <tbody>
-                    {unattested.map((s) => (
+                    {shown.map((s) => (
                       <tr key={s.id}>
                         <td>
                           <span className="strong">{s.companyName}</span>
@@ -414,6 +472,12 @@ export default function AdminSources() {
                   </tbody>
                 </table>
               </div>
+              <Pager
+                page={safePage}
+                pageSize={PAGE_SIZE}
+                total={unattested.length}
+                onPage={setPage}
+              />
             </>
           )}
         </div>

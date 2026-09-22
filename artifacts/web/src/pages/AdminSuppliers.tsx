@@ -9,6 +9,7 @@ import {
 } from '@workspace/api-client-react';
 import type { AdminSupplier } from '@workspace/api-zod';
 import { View, Empty, Spinner, DemoTag } from '../components';
+import { Pager, Toolbar } from '../dash';
 import { useI18n } from '../i18n';
 
 /**
@@ -18,7 +19,13 @@ import { useI18n } from '../i18n';
  * supplier (docsMissing / docsSubmitted / docsApproved / docsRejected), so an
  * attestation decision is made against facts, not a badge. Approving or
  * rejecting always goes through a confirming modal that states the consequence.
+ *
+ * Paging is client-side: GET /api/admin/suppliers returns every row plus a
+ * `total` and takes no limit/offset (artifacts/api-server/src/routes/admin.ts),
+ * so the whole queue already sits in memory and this screen renders one page of
+ * it. The queue is 1,600-odd rows and one document per row is what froze the tab.
  */
+const PAGE_SIZE = 25;
 
 interface Decision {
   supplier: AdminSupplier;
@@ -144,6 +151,7 @@ export default function AdminSuppliers() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<'all' | 'unattested' | 'attested' | 'demo'>('all');
+  const [page, setPage] = useState(1);
 
   const items = useMemo(() => res.data?.items ?? [], [res.data]);
 
@@ -162,6 +170,12 @@ export default function AdminSuppliers() {
       );
     });
   }, [items, q, filter]);
+
+  // One page of the queue at a time; changing the search or the filter returns to
+  // the first page so a decision is never taken against an empty view.
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const shown = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   if (!signedIn) return <AdminOnly signedIn={false} />;
   if (me.isLoading) {
@@ -256,13 +270,13 @@ export default function AdminSuppliers() {
             </div>
           </div>
 
-          <div className="filters">
+          <Toolbar>
             <input
-              className="in"
-              style={{ width: 240 }}
+              type="search"
+              className="grow"
               placeholder={t('admin.suppliers.searchPlaceholder')}
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => { setQ(e.target.value); setPage(1); }}
               aria-label={t('admin.suppliers.searchAria')}
             />
             {([
@@ -274,19 +288,13 @@ export default function AdminSuppliers() {
               <button
                 key={key}
                 className={`chip ${filter === key ? 'on' : ''}`}
-                onClick={() => setFilter(key)}
+                onClick={() => { setFilter(key); setPage(1); }}
                 aria-pressed={filter === key}
               >
                 {label}
               </button>
             ))}
-            <span className="muted" style={{ marginLeft: 'auto' }}>
-              {t('admin.common.showingOf', {
-                shown: filtered.length.toLocaleString(locale),
-                total: items.length.toLocaleString(locale),
-              })}
-            </span>
-          </div>
+          </Toolbar>
 
           {filtered.length === 0 ? (
             <Empty title={t('admin.suppliers.noMatchTitle')}>
@@ -314,15 +322,19 @@ export default function AdminSuppliers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((s) => (
+                    {shown.map((s) => (
                       <tr key={s.id}>
                         <td>
                           <span className="strong">{s.companyName}</span>
                           <div className="muted">
                             {s.country}{s.city ? ` · ${s.city}` : ''} · #{s.id} ·{' '}
+                            {/* Same rule as the public directory: a demo row carries
+                                no numeric trust claim (the seeded rating/trust are not
+                                measurements), and a real row with nothing recorded shows
+                                an em dash. The Source column beside it says which is which. */}
                             {t('admin.suppliers.ratingTrust', {
-                              rating: s.rating > 0 ? s.rating.toFixed(1) : '—',
-                              trust: s.trustScore > 0 ? s.trustScore.toFixed(0) : '—',
+                              rating: s.dataSource !== 'demo' && s.rating > 0 ? s.rating.toFixed(1) : '—',
+                              trust: s.dataSource !== 'demo' && s.trustScore > 0 ? s.trustScore.toFixed(0) : '—',
                             })}
                           </div>
                         </td>
@@ -389,6 +401,20 @@ export default function AdminSuppliers() {
                   </tbody>
                 </table>
               </div>
+              <Pager
+                page={safePage}
+                pageSize={PAGE_SIZE}
+                total={filtered.length}
+                onPage={setPage}
+                left={
+                  filtered.length < items.length
+                    ? <span className="tnum">{t('admin.common.showingOf', {
+                      shown: filtered.length.toLocaleString(locale),
+                      total: items.length.toLocaleString(locale),
+                    })}</span>
+                    : undefined
+                }
+              />
             </div>
           )}
 

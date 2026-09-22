@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { useNotifications, useMarkNotificationsRead, useMe, getToken } from '@workspace/api-client-react';
-import { View, Empty, Spinner, requireAuthGate } from '../components';
+import { View, Empty, Spinner, requireAuthGate, notifTypeLabel, notifSentence } from '../components';
 import { useI18n } from '../i18n';
 
 /**
@@ -15,8 +15,12 @@ import { useI18n } from '../i18n';
  * relative label; the exact timestamp stays in the title attribute. A row with
  * no timestamp renders '—'.
  *
- * `text` and `type` on a row are server-supplied notification content, not
- * interface copy — they are shown as received.
+ * `type` and `text` are server-supplied values, not interface copy: the API
+ * writes its bodies in English and stores the raw enum. Both are put through the
+ * shared helpers in components.tsx — the chip becomes the localised noun for
+ * that entity, and the body is re-composed in the interface language when the
+ * row matches a template we know. Anything unrecognised is shown exactly as the
+ * server sent it (never a raw key, never a half-translated sentence).
  */
 
 function errMessage(e: unknown, fallback: string): string {
@@ -55,7 +59,7 @@ function resolveLink(link: string | null): string | null {
 }
 
 export default function Notifications() {
-  const { t, locale } = useI18n();
+  const { t, lang, locale } = useI18n();
   const me = useMe();
   const user = me.data;
 
@@ -170,6 +174,7 @@ export default function Notifications() {
           <div>
             {items.map((n) => {
               const href = resolveLink(n.link);
+              const typeLabel = notifTypeLabel(t, lang, n.type);
               return (
                 <div
                   key={n.id}
@@ -185,9 +190,9 @@ export default function Notifications() {
                   <div style={{ minWidth: 0 }}>
                     <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
                       {!n.read && <span className="pill p-blue">{t('notes.unreadLabel')}</span>}
-                      {n.type && <span className="pill p-grey">{n.type.replace(/_/g, ' ')}</span>}
+                      {typeLabel && <span className="pill p-grey">{typeLabel}</span>}
                     </div>
-                    <div className={n.read ? undefined : 'strong'}>{n.text}</div>
+                    <div className={n.read ? undefined : 'strong'}>{notifSentence(t, lang, n)}</div>
                     <div className="muted" title={new Date(n.createdAt).toLocaleString(locale)}>
                       {timeAgo(n.createdAt)}
                     </div>

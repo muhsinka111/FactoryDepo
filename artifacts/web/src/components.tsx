@@ -448,6 +448,118 @@ export function DemoNotice() {
   );
 }
 
+/* ========================= notification copy ============================= */
+
+/**
+ * Notification rows arrive from the API with a server-written English `text` and
+ * a raw enum `type`. Neither is interface copy, so neither may be rendered
+ * verbatim in a translated UI:
+ *
+ *  • the type chip goes through a dictionary key — the same noun the navigation
+ *    already translates for that entity — so `message` reads as “Mesajlar” in
+ *    Turkish instead of the internal enum value; an unknown type falls back to
+ *    the existing `statusLabel()` convention (readable words, never blank);
+ *  • the body is re-composed in the interface language when the row matches a
+ *    template the API actually writes (see `notifParts` below). When the type or
+ *    the wording is not recognised, or the dictionary has no sentence for it
+ *    yet, the server text is shown exactly as received — never a raw key, never
+ *    a half-translated sentence.
+ *
+ * The sentence keys live in the `notes.body.*` namespace. `t()` returns the key
+ * itself while a key is missing from `en` (i18n.tsx documents that), and that is
+ * exactly what the fallback detects — so adding the key to the dictionary is all
+ * that is needed to light its sentence up; no code change follows.
+ */
+export type TranslateFn = (key: DictKey, vars?: Record<string, string | number>) => string;
+
+/** `DictKey` cast for keys this file needs before the dictionary carries them. */
+const dictKey = (key: string): DictKey => key as DictKey;
+
+/** Notification `type` → the noun the interface already uses for that entity. */
+const NOTIF_TYPE_KEY: Record<string, DictKey> = {
+  message: 'nav.messages',
+  thread: 'nav.messages',
+  shipment: 'nav.shipments',
+  payment: 'nav.adminPayments',
+  offer: 'nav.offersSup',
+  order: 'nav.orders',
+};
+
+/** The localised chip label for a notification type, or null when there is none. */
+export function notifTypeLabel(t: TranslateFn, lang: LangCode, type: string | null | undefined): string | null {
+  if (!type) return null;
+  const key = NOTIF_TYPE_KEY[type];
+  return key ? t(key) : statusLabel(lang, type);
+}
+
+/** A notification shape, structurally — only these two fields are ever read. */
+export interface NotifLike {
+  type: string | null;
+  text: string;
+}
+
+interface NotifParts {
+  key: DictKey;
+  vars: Record<string, string | number>;
+}
+
+/**
+ * The API writes a fixed set of English notification bodies (see the notify()
+ * call sites in the server routes). Each template is matched exactly and
+ * anchored, so a reworded server string falls through to the body-as-received
+ * rather than being mis-parsed.
+ */
+function notifParts(n: NotifLike, lang: LangCode): NotifParts | null {
+  const text = n.text ?? '';
+  let m: RegExpMatchArray | null;
+  switch (n.type) {
+    case 'message':
+      m = text.match(/^New message from (.+)\.$/);
+      return m ? { key: dictKey('notes.body.newMessage'), vars: { name: m[1] } } : null;
+    case 'thread':
+      m = text.match(/^New enquiry from (.+)\.$/);
+      return m ? { key: dictKey('notes.body.newEnquiry'), vars: { name: m[1] } } : null;
+    case 'shipment':
+      m = text.match(/^Order #(\d+) was delivered\.$/);
+      if (m) return { key: dictKey('notes.body.shipmentDelivered'), vars: { id: m[1] } };
+      m = text.match(/^Shipment for order #(\d+) advanced\.$/);
+      return m ? { key: dictKey('notes.body.shipmentAdvanced'), vars: { id: m[1] } } : null;
+    case 'payment':
+      m = text.match(/^Payment of (\S+) ([\d.,]+) recorded for order #(\d+) — awaiting confirmation\.$/);
+      if (m) return { key: dictKey('notes.body.paymentRecorded'), vars: { currency: m[1], amount: m[2], id: m[3] } };
+      m = text.match(/^Payment for order #(\d+) was confirmed\.$/);
+      if (m) return { key: dictKey('notes.body.paymentConfirmed'), vars: { id: m[1] } };
+      m = text.match(/^Payment for order #(\d+) was rejected\.$/);
+      return m ? { key: dictKey('notes.body.paymentRejected'), vars: { id: m[1] } } : null;
+    case 'offer':
+      m = text.match(/^Offer #(\d+) was (\w+)\.$/);
+      if (m) {
+        return {
+          key: dictKey('notes.body.offerState'),
+          vars: { id: m[1], state: statusLabel(lang, m[2]) },
+        };
+      }
+      m = text.match(/^New offer #(\d+) on your listing "(.+)"\.$/);
+      return m ? { key: dictKey('notes.body.newOffer'), vars: { id: m[1], product: m[2] } } : null;
+    case 'order':
+      m = text.match(/^New order #(\d+) for (.+)$/);
+      return m ? { key: dictKey('notes.body.newOrder'), vars: { id: m[1], product: m[2] } } : null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * A notification body in the interface language, falling back to the server text
+ * whenever we cannot honestly translate the row.
+ */
+export function notifSentence(t: TranslateFn, lang: LangCode, n: NotifLike): string {
+  const parts = notifParts(n, lang);
+  if (!parts) return n.text;
+  const composed = t(parts.key, parts.vars);
+  return composed === parts.key ? n.text : composed;
+}
+
 /** The six stock types, in the order a buyer thinks about them. */
 export const STOCK_TYPES = ['stock', 'surplus', 'overstock', 'liquidation', 'seconds', 'container'] as const;
 
@@ -646,8 +758,26 @@ export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) =
   );
 }
 
+/**
+ * One supplier card for the public directory.
+ *
+ * Provenance rules this card exists to honour:
+ *  • a `demo` row ALWAYS carries the Demo tag, whatever its verification level —
+ *    the tag and the Verified badge may appear together, because a seeded row can
+ *    also carry a seeded level. Showing Verified alone made seed rows
+ *    indistinguishable from real, attested suppliers;
+ *  • the numeric trust line renders only for a row the platform actually
+ *    measured: not a demo row, and a value that is genuinely present. A row with
+ *    no recorded measure shows an em dash rather than a zero that reads as a
+ *    real score, and a demo row shows no numeric trust claim at all.
+ * Genuine platform rows (dataSource 'platform') render exactly as they always
+ * have — stars and inspection count as soon as those figures exist.
+ */
 export function SupplierCard({ s }: { s: Supplier }) {
   const { t } = useI18n();
+  const isDemo = s.dataSource === 'demo';
+  const rated = !isDemo && s.rating > 0;
+  const inspected = !isDemo && s.inspectionsCount > 0;
   return (
     <Link href={`/suppliers/${s.id}`} className="card">
       <div className="bd row" style={{ alignItems: 'flex-start', gap: 10 }}>
@@ -657,15 +787,30 @@ export function SupplierCard({ s }: { s: Supplier }) {
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="between">
             <b style={{ fontSize: 13 }}>{s.companyName}</b>
-            {s.verifiedLevel >= 2 ? <Verified /> : (s.dataSource === 'demo' ? <DemoTag /> : null)}
+            <span className="row" style={{ gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {s.verifiedLevel >= 2 && <Verified />}
+              {isDemo && <DemoTag />}
+            </span>
           </div>
           <div className="muted" style={{ fontSize: 11.5 }}>
             {s.country}{s.city ? ` · ${s.city}` : ''} · {s.productCount} {t('listings.col.lot')}
           </div>
-          <div className="row" style={{ marginTop: 5, gap: 8 }}>
-            <Stars rating={s.rating} />
-            <span className="muted" style={{ fontSize: 11 }}>{s.inspectionsCount} {t('cards.inspections')}</span>
-          </div>
+          {!isDemo && (
+            <div className="row" style={{ marginTop: 5, gap: 8 }}>
+              {rated && (
+                <>
+                  <Stars rating={s.rating} />
+                  <span className="muted" style={{ fontSize: 11 }}>{s.rating.toFixed(1)}</span>
+                </>
+              )}
+              {inspected && (
+                <span className="muted" style={{ fontSize: 11 }}>{s.inspectionsCount} {t('cards.inspections')}</span>
+              )}
+              {!rated && !inspected && (
+                <span className="muted" style={{ fontSize: 11 }} title={t('supplierDetail.notRated')}>—</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>
