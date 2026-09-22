@@ -52,6 +52,40 @@ all were found by review, not by the test suite, which is the real lesson of the
 - **Honesty/trust audit:** 4 blockers, 7 majors — `.omh/reviews/honesty-and-i18n-audit.md`
 - **Exploratory QA:** 0 blockers, 2 majors — `.omh/reviews/qa-dogfood-findings.md`
 
+## Deploy runbook (verified 2026-09-22)
+
+**Branch topology found before deploying:**
+- merge base of both active branches = `e0bc9a3` = `origin/main`.
+- `design` (this run): 19 commits — the marketplace UI + API work.
+- `security-and-integrity-fixes` (the primary tree, not this worktree): 1 commit,
+  `ffc348a feat(shopify): FactoryDepo Surplus theme, store tooling, and the operating
+  docs`, plus 26 uncommitted files from that line of work. `ffc348a` touches **no**
+  file under `artifacts/web`, `artifacts/api-server`, `artifacts/landing` or `lib/`,
+  so shipping `design` neither reverts it nor changes the deployed marketplace — the
+  Shopify branch simply stays outside this deploy.
+
+**Ship order**
+1. `git push origin design` then `git push origin design:main` (fast-forward; `main`
+   is the merge base, so no force and no merge commit is needed).
+2. `railway up` from this worktree root — `.railwayignore` excludes `node_modules`,
+   `.git`, `dist`, `.env`, so the upload is source only. Railway then runs the build
+   from `railway.json`: `pnpm install --frozen-lockfile=false && pnpm --filter
+   @workspace/api-server run build && pnpm --filter @workspace/web run build`, starts
+   the API with `NODE_ENV=production`, health-checks `/api/healthz` (300s allowance).
+3. The boot migration runner scans `lib/db/migrations/` in sorted order, so
+   `021_product_questions.sql` applies itself on first boot. No manual DB step.
+
+**Verify after deploy (anonymous, no prod credentials used):**
+- `/api/healthz` → `{"status":"ok","db":"up"}`.
+- `/` → the new landing (marketplace-light.html: the served candidate list in
+  `findLandingFile()` prefers it over `index.html`).
+- `/api/products/countries` → status 200 with `items` (it returned **400** before the
+  deploy — the old build parsed `countries` as a `:id` — which is how the pre-deploy
+  state was confirmed to be stale code).
+- A product page and `/explore` render with live data.
+Signed-in prod flows need the owner's admin credentials (`ADMIN_EMAIL`/`ADMIN_PASSWORD`
+create the owner admin; the seeded demo admin deliberately does not exist in prod).
+
 ## Learnings worth carrying forward
 
 1. Windows Chrome clamps `--window-size` to ~500px — a true phone layout needs
