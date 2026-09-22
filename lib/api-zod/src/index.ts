@@ -59,6 +59,16 @@ export const zDataSource = z.enum(['platform', 'demo']);
 export const zListingType = z.enum(['stock', 'surplus', 'overstock', 'liquidation', 'seconds', 'container']);
 export type ListingType = z.infer<typeof zListingType>;
 
+/** A stored upload (022) — served by GET /api/media/:id. Declared before zProduct. */
+export const zMediaRef = z.object({
+  id: z.number().int(),
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number().int(),
+  url: z.string(),
+});
+export type MediaRef = z.infer<typeof zMediaRef>;
+
 export const zProduct = z.object({
   id: z.number(),
   supplierId: z.number(),
@@ -80,6 +90,15 @@ export const zProduct = z.object({
   status: zProductStatus,
   dataSource: zDataSource,
   listingType: zListingType,
+  /* 022: seller-declared stock location and lead time, plus the moderation state
+     and any uploaded gallery photos (media refs are ordered). */
+  location: z.string().nullable().optional(),
+  leadTimeDays: z.number().nullable().optional(),
+  moderationStatus: z.string().optional(),
+  /* Present for the owning supplier and for admins — the public shape strips it. */
+  pulledReason: z.string().nullable().optional(),
+  pulledAt: z.string().nullable().optional(),
+  media: z.array(zMediaRef).optional(),
   createdAt: z.string(),
 });
 export type Product = z.infer<typeof zProduct>;
@@ -842,15 +861,17 @@ export type UpdateProductInput = z.infer<typeof zUpdateProductInput>;
 export const zUpdateShopProfileInput = z.object({
   companyName: z.string().min(2).max(160).optional(),
   country: z.string().min(1).max(60).optional(),
-  city: z.string().max(80).optional(),
-  addressLine: z.string().max(200).optional(),
-  description: z.string().max(4000).optional(),
-  contactEmail: z.string().email().max(160).optional(),
-  contactPhone: z.string().max(60).optional(),
-  website: z.string().max(200).optional(),
-  incoterms: z.string().max(40).optional(),
-  leadTimeDays: z.coerce.number().int().min(0).max(365).optional(),
-  paymentTerms: z.string().max(120).optional(),
+  /* Nullable as well as optional: a seller must be able to CLEAR a field they
+     once set (an empty form input submits null, not ''). */
+  city: z.string().max(80).nullable().optional(),
+  addressLine: z.string().max(200).nullable().optional(),
+  description: z.string().max(4000).nullable().optional(),
+  contactEmail: z.string().email().max(160).nullable().optional(),
+  contactPhone: z.string().max(60).nullable().optional(),
+  website: z.string().max(200).nullable().optional(),
+  incoterms: z.string().max(40).nullable().optional(),
+  leadTimeDays: z.coerce.number().int().min(0).max(365).nullable().optional(),
+  paymentTerms: z.string().max(120).nullable().optional(),
   logoMediaId: z.coerce.number().int().positive().nullable().optional(),
 });
 export type UpdateShopProfileInput = z.infer<typeof zUpdateShopProfileInput>;
@@ -883,18 +904,10 @@ export type MyShop = z.infer<typeof zMyShop>;
 export const zCreateMediaInput = z.object({
   filename: z.string().min(1).max(200),
   contentType: z.string().min(3).max(80),
-  dataBase64: z.string().min(1),
+  /* Self-describing upper bound: a 2 MB image is ~2.7 MB of base64. */
+  dataBase64: z.string().min(1).max(4_000_000),
 });
 export type CreateMediaInput = z.infer<typeof zCreateMediaInput>;
-
-export const zMediaRef = z.object({
-  id: z.number().int(),
-  filename: z.string(),
-  contentType: z.string(),
-  sizeBytes: z.number().int(),
-  url: z.string(),
-});
-export type MediaRef = z.infer<typeof zMediaRef>;
 
 /** Attach an uploaded photo to one of the caller's listings. */
 export const zAttachProductMediaInput = z.object({ mediaId: z.coerce.number().int().positive() });
