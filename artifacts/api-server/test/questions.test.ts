@@ -6,12 +6,16 @@
  * Skipped when TEST_BASE_URL is unset, exactly like api.test.ts, so a developer
  * with no server running gets a clean skip instead of connection errors.
  *
- * The suite proves the three rules the feature exists for:
+ * The suite proves the four rules the feature exists for:
  *   1. the public sees a question only AFTER the seller answered it — a pending
  *      question is visible to its asker, nobody else (anonymous or registered);
  *   2. only the supplier who OWNS the listing may answer it — a different
  *      supplier gets 403, and so does the asker answering their own question;
  *   3. the moderation queue is admin-only.
+ *   4. moderation is a status change, never a deletion: an admin can hide an
+ *      answered question (it leaves the public list) and republish it with the
+ *      original answer intact, but publishing an UNANSWERED question is refused
+ *      (409) — 'answered' is what makes a question public.
  *
  * Every row it creates hangs off a throwaway listing that the owning supplier
  * deletes at the end (product_questions cascades on product delete), so a local
@@ -267,4 +271,107 @@ test('the Q&A moderation queue is admin-only', { skip }, async () => {
 
   const anon = await call('GET', '/api/admin/questions');
   assert.equal(anon.status, 401, `anonymous must be 401, got ${anon.status}`);
+});
+
+/**
+ * The seeded demo admin (`bootstrapSeedIfEmpty` creates it whenever NODE_ENV is
+ * not production, which covers the local dev DB and CI). No API path can mint
+ * an admin — `zSelfServiceRole` refuses `role:'admin'` at registration — so this
+ * is the only account moderation can be exercised with.
+ *
+ * Costs one login against the 10/15min per-IP login bucket; the whole file
+ * spends two, so do not add more logins casually.
+ */
+async function adminLogin(): Promise<string> {
+  const r = await call('POST', '/api/auth/login', { email: 'demo@factorydepo.com', password: 'factorydepo' });
+  assert.equal(r.status, 200, `admin login failed: ${r.status} ${r.text}`);
+  return (r.body as { token: string }).token;
+}
+
+test('an admin can hide and republish an answered question, but cannot publish an unanswered one', { skip }, async () => {
+  const tag = uniq();
+  const owner = await register('supplier', `mod${tag}`);
+  const asker = await register('buyer', `modask${tag}`);
+  const productId = await createListing(owner, tag);
+  const admin = await adminLogin();
+
+  try {
+    const question = `Moderation probe, tag ${tag}: does this lot ship in 20ft containers?`;
+    const asked = await call('POST', `/api/products/${productId}/questions`, { question }, asker.token);
+    assert.equal(asked.status, 201, `ask failed: ${asked.status} ${asked.text}`);
+    const qid = (asked.body as QuestionRow).id;
+
+    const answer = `Moderation probe answer, tag ${tag}: yes, 22 pallets per 20ft container.`;
+    const answered = await call(
+      'POST',
+      `/api/products/${productId}/questions/${qid}/answer`,
+      { answer },
+      owner.token,
+    );
+    assert.equal(answered.status, 200, `answer failed: ${answered.status} ${answered.text}`);
+
+    const published = await call('GET', `/api/products/${productId}/questions`);
+    assert.ok(contains(published, qid), 'the answered question must be public before moderation');
+
+    // ---- the admin hides it: it leaves the public list ----
+    const hide = await call('PATCH', `/api/admin/questions/${qid}`, { status: 'hidden' }, admin);
+    assert.equal(hide.status, 200, `hiding failed: ${hide.status} ${hide.text}`);
+    assert.equal((hide.body as QuestionRow).status, 'hidden');
+
+    const afterHide = await call('GET', `/api/products/${productId}/questions`);
+    assert.equal(afterHide.status, 200);
+    assert.ok(!contains(afterHide, qid), 'a hidden question must not be public');
+    assert.equal((afterHide.body as { total: number }).total, 0, 'the public list must be empty once hidden');
+
+    // Suppression is not deletion — the owner still sees the row and its answer.
+    const ownerView = await call('GET', `/api/products/${productId}/questions`, undefined, owner.token);
+    const hiddenRow = items(ownerView).find((q) => q.id === qid);
+    assert.ok(hiddenRow, 'the owning supplier must still see the hidden question');
+    assert.equal(hiddenRow.status, 'hidden');
+    assert.equal(hiddenRow.answer, answer, 'hiding must keep the answer text');
+
+    // ---- the admin republishes it: the original answer comes back ----
+    const republish = await call('PATCH', `/api/admin/questions/${qid}`, { status: 'answered' }, admin);
+    assert.equal(republish.status, 200, `republishing failed: ${republish.status} ${republish.text}`);
+    const republishedRow = republish.body as QuestionRow;
+    assert.equal(republishedRow.status, 'answered');
+    assert.equal(republishedRow.answer, answer, 'republishing must restore the answer, not a stub');
+
+    const afterRepublish = await call('GET', `/api/products/${productId}/questions`);
+    const back = items(afterRepublish).find((q) => q.id === qid);
+    assert.ok(back, 'the republished question must be public again');
+    assert.equal(back.answer, answer);
+    assert.equal(back.answeredByName, `QA mod${tag} Ltd`, 'republishing must keep the original attribution');
+
+    // ---- an UNANSWERED question cannot be published (409) ----
+    const second = await call(
+      'POST',
+      `/api/products/${productId}/questions`,
+      { question: `Moderation probe 2, tag ${tag}: what is the minimum order quantity?` },
+      asker.token,
+    );
+    assert.equal(second.status, 201, `second ask failed: ${second.status} ${second.text}`);
+    const secondId = (second.body as QuestionRow).id;
+
+    const refused = await call('PATCH', `/api/admin/questions/${secondId}`, { status: 'answered' }, admin);
+    assert.equal(
+      refused.status,
+      409,
+      `publishing an unanswered question must be refused with 409 (got ${refused.status} ${refused.text})`,
+    );
+    assert.equal((refused.body as { error: string }).error, 'unanswered_question');
+
+    // …and the refusal left it unpublished: a 409 that still showed the row would
+    // be the same defect with a nicer status code.
+    const stillPrivate = await call('GET', `/api/products/${productId}/questions`);
+    assert.ok(!contains(stillPrivate, secondId), 'a refused publication must not appear anyway');
+
+    // Hiding an unanswered question is allowed — moderation must be able to
+    // suppress junk that has no answer to preserve.
+    const hideUnanswered = await call('PATCH', `/api/admin/questions/${secondId}`, { status: 'hidden' }, admin);
+    assert.equal(hideUnanswered.status, 200, `hiding an unanswered question failed: ${hideUnanswered.status}`);
+  } finally {
+    // product_questions cascades on product delete — the file leaves no rows.
+    await call('DELETE', `/api/products/${productId}`, undefined, owner.token);
+  }
 });

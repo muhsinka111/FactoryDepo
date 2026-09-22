@@ -325,3 +325,110 @@ test('a buyer can become a supplier, once, and can then list stock', { skip }, a
   const escalate = await call('PATCH', '/api/me', { role: 'admin' }, buyer.token);
   assert.equal(escalate.status, 400, 'PATCH /api/me must reject a role field outright');
 });
+
+/* ---------------------------------------------------------------------------
+ * Market counts vs the market filter.
+ *
+ * `GET /api/products/countries` feeds the header strip, and every figure links
+ * to `?country=<code>`. Both sides must be derived from the same alias map, so
+ * the number a user clicks equals the rows they get. The defect this section
+ * pins down: the strip merged 'TR' + 'Türkiye' (29) while the filter matched a
+ * single spelling (13) — a figure whose own link could not return it, and a
+ * listing published with the long form unreachable from the code-based link.
+ * ------------------------------------------------------------------------ */
+
+interface CountryCount {
+  country: string;
+  count: number;
+}
+
+/** The market strip exactly as the UI consumes it. */
+async function countries(): Promise<{ items: CountryCount[]; total: number }> {
+  const r = await call('GET', '/api/products/countries');
+  assert.equal(r.status, 200, `GET /api/products/countries failed: ${r.status} ${r.text}`);
+  return r.body as { items: CountryCount[]; total: number };
+}
+
+/** The `total` of the public product envelope for one `?country=` spelling. */
+async function totalFor(country: string): Promise<number> {
+  const r = await call('GET', `/api/products?country=${encodeURIComponent(country)}&limit=1`);
+  assert.equal(r.status, 200, `GET /api/products?country=${country} failed: ${r.status} ${r.text}`);
+  return (r.body as { total: number }).total;
+}
+
+/**
+ * Markets whose advertised count disagrees with their own filter. Returned
+ * rather than asserted so the caller can re-check: the sibling suite creates and
+ * deletes probe listings with originCountry 'Türkiye' while this file runs.
+ */
+async function countMismatches(): Promise<string[]> {
+  const strip = await countries();
+  const bad: string[] = [];
+  for (const item of strip.items) {
+    const total = await totalFor(item.country);
+    if (total !== item.count) {
+      bad.push(`${item.country}: strip advertises ${item.count}, ?country=${item.country} returns ${total}`);
+    }
+  }
+  return bad;
+}
+
+test('the market strip is ordered, positive, summed and every item finds its own rows', { skip }, async () => {
+  const strip = await countries();
+
+  assert.ok(strip.items.length > 0, 'the seeded catalogue must expose at least one origin market');
+  for (let i = 1; i < strip.items.length; i += 1) {
+    const prev = strip.items[i - 1];
+    const cur = strip.items[i];
+    assert.ok(
+      prev.count >= cur.count,
+      `markets must be ordered by count descending: ${prev.country} (${prev.count}) then ${cur.country} (${cur.count})`,
+    );
+  }
+  for (const item of strip.items) {
+    assert.equal(typeof item.country, 'string', 'a market needs a country key');
+    assert.ok(item.country.length > 0, 'a market needs a non-empty country key');
+    assert.ok(item.count > 0, `${item.country} is listed with a meaningless count of ${item.count}`);
+  }
+  assert.equal(
+    strip.total,
+    strip.items.reduce((n, r) => n + r.count, 0),
+    'total must be the sum of the market counts',
+  );
+
+  // The seeded catalogue's biggest market is CN, so it must be listed…
+  assert.ok(
+    strip.items.some((i) => i.country === 'CN'),
+    'the seeded catalogue must list the CN market',
+  );
+  // …and no strip entry may be a dead link: whatever it advertises has to exist.
+  for (const item of strip.items) {
+    const total = await totalFor(item.country);
+    assert.ok(total > 0, `?country=${item.country} returned no rows while the strip advertises ${item.count}`);
+  }
+});
+
+test('every market count is exactly what its own country filter returns', { skip }, async () => {
+  let bad = await countMismatches();
+  // A concurrent probe listing can move a count between the two requests; a real
+  // disagreement survives a second, settled snapshot.
+  if (bad.length > 0) bad = await countMismatches();
+  assert.deepEqual(bad, [], `the market strip and the country filter disagree — ${bad.join('; ')}`);
+});
+
+test('the country filter is alias-aware: TR and Türkiye are one market', { skip }, async () => {
+  const tr = await totalFor('TR');
+  const turkiye = await totalFor('Türkiye');
+  const turkey = await totalFor('Turkey');
+
+  assert.ok(tr > 0, 'the TR market must not be empty in the seeded catalogue');
+  assert.equal(turkiye, tr, 'the long spelling must resolve to exactly the same market as the code');
+  assert.equal(turkey, tr, 'the English spelling must resolve to the same market as the code');
+
+  const listed = (await countries()).items.find((i) => i.country === 'TR');
+  assert.ok(listed, 'the merged market must be listed under its code');
+  assert.equal(listed.count, tr, 'the advertised TR count must equal the rows ?country=TR returns');
+
+  // A spelling that maps to no market stays literal — it can never inherit one.
+  assert.equal(await totalFor('Narnia'), 0, 'an unrecognised market must not be merged into a real one');
+});

@@ -23,7 +23,7 @@
  */
 import { Router } from 'express';
 import type { Request } from 'express';
-import { and, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from 'drizzle-orm';
 import * as c from '@workspace/api-zod';
 import { db, products, productQuestions, productViews, suppliers, users } from '../db.js';
 import { requireAuth, requireRole, verifyToken } from '../auth.js';
@@ -114,7 +114,16 @@ productsRouter.get('/', async (req, res) => {
   }
   if (category) conds.push(eq(products.category, category));
   if (listingType) conds.push(eq(products.listingType, listingType));
-  if (country) conds.push(eq(products.originCountry, country));
+  // Alias-aware market filter: a request for either spelling of a market matches
+  // EVERY spelling of it, so the count the market strip advertises is the number
+  // of rows its own link returns (and a listing published with the long form
+  // from `COUNTRIES` is reachable from the code-based link).
+  if (country) {
+    const group = marketSpellings(country);
+    conds.push(
+      group.length > 1 ? inArray(products.originCountry, group) : eq(products.originCountry, group[0]),
+    );
+  }
   // Public per-supplier scope. `mine` wins when both are present (a supplier
   // asking for its own listings must never be widened by a body-supplied id).
   if (supplierId != null && scopedSupplierId == null) conds.push(eq(products.supplierId, supplierId));
@@ -175,6 +184,10 @@ productsRouter.get('/categories', async (_req, res) => {
  * would split a market across rows and under-report it. Only true synonyms are
  * merged; anything unrecognised (including the deliberate 'Global' bucket) keeps
  * its literal value rather than being forced into a country.
+ *
+ * The counts route AND the `country` filter both read this one map: if they
+ * disagree, the header strip advertises a figure whose own link cannot return
+ * it (measured once: strip 'TR 29' → `?country=TR` → 13 rows).
  */
 const COUNTRY_ALIASES: Record<string, string> = {
   türkiye: 'TR', turkey: 'TR', tr: 'TR',
@@ -189,11 +202,49 @@ const COUNTRY_ALIASES: Record<string, string> = {
   'united kingdom': 'GB', uk: 'GB', gb: 'GB',
 };
 
+/** The market a stored/requested origin value belongs to — its code, or itself. */
+function marketKey(value: string): string {
+  const raw = value.trim();
+  return COUNTRY_ALIASES[raw.toLowerCase()] ?? raw;
+}
+
+/**
+ * Every catalogue spelling that belongs to the same market as `value`.
+ *
+ * One market, several spellings: the supplier publish form writes the long name
+ * from `COUNTRIES` ('Türkiye') while the market strip links the code ('TR'), so
+ * a filter for either has to match both — otherwise a real listing is
+ * unreachable, or a count promises rows its own link does not return.
+ *
+ * An unrecognised value returns exactly itself, so its filter stays a literal
+ * exact match: 'Global' is a bucket, never a country to be widened into one.
+ */
+function marketSpellings(value: string): string[] {
+  const trimmed = value.trim();
+  const key = trimmed ? COUNTRY_ALIASES[trimmed.toLowerCase()] : undefined;
+  if (!key) return [value];
+
+  // Stored rows are not case-consistent ('Türkiye', 'china'), so the group
+  // carries each alias in the casings a publisher could plausibly have written.
+  const spellings = new Set<string>([key, trimmed]);
+  for (const alias of Object.keys(COUNTRY_ALIASES)) {
+    if (COUNTRY_ALIASES[alias] !== key) continue;
+    spellings.add(alias);
+    spellings.add(alias.charAt(0).toUpperCase() + alias.slice(1));
+    spellings.add(alias.toUpperCase());
+  }
+  return [...spellings];
+}
+
 /**
  * GET /api/products/countries — live listing counts per origin market, used by
  * the header's market strip. Declared BEFORE `/:id` so "countries" is never
  * parsed as a product id. Counts are real; a market with no stock is simply
  * absent from the list, never shown as a guess.
+ *
+ * This route is the single source of truth for market sizes: every count it
+ * emits is what `GET /api/products?country=<that market>` returns, because both
+ * sides go through `marketKey` / `marketSpellings`.
  */
 productsRouter.get('/countries', async (_req, res) => {
   const rows = await db
@@ -204,7 +255,7 @@ productsRouter.get('/countries', async (_req, res) => {
   for (const r of rows) {
     const raw = String(r.country ?? '').trim();
     if (!raw) continue;
-    const key = COUNTRY_ALIASES[raw.toLowerCase()] ?? raw;
+    const key = marketKey(raw);
     merged.set(key, (merged.get(key) ?? 0) + toNum(r.n));
   }
   const items = [...merged.entries()]
