@@ -977,6 +977,42 @@ export const zCreateBannerInput = z.object({
 });
 export type CreateBannerInput = z.infer<typeof zCreateBannerInput>;
 
+/* ── sourced-listing title generation (owner directive 2026-09-22) ──────────
+ * The operator imports a listing from a source page and the title must be
+ * OURS — not the source's marketing string — unique in the catalogue, and
+ * built only from facts the import actually carries (no invented certificate,
+ * no superlative, no source brand). The AI engine is optional: when no key is
+ * configured the deterministic composer answers instead and says so, so the
+ * operator is never shown a silent, unexplained failure.
+ */
+export const zGeneratedTitleInput = z.object({
+  /** The title as read from the source page (factored in, never echoed as-is). */
+  sourceTitle: z.string().min(2).max(500),
+  category: z.string().max(80).optional(),
+  originCountry: z.string().max(80).optional(),
+  unit: z.string().max(40).optional(),
+  spec: z.array(z.string().max(300)).max(40).optional(),
+  description: z.string().max(4000).optional(),
+  /** Extra terms the operator wants findable (search covers name + category + description). */
+  keywords: z.array(z.string().max(60)).max(12).optional(),
+  /** Which candidate to ask for, so "Regenerate" returns a genuinely different one. */
+  variant: z.coerce.number().int().min(0).max(9).default(0),
+});
+export type GeneratedTitleInput = z.infer<typeof zGeneratedTitleInput>;
+
+export const zGeneratedTitle = z.object({
+  title: z.string().min(2).max(200),
+  /** 'ai' = a model wrote it, 'fallback' = composed from the record's own fields. */
+  engine: z.enum(['ai', 'fallback']),
+  /** True when the title came back already distinct from anything in the catalogue. */
+  unique: z.boolean(),
+  /** Set when the catalogue already held a near-identical name (the id it found). */
+  duplicateOf: z.number().int().positive().nullable().optional(),
+  /** One honest sentence for the operator: which engine answered, and why. */
+  note: z.string().max(300),
+});
+export type GeneratedTitle = z.infer<typeof zGeneratedTitle>;
+
 /** Admin: create a help-centre FAQ. */
 export const zCreateFaqInput = z.object({
   category: z.string().max(60).optional(),

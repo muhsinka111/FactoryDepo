@@ -111,6 +111,7 @@ export const ROUTES: RouteDef[] = [
   { method: 'PATCH', path: '/api/suppliers/me', auth: 'supplier', input: c.zUpdateShopProfileInput, output: c.zMyShop, desc: 'Edit own shop: company name, country, city, address, description, contacts, incoterms, lead time, payment terms, logo (verifiedLevel is NOT self-writable)' },
   { method: 'POST', path: '/api/media', auth: 'user', input: c.zCreateMediaInput, output: c.zMediaRef, desc: 'Upload an image (base64 JSON, image/* only, ≤2 MB) — stored in the database because the container disk is ephemeral' },
   { method: 'GET', path: '/api/media/:id', auth: 'public', desc: 'Serve an uploaded file with its own content type' },
+  { method: 'POST', path: '/api/imports/title', auth: 'supplier', input: c.zGeneratedTitleInput, output: c.zGeneratedTitle, desc: 'Generate OUR OWN unique, searchable title for a sourced listing (AI when a key is configured, deterministic composer otherwise — the reply says which engine answered)' },
   { method: 'POST', path: '/api/products/:id/media', auth: 'supplier', input: c.zAttachProductMediaInput, output: c.zMediaRef, desc: 'Attach one of your uploaded photos to one of your listings (owner or admin)' },
   { method: 'DELETE', path: '/api/products/:id/media/:mediaId', auth: 'supplier', desc: 'Detach a photo from a listing you own (owner or admin)' },
   { method: 'PATCH', path: '/api/admin/listings/:id', auth: 'user', input: c.zAdminUpdateListingInput, desc: 'Admin only — edit ANY listing (price, MOQ, quantity, location, stock type, status…) and record the change in the audit trail' },
