@@ -248,6 +248,26 @@ tbody tr:hover{background:#fbfcfe}
   .bottomnav .fab{background:var(--gold);color:#3d2a00;width:38px;height:38px;border-radius:50%;margin-top:-14px;display:grid;place-items:center;font-size:19px;flex:none}
 }
 
+/* Very narrow screens (phones): the single topbar row cannot hold the logo, the
+   search field, the language picker and the guest CTAs — it overflowed the
+   document by ~53px at 390px. It now wraps onto two rows with slightly denser
+   controls (smaller wordmark, tighter selects/buttons) so nothing is hidden:
+   row 1 = identity + language + account actions, row 2 = the full-width search.
+   The rail is pinned below the taller bar (measured: 36px row 1 + 6px gap + 38px
+   row 2 ≈ 80px). */
+@media(max-width:640px){
+  .topbar{flex-wrap:wrap;height:auto;padding:6px 10px;gap:6px;row-gap:6px}
+  .topbar .searchwrap{order:9;flex:1 0 100%;max-width:none}
+  .topbar .spacer{display:none}
+  .logo{font-size:15px;gap:5px}
+  .logo .mark{width:18px;height:18px}
+  .topbar .rolepick{gap:5px}
+  .topbar .rolepick select{padding:3px 5px;font-size:11.5px;max-width:78px}
+  .topbar .btn-sm{padding:3px 7px;font-size:11.5px}
+  .rail{top:80px}
+  .shell{min-height:calc(100vh - 80px)}
+}
+
 /* =====================================================================
    App additions — utilities the reference template did not need.
    The template's block above is the authority; keep this section small and

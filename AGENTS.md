@@ -60,14 +60,16 @@ landing page's inbound links.
 ## Gates
 1. `pnpm run typecheck` — clean
 2. `pnpm run build` — clean
-3. `pnpm test` — 18 tests. Unit tests (email rendering, HTML escaping) run anywhere;
+3. `pnpm test` — 26 tests. Unit tests (email rendering, HTML escaping) run anywhere;
    the integration suite boots against a server and **skips unless `TEST_BASE_URL`
    is set**:
    `TEST_BASE_URL=http://localhost:9090 pnpm --filter @workspace/api-server run test`
    It covers anonymous 401s, forged tokens, authz (a buyer must get 403 from
    `/api/admin/*`), supplier-ownership enforcement (supplier B must not edit A's
-   listing) and the **oversell test** (8 concurrent 25-unit orders against 100 in
-   stock must yield exactly 4 successes, 4×409, final stock 0, status `sold_out`).
+   listing), the `?supplierId=` public scope, the product Q&A rules (only the owning
+   supplier or an admin may answer) and the **oversell test** (8 concurrent 25-unit
+   orders against 100 in stock must yield exactly 4 successes, 4×409, final stock 0,
+   status `sold_out`).
    It creates throwaway `*@factorydepo.test` rows — clean them up after a local run
    if you care about the dev catalogue.
 4. `curl -s http://localhost:9090/api/healthz` → `{"status":"ok",...}`

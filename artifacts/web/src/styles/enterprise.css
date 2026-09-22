@@ -210,12 +210,12 @@ td.strong{font-weight:600}
 .tl .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex:none}
 .tl .dot.gold{background:var(--gold)} .tl .dot.green{background:var(--green)} .tl .dot.red{background:var(--red)}
 .tl .bd{min-width:0;flex:1}
-.tl .tx{font-size:12.5px}
-.tl .mt{font-size:11px;color:var(--faint);margin-top:1px}
+.tl .tx{display:block;font-size:12.5px}
+.tl .mt{display:block;font-size:11px;color:var(--faint);margin-top:1px}
 .attn{display:grid;gap:7px}
-.attn a{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);
-  border-radius:6px;background:var(--card);font-size:12.5px;color:var(--ink)}
-.attn a:hover{border-color:#cfd6e0;background:#fcfcfd}
+.attn a,.attn button{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:6px;background:var(--card);font-size:12.5px;color:var(--ink);width:100%;text-align:left}
+.attn a:hover,.attn button:hover{border-color:#cfd6e0;background:#fcfcfd}
 .attn .n{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
 .attn .ic{width:26px;height:26px;border-radius:5px;background:#fff7e8;display:grid;place-items:center;font-size:12px;flex:none}
 .attn a.ok .ic{background:var(--green-l)}
