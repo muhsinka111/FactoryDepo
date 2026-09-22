@@ -820,12 +820,119 @@ export const zCreateProductInput = z.object({
   status: zProductStatus.default('active'),
   /* Sellers choose the stock type when listing; defaults to ordinary stock. */
   listingType: zListingType.default('stock'),
+  /* 022: where the stock physically sits, and how long it takes to ship. */
+  location: z.string().max(120).optional(),
+  leadTimeDays: z.coerce.number().int().min(0).max(365).optional(),
 });
 export type CreateProductInput = z.infer<typeof zCreateProductInput>;
 
 /** Partial listing edit — ownership is enforced by the route, not by the shape. */
 export const zUpdateProductInput = zCreateProductInput.partial();
 export type UpdateProductInput = z.infer<typeof zUpdateProductInput>;
+
+/* ---------------------------------------------------------------------------
+   Seller shop + media + admin control (022).
+--------------------------------------------------------------------------- */
+
+/**
+ * Seller edits their OWN shop profile. Identity (supplierId / userId) comes from
+ * the token — never from the body — so this shape carries no id field at all.
+ * `verifiedLevel` is deliberately absent: verification is the desk's decision.
+ */
+export const zUpdateShopProfileInput = z.object({
+  companyName: z.string().min(2).max(160).optional(),
+  country: z.string().min(1).max(60).optional(),
+  city: z.string().max(80).optional(),
+  addressLine: z.string().max(200).optional(),
+  description: z.string().max(4000).optional(),
+  contactEmail: z.string().email().max(160).optional(),
+  contactPhone: z.string().max(60).optional(),
+  website: z.string().max(200).optional(),
+  incoterms: z.string().max(40).optional(),
+  leadTimeDays: z.coerce.number().int().min(0).max(365).optional(),
+  paymentTerms: z.string().max(120).optional(),
+  logoMediaId: z.coerce.number().int().positive().nullable().optional(),
+});
+export type UpdateShopProfileInput = z.infer<typeof zUpdateShopProfileInput>;
+
+/** The public shape of the caller's own shop (includes private-ish fields). */
+export const zMyShop = z.object({
+  id: z.number().int(),
+  companyName: z.string(),
+  country: z.string(),
+  city: z.string().nullable().optional(),
+  addressLine: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  incoterms: z.string().nullable().optional(),
+  leadTimeDays: z.number().int().nullable().optional(),
+  paymentTerms: z.string().nullable().optional(),
+  logoMediaId: z.number().int().nullable().optional(),
+  verifiedLevel: z.number().int().nullable().optional(),
+  dataSource: z.string(),
+  listingCount: z.number().int().optional(),
+});
+export type MyShop = z.infer<typeof zMyShop>;
+
+/**
+ * Media upload. Bytes travel base64 in JSON (no multipart dependency); the route
+ * enforces the size cap and an image/* allow-list before storing.
+ */
+export const zCreateMediaInput = z.object({
+  filename: z.string().min(1).max(200),
+  contentType: z.string().min(3).max(80),
+  dataBase64: z.string().min(1),
+});
+export type CreateMediaInput = z.infer<typeof zCreateMediaInput>;
+
+export const zMediaRef = z.object({
+  id: z.number().int(),
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number().int(),
+  url: z.string(),
+});
+export type MediaRef = z.infer<typeof zMediaRef>;
+
+/** Attach an uploaded photo to one of the caller's listings. */
+export const zAttachProductMediaInput = z.object({ mediaId: z.coerce.number().int().positive() });
+export type AttachProductMediaInput = z.infer<typeof zAttachProductMediaInput>;
+
+/** Admin: edit any listing (the same fields a seller may edit, plus status). */
+export const zAdminUpdateListingInput = zUpdateProductInput.extend({
+  name: z.string().min(2).max(160).optional(),
+  status: zProductStatus.optional(),
+});
+export type AdminUpdateListingInput = z.infer<typeof zAdminUpdateListingInput>;
+
+/** Admin: pull a listing from the catalogue (reversible), with a reason. */
+export const zAdminPullListingInput = z.object({ reason: z.string().min(3).max(300) });
+export type AdminPullListingInput = z.infer<typeof zAdminPullListingInput>;
+
+/** Admin: edit any supplier's company record. */
+export const zAdminUpdateSupplierInput = zUpdateShopProfileInput.extend({
+  verifiedLevel: z.coerce.number().int().min(0).max(3).optional(),
+  tags: z.array(z.string().max(40)).max(20).optional(),
+});
+export type AdminUpdateSupplierInput = z.infer<typeof zAdminUpdateSupplierInput>;
+
+/** One row of the admin audit trail. */
+export const zAdminAuditRow = z.object({
+  id: z.number().int(),
+  adminUserId: z.number().int(),
+  adminName: z.string().nullable().optional(),
+  action: z.string(),
+  entity: z.string(),
+  entityId: z.number().int().nullable().optional(),
+  before: z.unknown().nullable().optional(),
+  after: z.unknown().nullable().optional(),
+  createdAt: z.string(),
+});
+export type AdminAuditRow = z.infer<typeof zAdminAuditRow>;
+export const zAdminAuditList = z.object({ items: z.array(zAdminAuditRow), total: z.number().int() });
+export type AdminAuditList = z.infer<typeof zAdminAuditList>;
 
 /** Supplier verification-desk submission (upsert) for one document type. */
 export const zSubmitDocInput = z.object({

@@ -1,6 +1,7 @@
 import {
   type AnyPgColumn,
   boolean,
+  customType,
   integer,
   jsonb,
   numeric,
@@ -12,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /**
- * FactoryDepo schema — 22 tables.
+ * FactoryDepo schema — 25 tables.
  *
  * Core marketplace tables (users, suppliers, products, rfqs, quotes,
  * inspections, orders) come from migrations/001_init.sql…008; the platform
@@ -20,7 +21,9 @@ import {
  * saved_lots, shipments, notifications, supplier_docs, feature_flags, banners,
  * faqs, support_tickets, product_views, payments, email_outbox) come from
  * migrations/009_platform_tables.sql; the product Q&A table
- * (product_questions) comes from migrations/021_product_questions.sql.
+ * (product_questions) comes from migrations/021_product_questions.sql; the
+ * seller-shop / media / admin-control tables (media, product_media,
+ * admin_audit) come from migrations/022_shop_and_media.sql.
  *
  * Enum-like columns are plain TEXT with CHECK constraints enforced by the raw
  * boot migrations. No pgEnum here so the schema stays in sync with
@@ -74,6 +77,12 @@ export const suppliers = pgTable('suppliers', {
   // Attestation of the verification materials (009) — who signed off, and when.
   attestedAt: timestamp('attestedAt', { withTimezone: true, mode: 'date' }),
   attestedBy: integer('attestedBy').references(() => users.id),
+  /* Shop profile (022) — the fields a supplier publishes about their own company. */
+  addressLine: text('addressLine'),
+  logoMediaId: integer('logoMediaId'),
+  incoterms: text('incoterms'),
+  leadTimeDays: integer('leadTimeDays'),
+  paymentTerms: text('paymentTerms'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
@@ -102,6 +111,65 @@ export const products = pgTable('products', {
   /* stock | surplus | overstock | liquidation | seconds | container
      See lib/api-zod zListingType and migrations/019_listing_type.sql. */
   listingType: text('listingType').notNull().default('stock'),
+  /* Listing extras + moderation plane (022). */
+  location: text('location'),
+  leadTimeDays: integer('leadTimeDays'),
+  // visible | pulled — an admin pulls a listing without destroying it
+  moderationStatus: text('moderationStatus').notNull().default('visible'),
+  pulledReason: text('pulledReason'),
+  pulledBy: integer('pulledBy'),
+  pulledAt: timestamp('pulledAt', { withTimezone: true, mode: 'date' }),
+  updatedAt: timestamp('updatedAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+  createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+});
+
+/* ---------------------------------------------------------------------------
+   Durable media (022): uploads live in the database because the container
+   filesystem is ephemeral. Streamed back by GET /api/media/:id.
+--------------------------------------------------------------------------- */
+/** Postgres `bytea` — node-postgres hands it to us as a Buffer. */
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return 'bytea';
+  },
+});
+
+export const media = pgTable('media', {
+  id: serial('id').primaryKey(),
+  ownerUserId: integer('ownerUserId')
+    .notNull()
+    .references(() => users.id),
+  filename: text('filename').notNull(),
+  contentType: text('contentType').notNull(),
+  sizeBytes: integer('sizeBytes').notNull(),
+  bytes: bytea('bytes').notNull(),
+  createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+});
+
+/** Ordered gallery: one listing may carry several uploaded photos. */
+export const productMedia = pgTable('product_media', {
+  id: serial('id').primaryKey(),
+  productId: integer('productId')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  mediaId: integer('mediaId')
+    .notNull()
+    .references(() => media.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull().default(0),
+  createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+});
+
+/** Admin audit: every admin action that changes someone else's data. */
+export const adminAudit = pgTable('admin_audit', {
+  id: serial('id').primaryKey(),
+  adminUserId: integer('adminUserId')
+    .notNull()
+    .references(() => users.id),
+  action: text('action').notNull(),
+  entity: text('entity').notNull(),
+  entityId: integer('entityId'),
+  before: jsonb('before'),
+  after: jsonb('after'),
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 

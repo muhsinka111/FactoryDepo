@@ -839,3 +839,177 @@ export function useUpdateMe() {
     },
   });
 }
+
+/* ---------- the seller's own shop (022) ---------- */
+
+/** The signed-in supplier's own shop record (identity from the token). */
+export function useMyShop(options?: Pick<UseQueryOptions, 'enabled'>) {
+  return useQuery({
+    queryKey: ['my-shop'],
+    queryFn: () => apiFetch<c.MyShop>('/suppliers/me'),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+/** Edit the caller's own shop. There is no id: the token decides the row. */
+export function useUpdateMyShop() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: c.UpdateShopProfileInput) =>
+      apiFetch<c.MyShop>('/suppliers/me', { method: 'PATCH', body: input }),
+    onSuccess: (shop) => {
+      qc.setQueryData(['my-shop'], shop);
+      qc.invalidateQueries({ queryKey: ['my-shop'] });
+      qc.invalidateQueries({ queryKey: ['me'] });
+      // The public shop page and the directory carry the same fields.
+      qc.invalidateQueries({ queryKey: ['suppliers'] });
+      qc.invalidateQueries({ queryKey: ['supplier'] });
+    },
+  });
+}
+
+/* ---------- uploads (022) ---------- */
+
+/**
+ * Upload one image. Reads the File as base64 and posts it as JSON (no multipart
+ * dependency); the API stores the bytes in Postgres and hands back {id, url}.
+ */
+export function useUploadMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const dataBase64 = await fileToBase64(file);
+      return apiFetch<c.MediaRef>('/media', {
+        method: 'POST',
+        body: { filename: file.name, contentType: file.type || 'application/octet-stream', dataBase64 },
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['product'] });
+      qc.invalidateQueries({ queryKey: ['my-shop'] });
+    },
+  });
+}
+
+/** Attach an uploaded photo to one of the caller's listings. */
+export function useAttachProductMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, mediaId }: { productId: number; mediaId: number }) =>
+      apiFetch<c.MediaRef>(`/products/${productId}/media`, { method: 'POST', body: { mediaId } }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['product', vars.productId] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+/** Detach a photo from a listing you own. */
+export function useDetachProductMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, mediaId }: { productId: number; mediaId: number }) =>
+      apiFetch<AckResponse>(`/products/${productId}/media/${mediaId}`, { method: 'DELETE' }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['product', vars.productId] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read the file'));
+    reader.onload = () => {
+      const result = String(reader.result ?? '');
+      // data:<type>;base64,<payload> → payload
+      const comma = result.indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- admin control plane (022) ---------- */
+
+/** Admin: edit ANY listing (price, MOQ, quantity, location, stock type, status…). */
+export function useAdminUpdateListing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: c.AdminUpdateListingInput & { id: number }) =>
+      apiFetch<c.Product>(`/admin/listings/${id}`, { method: 'PATCH', body }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-listings'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['product', vars.id] });
+      qc.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+}
+
+/** Admin: pull a listing from the catalogue (reversible). */
+export function useAdminPullListing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      apiFetch<c.Product>(`/admin/listings/${id}/pull`, { method: 'POST', body: { reason } }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-listings'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['product', vars.id] });
+      qc.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+}
+
+/** Admin: restore a pulled listing. */
+export function useAdminRestoreListing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: number }) => apiFetch<c.Product>(`/admin/listings/${id}/restore`, { method: 'POST' }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-listings'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['product', vars.id] });
+      qc.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+}
+
+/** Admin: delete a listing outright. */
+export function useAdminDeleteListing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: number }) => apiFetch<AckResponse>(`/admin/listings/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-listings'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+}
+
+/** Admin: edit any supplier record (incl. verifiedLevel and tags). */
+export function useAdminUpdateSupplier() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: c.AdminUpdateSupplierInput & { id: number }) =>
+      apiFetch<unknown>(`/admin/suppliers/${id}`, { method: 'PATCH', body }),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['admin-suppliers'] });
+      qc.invalidateQueries({ queryKey: ['suppliers'] });
+      qc.invalidateQueries({ queryKey: ['supplier', vars.id] });
+      qc.invalidateQueries({ queryKey: ['admin-audit'] });
+    },
+  });
+}
+
+/** Admin: the audit trail of admin actions. */
+export function useAdminAudit(options?: Pick<UseQueryOptions, 'enabled'>) {
+  return useQuery({
+    queryKey: ['admin-audit'],
+    queryFn: () => apiFetch<c.AdminAuditList>('/admin/audit'),
+    enabled: options?.enabled ?? true,
+  });
+}

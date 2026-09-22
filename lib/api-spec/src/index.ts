@@ -105,6 +105,20 @@ export const ROUTES: RouteDef[] = [
   { method: 'PATCH', path: '/api/admin/questions/:id', auth: 'user', input: c.zModerateQuestionInput, output: c.zAdminProductQuestion, desc: 'Admin only — moderate a question (answered|hidden); publishing an unanswered question is refused with 409' },
   { method: 'GET', path: '/api/admin/tickets', auth: 'user', output: c.zSupportTicketList, desc: 'Admin only — support tickets' },
   { method: 'PATCH', path: '/api/me', auth: 'user', output: c.zUser, desc: 'Update own profile (name/company/country/lang)' },
+
+  /* --- 022: seller shop, media, admin control --- */
+  { method: 'GET', path: '/api/suppliers/me', auth: 'supplier', output: c.zMyShop, desc: 'The signed-in supplier’s own shop record (identity from the token)' },
+  { method: 'PATCH', path: '/api/suppliers/me', auth: 'supplier', input: c.zUpdateShopProfileInput, output: c.zMyShop, desc: 'Edit own shop: company name, country, city, address, description, contacts, incoterms, lead time, payment terms, logo (verifiedLevel is NOT self-writable)' },
+  { method: 'POST', path: '/api/media', auth: 'user', input: c.zCreateMediaInput, output: c.zMediaRef, desc: 'Upload an image (base64 JSON, image/* only, ≤2 MB) — stored in the database because the container disk is ephemeral' },
+  { method: 'GET', path: '/api/media/:id', auth: 'public', desc: 'Serve an uploaded file with its own content type' },
+  { method: 'POST', path: '/api/products/:id/media', auth: 'supplier', input: c.zAttachProductMediaInput, output: c.zMediaRef, desc: 'Attach one of your uploaded photos to one of your listings (owner or admin)' },
+  { method: 'DELETE', path: '/api/products/:id/media/:mediaId', auth: 'supplier', desc: 'Detach a photo from a listing you own (owner or admin)' },
+  { method: 'PATCH', path: '/api/admin/listings/:id', auth: 'user', input: c.zAdminUpdateListingInput, desc: 'Admin only — edit ANY listing (price, MOQ, quantity, location, stock type, status…) and record the change in the audit trail' },
+  { method: 'POST', path: '/api/admin/listings/:id/pull', auth: 'user', input: c.zAdminPullListingInput, desc: 'Admin only — pull a listing from the catalogue (reversible, reason required)' },
+  { method: 'POST', path: '/api/admin/listings/:id/restore', auth: 'user', desc: 'Admin only — restore a pulled listing' },
+  { method: 'DELETE', path: '/api/admin/listings/:id', auth: 'user', desc: 'Admin only — delete a listing outright' },
+  { method: 'PATCH', path: '/api/admin/suppliers/:id', auth: 'user', input: c.zAdminUpdateSupplierInput, desc: 'Admin only — edit any supplier record (incl. verifiedLevel and tags)' },
+  { method: 'GET', path: '/api/admin/audit', auth: 'user', output: c.zAdminAuditList, desc: 'Admin only — the audit trail of admin actions' },
 ];
 
 export const CATEGORIES = [
