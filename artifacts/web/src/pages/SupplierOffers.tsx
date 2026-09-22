@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import {
   useMyOffers,
@@ -11,13 +11,24 @@ import {
 import type { ApiError } from '@workspace/api-client-react';
 import type { Offer } from '@workspace/api-zod';
 import {
-  View,
   Empty,
   StatusChip,
   DemoTag,
   Spinner,
   requireAuthGate,
 } from '../components';
+import {
+  PageHeader,
+  KpiRow,
+  Kpi,
+  Toolbar,
+  ToolSelect,
+  Pager,
+  EmptyState,
+  TableWrap,
+  Attention,
+  metric,
+} from '../dash';
 import { useI18n } from '../i18n';
 
 /**
@@ -38,10 +49,41 @@ import { useI18n } from '../i18n';
  *    decision on an accepted/rejected offer with 409.
  *
  * A decided offer is shown with no action buttons, matching what the API accepts.
+ *
+ * Honesty rules applied here
+ *  • Every KPI is a count of the rows the API returned, grouped by their real
+ *    status — nothing is estimated.
+ *  • "Their price" is the buyer's opening price of the row's negotiation chain.
+ *    POST /api/offers always opens the root of a chain as a buyer action and
+ *    refuses a supplier offering on its own listing, so the root row of a chain
+ *    on this account's stock is provably the buyer's number; the cell names the
+ *    root offer it came from. When the chain's root is not in the returned list
+ *    the cell prints '—' rather than guessing.
+ *  • The unit price column is the price stated on that row, whatever side of the
+ *    negotiation it came from — the offer contract records no per-row author, so
+ *    the table never labels a row "your counter" when the API cannot prove whose
+ *    number it is. The parent link on the row says which offer it answers.
+ *  • The unit of measure is not part of the offer contract, so quantity is shown
+ *    without inventing one.
+ *  • Rows keep <DemoTag /> when the underlying lot is demo supply.
  */
 
-/** Statuses from which no further decision can be taken (mirrors the API). */
+const PAGE_SIZE = 20;
 const FINAL = new Set(['accepted', 'rejected', 'withdrawn']);
+
+type StatusFilter = 'all' | 'pending' | 'countered' | 'accepted' | 'rejected';
+type SortKey = 'new' | 'old' | 'price_desc' | 'price_asc';
+
+const STATUS_VALUES: StatusFilter[] = ['all', 'pending', 'countered', 'accepted', 'rejected'];
+
+/**
+ * Deep-linked status filter — `/supplier/offers?status=pending` is where the
+ * "needs attention" row sends you, so the filtered view has a real URL.
+ */
+function statusFromUrl(): StatusFilter {
+  const raw = new URLSearchParams(window.location.search).get('status');
+  return STATUS_VALUES.includes(raw as StatusFilter) ? (raw as StatusFilter) : 'all';
+}
 
 function money(currency: string, amount: number): string {
   return `${currency === 'USD' ? '$' : `${currency} `}${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
@@ -298,25 +340,102 @@ export default function SupplierOffers() {
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
   const isSupplier = user?.role === 'supplier';
+  const ready = loggedIn && isSupplier;
 
-  const res = useMyOffers({ enabled: loggedIn && isSupplier });
+  const res = useMyOffers({ enabled: ready });
   const [countering, setCountering] = useState<Offer | null>(null);
   const [accepting, setAccepting] = useState<Offer | null>(null);
   const [rejecting, setRejecting] = useState<Offer | null>(null);
   const [notice, setNotice] = useState('');
-  const [only, setOnly] = useState<'open' | 'decided'>('open');
+  const [status, setStatus] = useState<StatusFilter>(() => statusFromUrl());
+  const [sort, setSort] = useState<SortKey>('new');
+  const [page, setPage] = useState(1);
+
+  const all = useMemo(() => res.data?.items ?? [], [res.data]);
+
+  const counts = useMemo(
+    () => ({
+      pending: all.filter((o) => o.status === 'pending').length,
+      countered: all.filter((o) => o.status === 'countered').length,
+      accepted: all.filter((o) => o.status === 'accepted').length,
+      rejected: all.filter((o) => o.status === 'rejected').length,
+    }),
+    [all],
+  );
+
+  /**
+   * Money at stake per status: unitPrice × quantity over the rows the API
+   * returned — real arithmetic on returned numbers. It is only stated when the
+   * selection quotes a single currency; an empty selection or a mixed-currency
+   * selection prints '—' rather than a converted or empty total.
+   */
+  const valueOf = (pred: (o: Offer) => boolean): { currency: string; value: number } | null => {
+    const sel = all.filter(pred);
+    if (sel.length === 0) return null;
+    const currencies = new Set(sel.map((o) => o.currency));
+    if (currencies.size !== 1) return null;
+    const [currency] = [...currencies] as [string];
+    return { currency, value: sel.reduce((sum, o) => sum + o.unitPrice * o.quantity, 0) };
+  };
+  const pendingValue = valueOf((o) => o.status === 'pending');
+  const acceptedValue = valueOf((o) => o.status === 'accepted');
+  const totalValue = valueOf(() => true);
+  const money3 = (v: { currency: string; value: number } | null): string =>
+    metric(v?.value ?? null, (n) => money(v!.currency, n));
+
+  const rows = useMemo(() => {
+    const filtered = all.filter((o) => (status === 'all' ? true : o.status === status));
+    const sorted = [...filtered];
+    sorted.sort((a, b) =>
+      sort === 'old'
+        ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        : sort === 'price_desc'
+          ? b.unitPrice - a.unitPrice
+          : sort === 'price_asc'
+            ? a.unitPrice - b.unitPrice
+            : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    return sorted;
+  }, [all, status, sort]);
+
+  const pageRows = useMemo(
+    () => rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [rows, page],
+  );
+
+  /**
+   * Chain roots. A root (parentOfferId === null) is provably the buyer's opening
+   * offer: only a buyer action creates one, and the API refuses a supplier
+   * offering on its own listing. A broken chain (parent not in the list) yields
+   * null so the cell can print '—' instead of attributing a price to the buyer.
+   */
+  const rootOf = useMemo(() => {
+    const byId = new Map(all.map((o) => [o.id, o]));
+    return (offer: Offer): Offer | null => {
+      let cur: Offer = offer;
+      for (let guard = 0; guard < 20; guard++) {
+        if (cur.parentOfferId === null) return cur;
+        const parent = byId.get(cur.parentOfferId);
+        if (!parent) return null;
+        cur = parent;
+      }
+      return null;
+    };
+  }, [all]);
 
   if (meLoading) {
     return (
-      <View title={t('offers.title')}>
+      <>
+        <PageHeader title={t('offers.title')} />
         <Spinner />
-      </View>
+      </>
     );
   }
 
   if (!loggedIn || !user) {
     return (
-      <View title={t('offers.title')} sub={t('offers.sub')}>
+      <>
+        <PageHeader title={t('offers.title')} sub={t('offers.sub')} />
         <Empty title={t('offers.notSignedIn')}>
           {t('offers.notSignedInBody')}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
@@ -332,52 +451,123 @@ export default function SupplierOffers() {
             </Link>
           </div>
         </Empty>
-      </View>
+      </>
     );
   }
 
   if (!isSupplier) {
     return (
-      <View title={t('offers.title')} sub={t('offers.sub')}>
+      <>
+        <PageHeader title={t('offers.title')} sub={t('offers.sub')} />
         <Empty title={t('offers.supplierOnly')}>
           {t('offers.supplierOnlyBody', { role: user.role })}
           <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
             <Link href="/explore" className="btn btn-sm btn-ghost">{t('offers.browseStock')}</Link>
           </div>
         </Empty>
-      </View>
+      </>
     );
   }
 
-  const all = res.data?.items ?? [];
-  // GET /api/offers already returns only the offers where this account is the
-  // supplier (the supplier id comes from the token, never the request), so the
-  // list is used as served — no client-side guessing at who the caller is.
-  const open = all.filter((o) => !FINAL.has(o.status));
-  const decided = all.filter((o) => FINAL.has(o.status));
-  const visible = only === 'open' ? open : decided;
-
   return (
-    <View
-      title={t('offers.title')}
-      sub={
-        res.isLoading
-          ? t('offers.subLoading')
-          : t('offers.subCount', { n: all.length.toLocaleString(locale) })
-      }
-      actions={
-        <div className="row">
-          <button
-            className="btn btn-sm btn-grey"
-            onClick={() => res.refetch()}
-            disabled={res.isFetching}
-          >
-            {res.isFetching ? t('action.refreshing') : t('action.refresh')}
-          </button>
-          <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>
+    <>
+      <PageHeader
+        title={t('offers.title')}
+        sub={
+          res.isLoading
+            ? t('offers.subLoading')
+            : t('offers.subCount', { n: all.length.toLocaleString(locale) })
+        }
+        actions={
+          <div className="row" style={{ gap: 6 }}>
+            <button
+              className="btn btn-sm btn-grey"
+              onClick={() => res.refetch()}
+              disabled={res.isFetching}
+            >
+              {res.isFetching ? t('action.refreshing') : t('action.refresh')}
+            </button>
+            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('post.myListings')}</Link>
+          </div>
+        }
+      />
+
+      <KpiRow>
+        <Kpi
+          ic="⏳"
+          label={t('status.pending')}
+          value={metric(res.isLoading ? undefined : counts.pending)}
+          hint={t('offers.awaiting')}
+        />
+        <Kpi
+          ic="🔁"
+          label={t('status.countered')}
+          value={metric(res.isLoading ? undefined : counts.countered)}
+        />
+        <Kpi
+          ic="✅"
+          label={t('status.accepted')}
+          value={metric(res.isLoading ? undefined : counts.accepted)}
+        />
+        <Kpi
+          ic="⛔"
+          label={t('status.rejected')}
+          value={metric(res.isLoading ? undefined : counts.rejected)}
+        />
+        <Kpi
+          ic="🏷️"
+          label={t('orders.col.total')}
+          value={metric(res.isLoading ? undefined : all.length)}
+          hint={t('dash.rowsTotal', { n: all.length.toLocaleString(locale) })}
+        />
+      </KpiRow>
+
+      <div className="grid2 mb10">
+        <div className="card">
+          <div className="hd"><h2>{t('dash.needsAttention')}</h2></div>
+          <div className="bd">
+            <Attention
+              items={[
+                {
+                  icon: '⏳',
+                  label: t('offers.awaiting'),
+                  count: counts.pending,
+                  // Anchors get the kit's `.attn a` row layout, and the filter
+                  // lives in the URL so the landing view is shareable.
+                  href: '/supplier/offers?status=pending',
+                },
+              ]}
+            />
+            <div className="mt10">
+              <span className="muted" style={{ fontSize: 11.5 }}>{t('offers.acceptCreates')}</span>
+            </div>
+          </div>
         </div>
-      }
-    >
+
+        <div className="card">
+          <div className="hd"><h2>{t('offers.offerValue')}</h2></div>
+          <div className="bd">
+            <div className="mini3">
+              <div>
+                <div className="v tnum">{money3(pendingValue)}</div>
+                <div className="l">{t('status.pending')}</div>
+              </div>
+              <div>
+                <div className="v tnum">{money3(acceptedValue)}</div>
+                <div className="l">{t('status.accepted')}</div>
+              </div>
+              <div>
+                <div className="v tnum">{money3(totalValue)}</div>
+                <div className="l">{t('orders.col.total')}</div>
+              </div>
+            </div>
+            <p className="muted mt10" style={{ fontSize: 11.5, marginBottom: 0 }}>
+              {t('offers.counterNote')}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {notice && (
         <div className="stripe">
           <span>{notice}</span>
@@ -385,135 +575,210 @@ export default function SupplierOffers() {
         </div>
       )}
 
-      <div className="stripe">
-        <span>
-          <b>{res.isLoading ? '—' : open.length.toLocaleString(locale)}</b> {t('offers.awaiting')}
-        </span>
-        <span>
-          <b>{res.isLoading ? '—' : decided.length.toLocaleString(locale)}</b> {t('offers.decided')}
-        </span>
-        <span>{t('offers.acceptCreates')}</span>
-      </div>
-
-      <div className="filters">
-        <button
-          className={`chip ${only === 'open' ? 'on' : ''}`}
-          onClick={() => setOnly('open')}
-        >
-          {t('offers.filterAwaiting', { n: open.length.toLocaleString(locale) })}
-        </button>
-        <button
-          className={`chip ${only === 'decided' ? 'on' : ''}`}
-          onClick={() => setOnly('decided')}
-        >
-          {t('offers.filterDecided', { n: decided.length.toLocaleString(locale) })}
-        </button>
-        <span className="muted">{t('offers.counterNote')}</span>
-      </div>
+      <Toolbar>
+        <ToolSelect
+          label={t('offers.col.status')}
+          value={status}
+          onChange={(v) => {
+            setStatus(v as StatusFilter);
+            setPage(1);
+          }}
+          options={[
+            { value: 'all', label: t('rfq.statusAll') },
+            { value: 'pending', label: t('status.pending') },
+            { value: 'countered', label: t('status.countered') },
+            { value: 'accepted', label: t('status.accepted') },
+            { value: 'rejected', label: t('status.rejected') },
+          ]}
+        />
+        <ToolSelect
+          label={t('dash.sortBy')}
+          value={sort}
+          onChange={(v) => {
+            setSort(v as SortKey);
+            setPage(1);
+          }}
+          options={[
+            { value: 'new', label: t('dash.sortNewest') },
+            { value: 'old', label: t('dash.sortOldest') },
+            { value: 'price_desc', label: t('dash.sortPriceHigh') },
+            { value: 'price_asc', label: t('dash.sortPriceLow') },
+          ]}
+        />
+        <span className="sep" />
+        <span className="tl tnum">{t('dash.rowsTotal', { n: rows.length.toLocaleString(locale) })}</span>
+        {status !== 'all' && (
+          <button
+            className="btn btn-sm btn-ghost"
+            onClick={() => {
+              setStatus('all');
+              setPage(1);
+            }}
+          >
+            {t('dash.clearFilters')}
+          </button>
+        )}
+        <span className="grow" />
+        {res.dataUpdatedAt > 0 && (
+          <span className="tl tnum">
+            {t('dash.lastUpdated')} {new Date(res.dataUpdatedAt).toLocaleTimeString(locale)}
+          </span>
+        )}
+      </Toolbar>
 
       {res.isLoading ? (
         <Spinner />
       ) : res.isError ? (
-        <Empty title={t('offers.loadErrorTitle')}>
-          {t('offers.loadErrorBody')}
-          <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
+        <EmptyState
+          icon="⚠️"
+          title={t('offers.loadErrorTitle')}
+          body={t('offers.loadErrorBody')}
+          action={
             <button className="btn btn-sm btn-grey" onClick={() => res.refetch()}>{t('action.tryAgain')}</button>
-          </div>
-        </Empty>
+          }
+        />
       ) : all.length === 0 ? (
-        <Empty title={t('offers.emptyTitle')}>
-          {t('offers.emptyBody')}
-          <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 12 }}>
-            <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('offers.seeListings')}</Link>
-            <Link href="/supplier/post" className="btn btn-sm btn-gold">{t('offers.postMore')}</Link>
-          </div>
-        </Empty>
-      ) : visible.length === 0 ? (
-        <Empty title={only === 'open' ? t('offers.noneAwaiting') : t('offers.noneDecided')}>
-          {only === 'open' ? t('offers.noneAwaitingBody') : t('offers.noneDecidedBody')}
-        </Empty>
+        <EmptyState
+          icon="🏷️"
+          title={t('offers.emptyTitle')}
+          body={t('offers.emptyBody')}
+          action={
+            <div className="row" style={{ justifyContent: 'center', gap: 8 }}>
+              <Link href="/supplier/listings" className="btn btn-sm btn-ghost">{t('offers.seeListings')}</Link>
+              <Link href="/supplier/post" className="btn btn-sm btn-gold">{t('offers.postMore')}</Link>
+            </div>
+          }
+        />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          icon="🔍"
+          title={status === 'pending' ? t('offers.noneAwaiting') : t('dash.noResults')}
+          body={status === 'pending' ? t('offers.noneAwaitingBody') : t('dash.noResultsBody')}
+          action={
+            <button
+              className="btn btn-sm btn-grey"
+              onClick={() => {
+                setStatus('all');
+                setPage(1);
+              }}
+            >
+              {t('dash.clearFilters')}
+            </button>
+          }
+        />
       ) : (
-        <div className="card">
-          <div className="hd">
-            <b>{t('offers.count', { n: visible.length.toLocaleString(locale) })}</b>
-            <span className="muted" style={{ marginLeft: 'auto' }}>{t('common.newestFirst')}</span>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
+        <>
+          <TableWrap>
             <table>
               <thead>
                 <tr>
                   <th>{t('offers.col.listing')}</th>
                   <th>{t('offers.col.buyer')}</th>
-                  <th style={{ textAlign: 'right' }}>{t('offers.col.quantity')}</th>
-                  <th style={{ textAlign: 'right' }}>{t('offers.col.theirPrice')}</th>
-                  <th>{t('offers.col.status')}</th>
+                  <th className="num">{t('myoffers.col.quantity')}</th>
+                  <th className="num">{t('offers.col.theirPrice')}</th>
+                  <th className="num hidem">{t('myoffers.col.unitPrice')}</th>
+                  <th className="num">{t('orders.col.total')}</th>
+                  <th className="tight">{t('offers.col.status')}</th>
                   <th className="hidem">{t('offers.col.received')}</th>
-                  <th />
+                  <th className="tight">{t('myoffers.col.action')}</th>
                 </tr>
               </thead>
               <tbody>
-                {visible.map((o) => (
-                  <tr key={o.id}>
-                    <td>
-                      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                        <Link href={`/products/${o.productId}`} className="strong">{o.productName}</Link>
-                        {o.dataSource === 'demo' && <DemoTag />}
-                      </div>
-                      <div className="muted">
-                        {t('offers.offerRef', { id: o.id })}
-                        {o.parentOfferId !== null ? ` · ${t('offers.answersOffer', { id: o.parentOfferId })}` : ''}
-                        {o.notes ? ` · “${o.notes}”` : ''}
-                      </div>
-                    </td>
-                    <td>{o.buyerName}</td>
-                    <td style={{ textAlign: 'right' }}>{o.quantity.toLocaleString(locale)}</td>
-                    <td style={{ textAlign: 'right' }} className="strong">
-                      {money(o.currency, o.unitPrice)}
-                    </td>
-                    <td><StatusChip status={o.status} /></td>
-                    <td className="hidem muted" title={new Date(o.createdAt).toLocaleString(locale)}>
-                      {shortDate(o.createdAt, locale)}
-                    </td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      {FINAL.has(o.status) ? (
-                        <span className="muted">{t('offers.decidedLabel')}</span>
-                      ) : (
-                        <>
-                          <button
-                            className="btn btn-sm btn-ghost"
-                            onClick={() => { setNotice(''); setCountering(o); }}
-                          >
-                            {t('offers.counter')}
-                          </button>{' '}
-                          <button
-                            className="btn btn-sm btn-green"
-                            onClick={() => { setNotice(''); setAccepting(o); }}
-                          >
-                            {t('offers.accept')}
-                          </button>{' '}
-                          <button
-                            className="btn btn-sm btn-red"
-                            onClick={() => { setNotice(''); setRejecting(o); }}
-                          >
-                            {t('offers.reject')}
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {pageRows.map((o) => {
+                  const root = rootOf(o);
+                  const total = o.unitPrice * o.quantity;
+                  return (
+                    <tr key={o.id}>
+                      <td>
+                        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                          <Link href={`/products/${o.productId}`} className="cellmain">{o.productName}</Link>
+                          {o.dataSource === 'demo' && <DemoTag />}
+                        </div>
+                        <span className="cellsub">
+                          {t('offers.offerRef', { id: o.id })}
+                          {o.parentOfferId !== null
+                            ? ` · ${t('offers.answersOffer', { id: o.parentOfferId })}`
+                            : ''}
+                          {o.notes ? ` · “${o.notes}”` : ''}
+                        </span>
+                      </td>
+                      <td>{o.buyerName}</td>
+                      <td className="num">{o.quantity.toLocaleString(locale)}</td>
+                      <td className="num strong">
+                        {root ? money(o.currency, root.unitPrice) : metric(undefined)}
+                        {root ? (
+                          <span className="cellsub">{t('offers.offerRef', { id: root.id })}</span>
+                        ) : null}
+                      </td>
+                      <td className="num hidem">
+                        {money(o.currency, o.unitPrice)}
+                        <span className="cellsub">
+                          {o.parentOfferId !== null
+                            ? t('offers.answersOffer', { id: o.parentOfferId })
+                            : t('offers.col.theirPrice')}
+                        </span>
+                      </td>
+                      <td className="num">
+                        {money(o.currency, total)}
+                        <span className="cellsub tnum">
+                          {o.quantity.toLocaleString(locale)} × {money(o.currency, o.unitPrice)}
+                        </span>
+                      </td>
+                      <td className="tight"><StatusChip status={o.status} /></td>
+                      <td className="hidem muted" title={new Date(o.createdAt).toLocaleString(locale)}>
+                        {shortDate(o.createdAt, locale)}
+                      </td>
+                      <td className="tight">
+                        {FINAL.has(o.status) ? (
+                          <span className="muted">{t('offers.decidedLabel')}</span>
+                        ) : (
+                          <div className="rowact">
+                            <button
+                              className="btn btn-sm btn-ghost"
+                              onClick={() => { setNotice(''); setCountering(o); }}
+                            >
+                              {t('offers.counter')}
+                            </button>
+                            <button
+                              className="btn btn-sm btn-green"
+                              onClick={() => { setNotice(''); setAccepting(o); }}
+                            >
+                              {t('offers.accept')}
+                            </button>
+                            <button
+                              className="btn btn-sm btn-red"
+                              onClick={() => { setNotice(''); setRejecting(o); }}
+                            >
+                              {t('offers.reject')}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
+          </TableWrap>
 
-      <div className="stripe" style={{ marginTop: 12 }}>
-        <span>
-          {t('offers.demoNoteLead')} <span className="pill p-amber">{t('cards.demo')}</span>{' '}
-          {t('offers.demoNoteTail')}
-        </span>
-      </div>
+          <div className="card" style={{ marginTop: 8 }}>
+            <Pager
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={rows.length}
+              onPage={setPage}
+              left={<span className="tnum">{t('offers.count', { n: rows.length.toLocaleString(locale) })}</span>}
+            />
+          </div>
+
+          <div className="stripe" style={{ marginTop: 12 }}>
+            <span>
+              {t('offers.demoNoteLead')} <span className="pill p-amber">{t('cards.demo')}</span>{' '}
+              {t('offers.demoNoteTail')}
+            </span>
+          </div>
+        </>
+      )}
 
       {countering && (
         <CounterModal
@@ -536,6 +801,6 @@ export default function SupplierOffers() {
           onDone={(m) => { setRejecting(null); setNotice(m); }}
         />
       )}
-    </View>
+    </>
   );
 }
