@@ -129,6 +129,24 @@ export const zCategoryCountList = z.object({
 });
 export type CategoryCountList = z.infer<typeof zCategoryCountList>;
 
+/**
+ * Live per-origin listing counts for the header's market strip. `country` is
+ * normalised to the market code where the stored spelling is an alias
+ * ('Türkiye' → 'TR', 'China' → 'CN'), so a market is never split across two
+ * rows; unknown or 'Global' records keep their literal value.
+ */
+export const zCountryCount = z.object({
+  country: z.string(),
+  count: z.number(),
+});
+export type CountryCount = z.infer<typeof zCountryCount>;
+
+export const zCountryCountList = z.object({
+  items: z.array(zCountryCount),
+  total: z.number(),
+});
+export type CountryCountList = z.infer<typeof zCountryCountList>;
+
 /* ---------- product Q&A (ask the seller a question) ---------- */
 
 /**

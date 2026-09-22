@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearch } from 'wouter';
-import { useProducts, useCategoryCounts, useSaveLot, getToken } from '@workspace/api-client-react';
+import { useProducts, useCategoryCounts, useProductCountryCounts, useSaveLot, getToken } from '@workspace/api-client-react';
 import { View, ProductCard, Spinner, Empty, DemoNotice, StockTypeFilter, requireAuthGate } from '../components';
 import { COUNTRIES } from '@workspace/api-spec';
 import { useI18n } from '../i18n';
@@ -64,6 +64,10 @@ export default function Explore() {
   // Only categories that actually contain stock, so no option yields nothing.
   const { data: catData } = useCategoryCounts();
   const categoryOptions = catData?.items ?? [];
+
+  // Same rule for origins: real values, with the stock each one holds.
+  const { data: countryData } = useProductCountryCounts();
+  const countryOptions = countryData?.items ?? [];
 
   /**
    * Reflect the current filters in the URL so a filtered view is shareable and
@@ -157,7 +161,17 @@ export default function Explore() {
           aria-label={t('explore.originAria')}
         >
           <option value="">{t('explore.allCountries')}</option>
-          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {/* Origins come from the catalogue itself (GET /api/products/countries),
+              so the options are the values the rows actually carry and each one
+              shows how much stock it holds — the same pattern as the category
+              select. COUNTRIES is only the fallback for a failed request. */}
+          {countryOptions.length > 0
+            ? countryOptions.map((c) => (
+                <option key={c.country} value={c.country}>
+                  {c.country} ({c.count.toLocaleString(locale)})
+                </option>
+              ))
+            : COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <input
           className="in" style={{ width: 84 }} placeholder={t('explore.min')} inputMode="numeric"

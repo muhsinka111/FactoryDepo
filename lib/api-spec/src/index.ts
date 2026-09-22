@@ -28,6 +28,7 @@ export const ROUTES: RouteDef[] = [
 
   { method: 'GET', path: '/api/products', auth: 'public', input: c.zProductListQuery, output: c.zProductList, desc: 'Search products: q, category, listingType, country, supplierId, min/maxPrice, page, limit' },
   { method: 'GET', path: '/api/products/categories', auth: 'public', output: c.zCategoryCountList, desc: 'Live listing count per category — the UI offers only categories that hold stock' },
+  { method: 'GET', path: '/api/products/countries', auth: 'public', output: c.zCountryCountList, desc: 'Live listing count per origin market (aliases merged: Türkiye/TR, China/CN) — the header market strip' },
   { method: 'GET', path: '/api/products/:id', auth: 'public', output: c.zProduct, desc: 'Product detail' },
   { method: 'GET', path: '/api/products/:id/questions', auth: 'public', output: c.zProductQuestionList, desc: 'Listing Q&A: answered questions publicly, the caller\'s own pending ones with a token, everything (incl. hidden) for the owning supplier or an admin' },
   { method: 'POST', path: '/api/products/:id/questions', auth: 'user', input: c.zCreateProductQuestionInput, output: c.zProductQuestion, desc: 'Ask the seller a question (always written pending; only the seller can publish it)' },
@@ -134,4 +135,15 @@ export const CATEGORIES = [
   'Hardware & Fasteners',
 ] as const;
 
-export const COUNTRIES = ['Türkiye', 'China', 'Vietnam', 'Germany', 'India', 'USA', 'Italy', 'Poland', 'Mexico', 'South Korea', 'Japan'] as const;
+/**
+ * Country options offered by the listing / RFQ / filter forms.
+ *
+ * OWNER POLICY (hard rule): the marketplace covers Türkiye, China, USA and
+ * Europe — nothing else. India and Vietnam were explicitly excluded and purged
+ * from the catalogue, and this list is the only source for those pickers, so an
+ * excluded market can never be selected (or seeded) back in. Do not re-add them.
+ */
+export const COUNTRIES = [
+  'Türkiye', 'China', 'USA',
+  'Germany', 'Netherlands', 'Italy', 'Spain', 'Poland', 'France', 'United Kingdom',
+] as const;

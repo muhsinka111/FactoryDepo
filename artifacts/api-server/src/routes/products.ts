@@ -170,6 +170,51 @@ productsRouter.get('/categories', async (_req, res) => {
 });
 
 /**
+ * Name → market code. The catalogue stores a mix of codes and names for the
+ * same market ('TR' and 'Türkiye', 'CN' and 'China'), so counting raw values
+ * would split a market across rows and under-report it. Only true synonyms are
+ * merged; anything unrecognised (including the deliberate 'Global' bucket) keeps
+ * its literal value rather than being forced into a country.
+ */
+const COUNTRY_ALIASES: Record<string, string> = {
+  türkiye: 'TR', turkey: 'TR', tr: 'TR',
+  china: 'CN', cn: 'CN',
+  usa: 'US', us: 'US', 'united states': 'US',
+  germany: 'DE', de: 'DE',
+  netherlands: 'NL', nl: 'NL',
+  italy: 'IT', it: 'IT',
+  spain: 'ES', es: 'ES',
+  poland: 'PL', pl: 'PL',
+  france: 'FR', fr: 'FR',
+  'united kingdom': 'GB', uk: 'GB', gb: 'GB',
+};
+
+/**
+ * GET /api/products/countries — live listing counts per origin market, used by
+ * the header's market strip. Declared BEFORE `/:id` so "countries" is never
+ * parsed as a product id. Counts are real; a market with no stock is simply
+ * absent from the list, never shown as a guess.
+ */
+productsRouter.get('/countries', async (_req, res) => {
+  const rows = await db
+    .select({ country: products.originCountry, n: sql<number>`count(*)` })
+    .from(products)
+    .groupBy(products.originCountry);
+  const merged = new Map<string, number>();
+  for (const r of rows) {
+    const raw = String(r.country ?? '').trim();
+    if (!raw) continue;
+    const key = COUNTRY_ALIASES[raw.toLowerCase()] ?? raw;
+    merged.set(key, (merged.get(key) ?? 0) + toNum(r.n));
+  }
+  const items = [...merged.entries()]
+    .map(([country, count]) => ({ country, count }))
+    .filter((r) => r.count > 0)
+    .sort((a, b) => b.count - a.count);
+  respond(res, c.zCountryCountList, { items, total: items.reduce((n, r) => n + r.count, 0) });
+});
+
+/**
  * POST /api/products — supplier creates a listing under their own supplier row.
  * The body can never name a supplier: `supplierId` comes from the caller.
  */

@@ -6,7 +6,7 @@
  */
 import { Link, useLocation, useSearch } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts } from '@workspace/api-client-react';
+import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts, useProductCountryCounts } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
 import { coverFor } from './categoryImages';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
@@ -131,9 +131,16 @@ export function homeFor(dash: DashboardRole | null): string {
  */
 export { CATEGORIES as RAIL_CATEGORIES } from '@workspace/api-spec';
 
-export const MARKET_COUNTRIES: [string, string][] = [
-  ['Turkey', '🇹🇷'], ['China', '🇨🇳'], ['USA', '🇺🇸'],
-  ['Germany', '🇩🇪'], ['Netherlands', '🇳🇱'], ['India', '🇮🇳'],
+/**
+ * Markets shown in the topbar strip. Codes are the values the catalogue
+ * actually stores (`originCountry`), so the link filters the same rows the
+ * count was taken from; the strip is limited to the marketplace's declared
+ * scope (Türkiye, China, USA + Europe) — India and Vietnam are excluded by
+ * owner policy and must never be offered here.
+ */
+export const MARKET_COUNTRIES: [string, string, string][] = [
+  ['TR', '🇹🇷', 'Türkiye'], ['CN', '🇨🇳', 'China'], ['US', '🇺🇸', 'USA'],
+  ['DE', '🇩🇪', 'Germany'], ['NL', '🇳🇱', 'Netherlands'], ['IT', '🇮🇹', 'Italy'],
 ];
 
 /* ============================== chrome pieces ============================= */
@@ -201,6 +208,19 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
   const [q, setQ] = useState('');
 
   /**
+   * Live market counts for the strip. The `marketCounts` prop stays as an
+   * override for a caller that already holds the figures; otherwise the figures
+   * come from GET /api/products/countries. `undefined` means "not known yet"
+   * and renders an em dash — never a zero we did not measure.
+   */
+  const countryCounts = useProductCountryCounts({ enabled: !marketCounts });
+  const liveCounts: Record<string, number> | undefined =
+    marketCounts ??
+    (countryCounts.data
+      ? Object.fromEntries(countryCounts.data.items.map((i) => [i.country, i.count]))
+      : undefined);
+
+  /**
    * Switching language is always local and immediate. When an account is signed
    * in we also mirror the choice onto it, but the request is fire-and-forget:
    * a failed PATCH must never roll the interface back or block the switch.
@@ -232,17 +252,19 @@ export function Topbar({ marketCounts, notificationCount = 0, role }: TopbarProp
       </form>
 
       {/* Each market figure is a link into the catalogue filtered to that origin.
-          Before this the counts were decorative and the only way to filter by
-          market was the Explore dropdown. */}
+          Counts come from GET /api/products/countries (real COUNTs, alias-merged
+          so TR/Türkiye and CN/China are one market). While the request is in
+          flight the figure is an em dash; a market that answered with no rows is
+          a genuine 0. */}
       <div className="markets">
-        {MARKET_COUNTRIES.map(([country, flag]) => (
+        {MARKET_COUNTRIES.map(([code, flag, name]) => (
           <Link
-            key={country}
-            href={`/explore?country=${encodeURIComponent(country)}`}
-            title={`${country} — ${marketCounts ? (marketCounts[country] ?? 0) : '—'} listings`}
+            key={code}
+            href={`/explore?country=${encodeURIComponent(code)}`}
+            title={`${name} · ${t('categories.listingCount', { n: liveCounts ? String(liveCounts[code] ?? 0) : '—' })}`}
             style={{ color: 'inherit' }}
           >
-            {flag} <b>{marketCounts ? (marketCounts[country] ?? 0) : '—'}</b>
+            {flag} <b>{liveCounts ? (liveCounts[code] ?? 0) : '—'}</b>
           </Link>
         ))}
       </div>

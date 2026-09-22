@@ -137,6 +137,16 @@ export function useProduct(id: number | undefined) {
   });
 }
 
+/** Public per-market listing counts (header market strip). */
+export function useProductCountryCounts(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['product-country-counts'],
+    queryFn: () => apiFetch<c.CountryCountList>('/products/countries'),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /**
  * Live listing counts per category. Used by the category rail and the browse
  * filters so only categories that actually contain stock are offered.
