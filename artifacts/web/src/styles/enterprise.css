@@ -1,0 +1,247 @@
+/* =====================================================================
+   FactoryDepo — enterprise UI extension (product page + dashboards)
+   ---------------------------------------------------------------------
+   styles.css is the design authority (navy/gold, --r:8px, dense). This
+   file ONLY adds new classes for the Alibaba-style listing page and the
+   three role dashboards. It never restyles an existing class and never
+   redefines a token — it composes the tokens from styles.css:
+   --navy #132238, --gold #f5a623, --line #e6e9ee, --r 8px, --bg #f7f8fa.
+   ===================================================================== */
+
+/* ---------- breadcrumbs ---------- */
+.crumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin:0 0 10px;flex-wrap:wrap}
+.crumb a{color:var(--mute)}
+.crumb a:hover{color:var(--blue)}
+.crumb .sep{color:#c6ccd4}
+.crumb .now{color:var(--ink);font-weight:500;max-width:52ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- section head (h2 + right-hand link) ---------- */
+.sechead{display:flex;align-items:center;gap:8px;margin:0 0 9px}
+.sechead h2{font-size:14px;font-weight:600}
+.sechead .link{margin-left:auto;font-size:11.5px}
+
+/* ---------- compact KPI strip (dashboards) ---------- */
+.kpirow{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));margin-bottom:12px}
+.kpi{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r);text-align:left}
+.kpi .ic{width:30px;height:30px;border-radius:5px;background:var(--line-2);display:grid;place-items:center;
+  font-size:14px;flex:none}
+.kpi .v{font-size:19px;font-weight:600;letter-spacing:-.3px;line-height:1.15;
+  font-variant-numeric:tabular-nums}
+.kpi .l{font-size:11.5px;color:var(--mute)}
+.kpi .d{font-size:10.5px;font-weight:600;margin-top:2px}
+.kpi .d.up{color:var(--green)} .kpi .d.down{color:var(--red)} .kpi .d.flat{color:var(--faint)}
+.kpi.on{cursor:pointer}
+.kpi.on:hover{border-color:#cfd6e0;box-shadow:var(--shadow)}
+.kpi.sel{border-color:var(--gold);background:#fffdf7}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 11px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px}
+.toolbar .grow{flex:1;min-width:140px}
+.toolbar input[type='search'],.toolbar input[type='text'],.toolbar select{padding:5px 9px;border:1px solid var(--line);
+  border-radius:5px;background:#fff;font-size:12.5px;color:var(--ink)}
+.toolbar input[type='search']:focus,.toolbar select:focus{border-color:#cfd6e0;outline:none}
+.toolbar .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+.toolbar .tl{font-size:11.5px;color:var(--faint)}
+.search-s{position:relative}
+.search-s svg{position:absolute;left:8px;top:7px;opacity:.4}
+
+/* ---------- dense tables ---------- */
+.tblwrap{border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:auto}
+.tblwrap table{border-radius:var(--r)}
+.tblwrap thead th{position:sticky;top:0;z-index:2}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.tight,th.tight{padding-left:8px;padding-right:8px;width:1%;white-space:nowrap}
+td.strong{font-weight:600}
+.cellsub{display:block;font-size:11px;color:var(--faint);margin-top:1px}
+.cellmain{font-weight:500;color:var(--ink)}
+.rowact{display:flex;gap:5px;justify-content:flex-end}
+
+/* ---------- pager ---------- */
+.pager{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:12px;color:var(--mute)}
+.pager .grow{flex:1}
+.pager button{padding:3px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;font-size:12px}
+.pager button[disabled]{opacity:.4;cursor:not-allowed}
+
+/* ---------- empty state ---------- */
+.emptystate{padding:34px 18px;text-align:center;color:var(--mute);font-size:12.5px}
+.emptystate .ic{font-size:22px;opacity:.55;margin-bottom:6px}
+.emptystate b{display:block;color:var(--ink);font-size:13.5px;font-weight:600;margin-bottom:4px}
+.emptystate .sb{max-width:52ch;margin:0 auto 12px}
+
+/* ---------- tab strip ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 12px;overflow-x:auto}
+.tab{padding:8px 13px;font-size:12.5px;color:var(--mute);white-space:nowrap;border-bottom:2px solid transparent}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--navy);font-weight:600;border-bottom-color:var(--gold)}
+.tab .n{margin-left:5px;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* =====================================================================
+   product detail page
+   ===================================================================== */
+.pdgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr);gap:14px;align-items:start}
+.pdleft{min-width:0}
+.pdside{position:sticky;top:64px;display:grid;gap:12px}
+
+/* gallery */
+.pdimg{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:var(--radius-lg);
+  background:#eef0f3;overflow:hidden}
+.pdimg img{width:100%;height:100%;object-fit:cover;transition:transform .25s ease}
+.pdimg.zoom:hover img{transform:scale(1.12)}
+.pdimg .tag{position:absolute;left:9px;top:9px;display:flex;gap:5px;flex-wrap:wrap}
+.pdimg .hintz{position:absolute;right:9px;bottom:9px;background:rgba(19,34,56,.72);color:#fff;font-size:10.5px;
+  padding:3px 7px;border-radius:4px}
+.pdthumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.pdthumb{width:64px;height:54px;border-radius:5px;overflow:hidden;border:2px solid transparent;background:#eef0f3;padding:0}
+.pdthumb img{width:100%;height:100%;object-fit:cover}
+.pdthumb.on{border-color:var(--gold)}
+.pdmeta{font-size:11.5px;color:var(--faint);margin-top:6px}
+
+/* key facts strip */
+.factstrip{display:grid;gap:0;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));border:1px solid var(--line);
+  border-radius:var(--r);background:var(--card);margin-top:12px;overflow:hidden}
+.fact{padding:9px 11px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.fact .k{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.03em}
+.fact .v{font-size:13px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+
+/* buy box */
+.pbox{padding:12px}
+.pbox .price{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--navy);font-variant-numeric:tabular-nums}
+.pbox .per{font-size:12px;color:var(--mute)}
+.pbox .stockline{display:flex;justify-content:space-between;font-size:12.5px;margin:9px 0 0;
+  padding-top:9px;border-top:1px dashed var(--line)}
+.qtyrow{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;
+  width:fit-content;margin:9px 0 0}
+.qtyrow button{width:30px;height:30px;background:#fff;font-size:15px;color:#4a5665;border-right:1px solid var(--line)}
+.qtyrow button:last-child{border-right:none;border-left:1px solid var(--line)}
+.qtyrow button:hover{background:var(--line-2)}
+.qtyrow input{width:78px;height:30px;border:none;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+.qtyrow input:focus{outline:none}
+.linetotal{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0;
+  padding:8px 10px;background:var(--blue-l);border-radius:5px;font-size:12.5px}
+.linetotal b{font-size:15px;font-variant-numeric:tabular-nums}
+.ctastack{display:grid;gap:7px}
+.ctastack .btn{width:100%}
+.btn-lg{padding:9px 14px;font-size:13.5px}
+.trustrow{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:#4a5665;padding:6px 0;
+  border-top:1px solid var(--line-2)}
+.trustrow .ic{width:22px;height:22px;border-radius:4px;background:var(--line-2);display:grid;place-items:center;
+  font-size:11px;flex:none}
+.trustrow b{display:block;font-weight:600;color:var(--ink);font-size:12px}
+
+/* seller strip inside the buy box */
+.sellerline{display:flex;gap:9px;align-items:center;padding:9px 0 0;border-top:1px solid var(--line-2);margin-top:9px}
+.sellerline .av{width:32px;height:32px;font-size:12px}
+.sellerline .nm{font-size:12.5px;font-weight:600;line-height:1.25}
+.sellerline .mt{font-size:11px;color:var(--mute)}
+
+/* capability rows (company profile) */
+.cap{display:grid;grid-template-columns:minmax(120px,.7fr) 1.3fr;gap:6px 12px;font-size:12.5px}
+.cap .k{color:var(--mute)}
+.cap .v{color:var(--ink);font-weight:500}
+.cap .v.na{color:var(--faint);font-weight:400}
+
+/* spec table (two columns, zebra) */
+.spectbl{width:100%;font-size:12.5px}
+.spectbl tr:nth-child(odd) td{background:#fcfcfd}
+.spectbl td{padding:7px 11px;border-bottom:1px solid var(--line-2)}
+.spectbl td.k{color:var(--mute);width:38%}
+.spectbl td.v{font-weight:500}
+
+/* description block */
+.descblock{font-size:13px;line-height:1.65;color:#33404f}
+.descblock p{margin:0 0 9px}
+.descblock .raw{white-space:pre-line}
+
+/* Q&A */
+.qa{display:grid;gap:9px}
+.qa-item{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:10px 12px}
+.qa-q{display:flex;gap:7px;font-size:13px;font-weight:500;color:var(--ink)}
+.qa-q .mk{color:var(--blue);font-weight:700;flex:none}
+.qa-a{display:flex;gap:7px;margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);
+  font-size:12.5px;color:#33404f}
+.qa-a .mk{color:var(--green);font-weight:700;flex:none}
+.qa-meta{font-size:11px;color:var(--faint);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap}
+.qa-form{display:grid;gap:8px}
+.qa-form textarea,.qa-form input[type='text']{width:100%;padding:8px 10px;border:1px solid var(--line);
+  border-radius:5px;font-size:12.5px;resize:vertical}
+.qa-form textarea:focus,.qa-form input:focus{border-color:#cfd6e0;outline:none}
+.qa-pend{background:#fffdf5;border-color:#f0e2bd}
+
+/* FAQ accordion (native details) */
+.acc{border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.acc details{border-bottom:1px solid var(--line-2)}
+.acc details:last-child{border-bottom:none}
+.acc summary{padding:10px 12px;font-size:12.5px;font-weight:500;cursor:pointer;list-style:none;
+  display:flex;gap:8px;align-items:center}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary:before{content:"+";color:var(--mute);font-weight:600;width:12px;flex:none}
+.acc details[open] summary:before{content:"–"}
+.acc .bd{padding:0 12px 11px 32px;font-size:12.5px;color:#4a5665;line-height:1.6}
+
+/* mobile action bar */
+.mobar{display:none}
+@media (max-width:900px){
+  .mobar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:70;background:#fff;
+    border-top:1px solid var(--line);padding:8px 10px;gap:8px;align-items:center;box-shadow:0 -2px 8px rgba(20,32,50,.06)}
+  .mobar .p{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--navy)}
+  .mobar .u{font-size:10.5px;color:var(--faint);display:block}
+  .mobar .btn{flex:1}
+  .pdgrid{grid-template-columns:1fr}
+  .pdside{position:static}
+  .toolbar{padding:8px}
+  .kpirow{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .factstrip{grid-template-columns:repeat(2,1fr)}
+}
+
+/* rails of cards */
+.railgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(178px,1fr))}
+
+/* small stat trio used inside cards */
+.mini3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.mini3 .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.mini3 .l{font-size:10.5px;color:var(--mute)}
+
+/* ---------- dashboard extras ---------- */
+.tl{display:grid;gap:0;padding:4px 0}
+.tl-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.tl-item:last-child{border-bottom:none}
+.tl .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex:none}
+.tl .dot.gold{background:var(--gold)} .tl .dot.green{background:var(--green)} .tl .dot.red{background:var(--red)}
+.tl .bd{min-width:0;flex:1}
+.tl .tx{font-size:12.5px}
+.tl .mt{font-size:11px;color:var(--faint);margin-top:1px}
+.attn{display:grid;gap:7px}
+.attn a{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:6px;background:var(--card);font-size:12.5px;color:var(--ink)}
+.attn a:hover{border-color:#cfd6e0;background:#fcfcfd}
+.attn .n{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.attn .ic{width:26px;height:26px;border-radius:5px;background:#fff7e8;display:grid;place-items:center;font-size:12px;flex:none}
+.attn a.ok .ic{background:var(--green-l)}
+.stepbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stepbar .st{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+  border-radius:999px;background:#fff;font-size:12px;color:var(--mute)}
+.stepbar .st .n{width:18px;height:18px;border-radius:50%;background:var(--line-2);display:grid;place-items:center;
+  font-size:10.5px;font-weight:600;color:#4a5665}
+.stepbar .st.on{border-color:var(--navy);color:var(--navy);font-weight:500}
+.stepbar .st.on .n{background:var(--navy);color:#fff}
+.stepbar .st.ok{border-color:var(--green);color:var(--green)}
+.stepbar .st.ok .n{background:var(--green);color:#fff}
+.chiprow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--mute)}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.barcard{display:grid;gap:6px}
+.barcard .brow{display:grid;grid-template-columns:minmax(90px,1fr) 2fr auto;gap:8px;align-items:center;font-size:12px}
+.barcard .track{height:7px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.barcard .fill{height:100%;background:var(--navy);border-radius:4px}
+.barcard .fill.gold{background:var(--gold)}
+.barcard .n{font-variant-numeric:tabular-nums;color:var(--mute);font-size:11.5px}
+
+/* ---------- utilities ---------- */
+.na{color:var(--faint)}
+.tnum{font-variant-numeric:tabular-nums}
+.mt6{margin-top:6px}.mt10{margin-top:10px}.mt14{margin-top:14px}
+.mb6{margin-bottom:6px}.mb10{margin-bottom:10px}.mb14{margin-bottom:14px}
+.grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start}
+.grid3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start}

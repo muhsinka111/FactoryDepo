@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { LocaleProvider } from './i18n';
 import './styles.css';
+// Enterprise extension layer (product page + dashboard kit). Additive only —
+// styles.css stays the design authority for tokens and shared chrome.
+import './styles/enterprise.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
