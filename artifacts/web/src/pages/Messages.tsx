@@ -330,6 +330,10 @@ export default function Messages() {
       />
 
       <KpiRow>
+        {/* `admin.overview.threads` is the only existing key whose copy is the
+            bare noun "Conversations" — a buyer-page tile reusing an admin key's
+            wording beats inventing a new key. `notes.unreadLabel` is the only
+            standalone "Unread", and both counts come from the returned threads. */}
         <Kpi ic="💬" label={t('admin.overview.threads')} value={metric(list.length)} />
         <Kpi ic="🔔" label={t('notes.unreadLabel')} value={metric(unreadThreads)} />
         <Kpi ic="✉️" label={t('msg.title')} value={metric(messageTotal)} />
