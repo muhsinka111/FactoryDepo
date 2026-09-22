@@ -17,12 +17,17 @@ export class HttpError extends Error {
 }
 
 /** Parse an :id route param (Express 5 → req.params['id']), 400 on garbage. */
-export function parseId(req: Request): number {
-  const p = req.params['id'];
+export function parseParamId(req: Request, name: string): number {
+  const p = req.params[name];
   const raw = Array.isArray(p) ? p[0] : p;
   const id = Number.parseInt(raw ?? '', 10);
   if (Number.isNaN(id)) throw new HttpError(400, { error: 'invalid_id' });
   return id;
+}
+
+/** Parse the `:id` route param — the shape most routes use. */
+export function parseId(req: Request): number {
+  return parseParamId(req, 'id');
 }
 
 /**
@@ -360,6 +365,35 @@ export function mapFaq(f: Record<string, unknown>): c.Faq {
     question: String(f.question),
     answer: String(f.answer),
     position: toNum(f.position),
+  };
+}
+
+/**
+ * One product-Q&A row. `askedAt` is the row's `createdAt`; the asker/answerer
+ * names come from the row's own snapshots (never re-joined from `users`).
+ */
+export function mapProductQuestion(q: Record<string, unknown>): c.ProductQuestion {
+  return {
+    id: toNum(q.id),
+    productId: toNum(q.productId),
+    question: String(q.question),
+    askerName: String(q.askerName),
+    askedAt: toIso(q.createdAt),
+    answer: q.answer == null ? null : String(q.answer),
+    answeredAt: toIsoOrNull(q.answeredAt),
+    answeredByName: q.answeredByName == null ? null : String(q.answeredByName),
+    status: q.status as c.ProductQuestion['status'],
+  };
+}
+
+/** Admin row: the question plus the joined listing name and its provenance. */
+export function mapAdminProductQuestion(q: Record<string, unknown>): c.AdminProductQuestion {
+  return {
+    ...mapProductQuestion(q),
+    productName: String(q.productName ?? ''),
+    // Rows written before migration 021 default to 'platform' in the DB; the
+    // fallback keeps an older row readable instead of throwing.
+    dataSource: (q.dataSource ?? 'platform') as c.AdminProductQuestion['dataSource'],
   };
 }
 

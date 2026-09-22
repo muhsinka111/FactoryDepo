@@ -124,6 +124,75 @@ export const zCategoryCountList = z.object({
 });
 export type CategoryCountList = z.infer<typeof zCategoryCountList>;
 
+/* ---------- product Q&A (ask the seller a question) ---------- */
+
+/**
+ * `pending` — asked, the seller has not answered yet (only its asker and the
+ * listing's owner/admin can see it) · `answered` — publicly visible ·
+ * `hidden` — suppressed by moderation (answer text is kept, not erased).
+ */
+export const zProductQuestionStatus = z.enum(['pending', 'answered', 'hidden']);
+export type ProductQuestionStatus = z.infer<typeof zProductQuestionStatus>;
+
+/**
+ * One question on a listing. `askerName`/`answeredByName` are what the row
+ * snapshotted when it was written — never re-joined from `users`, so a renamed
+ * account cannot relabel history. `askedAt` maps the row's `createdAt`.
+ */
+export const zProductQuestion = z.object({
+  id: z.number(),
+  productId: z.number(),
+  question: z.string(),
+  askerName: z.string(),
+  askedAt: z.string(),
+  answer: z.string().nullable(),
+  answeredAt: z.string().nullable(),
+  answeredByName: z.string().nullable(),
+  status: zProductQuestionStatus,
+});
+export type ProductQuestion = z.infer<typeof zProductQuestion>;
+
+export const zProductQuestionList = z.object({
+  items: z.array(zProductQuestion),
+  total: z.number(),
+});
+export type ProductQuestionList = z.infer<typeof zProductQuestionList>;
+
+/** Ask a question. 10..1000 characters once trimmed: shorter is a typo, not a question. */
+export const zCreateProductQuestionInput = z.object({
+  question: z.string().trim().min(10).max(1000),
+});
+export type CreateProductQuestionInput = z.infer<typeof zCreateProductQuestionInput>;
+
+/** The seller's answer. The owning supplier (or an admin) is checked by the route. */
+export const zAnswerProductQuestionInput = z.object({
+  answer: z.string().trim().min(2).max(4000),
+});
+export type AnswerProductQuestionInput = z.infer<typeof zAnswerProductQuestionInput>;
+
+/** Admin moderation: publish or suppress a question. */
+export const zModerateQuestionInput = z.object({
+  status: z.enum(['answered', 'hidden']),
+});
+export type ModerateQuestionInput = z.infer<typeof zModerateQuestionInput>;
+
+/**
+ * Admin row: the same question plus the listing it belongs to (joined name).
+ * `dataSource` rides along so a moderator can tell a real buyer question from
+ * any seeded one (nothing seeds this table today).
+ */
+export const zAdminProductQuestion = zProductQuestion.extend({
+  productName: z.string(),
+  dataSource: zDataSource,
+});
+export type AdminProductQuestion = z.infer<typeof zAdminProductQuestion>;
+
+export const zAdminProductQuestionList = z.object({
+  items: z.array(zAdminProductQuestion),
+  total: z.number(),
+});
+export type AdminProductQuestionList = z.infer<typeof zAdminProductQuestionList>;
+
 /* ---------- suppliers ---------- */
 export const zSupplier = z.object({
   id: z.number(),

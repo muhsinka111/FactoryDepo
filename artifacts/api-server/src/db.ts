@@ -27,6 +27,7 @@ import {
   faqs,
   supportTickets,
   productViews,
+  productQuestions,
   payments,
   emailOutbox,
 } from '@workspace/db';
@@ -56,6 +57,7 @@ export {
   faqs,
   supportTickets,
   productViews,
+  productQuestions,
   payments,
   emailOutbox,
 };

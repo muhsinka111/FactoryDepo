@@ -150,6 +150,52 @@ export function useCategoryCounts(options?: { enabled?: boolean }) {
   });
 }
 
+/* ---------- product Q&A (ask the seller a question) ---------- */
+
+/**
+ * One listing's questions. What comes back depends on who is signed in: an
+ * anonymous visitor sees answered questions, a signed-in buyer additionally
+ * sees their own pending ones, and the supplier who owns the listing (or an
+ * admin) sees everything — including hidden rows.
+ */
+export function useProductQuestions(productId: number | undefined) {
+  return useQuery({
+    queryKey: ['product-questions', productId],
+    queryFn: () => apiFetch<c.ProductQuestionList>(`/products/${productId}/questions`),
+    enabled: productId !== undefined,
+  });
+}
+
+/** Ask the seller a question — the new row is pending until the seller answers. */
+export function useAskProductQuestion(productId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: c.CreateProductQuestionInput) =>
+      apiFetch<c.ProductQuestion>(`/products/${productId}/questions`, { method: 'POST', body: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['product-questions', productId] });
+      qc.invalidateQueries({ queryKey: ['admin-questions'] });
+    },
+  });
+}
+
+/**
+ * Answer a question on a listing the caller owns (or moderate as an admin).
+ * `qid` is the question being answered (path param); the seller is the caller,
+ * never a body field. 403 for anyone who does not own the listing.
+ */
+export function useAnswerProductQuestion(productId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ qid, ...body }: c.AnswerProductQuestionInput & { qid: number }) =>
+      apiFetch<c.ProductQuestion>(`/products/${productId}/questions/${qid}/answer`, { method: 'POST', body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['product-questions', productId] });
+      qc.invalidateQueries({ queryKey: ['admin-questions'] });
+    },
+  });
+}
+
 export function useSuppliers(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['suppliers'],
@@ -745,6 +791,29 @@ export function useTickets(options?: { enabled?: boolean }) {
     queryKey: ['tickets'],
     queryFn: () => apiFetch<c.SupportTicketList>('/admin/tickets'),
     enabled: options?.enabled ?? true,
+  });
+}
+
+/** The Q&A moderation queue — every question, pending and hidden included. */
+export function useAdminQuestions(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['admin-questions'],
+    queryFn: () => apiFetch<c.AdminProductQuestionList>('/admin/questions'),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+/** Moderate a question — `id` is the question (path param). */
+export function useModerateQuestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: c.ModerateQuestionInput & { id: number }) =>
+      apiFetch<c.AdminProductQuestion>(`/admin/questions/${id}`, { method: 'PATCH', body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-questions'] });
+      // Moderation changes what the listing page is allowed to show.
+      qc.invalidateQueries({ queryKey: ['product-questions'] });
+    },
   });
 }
 

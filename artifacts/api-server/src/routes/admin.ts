@@ -23,6 +23,7 @@ import {
   faqs,
   featureFlags,
   products,
+  productQuestions,
   quotes,
   rfqs,
   suppliers,
@@ -33,6 +34,7 @@ import {
 import { requireAuth, requireRole } from '../auth.js';
 import {
   HttpError,
+  mapAdminProductQuestion,
   mapAdminSupplier,
   mapBanner,
   mapFaq,
@@ -73,6 +75,25 @@ const rfqCols = {
   quoteCount: sql<number>`coalesce(${quoteCounts.count}, 0)`.as('quoteCount'),
   deadline: rfqs.deadline,
   createdAt: rfqs.createdAt,
+};
+
+/**
+ * One product-Q&A row plus the listing it belongs to — the admin queue reads
+ * questions by listing, not by product page, so the joined name is part of the
+ * row. `dataSource` rides along so a moderator can see provenance.
+ */
+const adminQuestionCols = {
+  id: productQuestions.id,
+  productId: productQuestions.productId,
+  productName: products.name,
+  question: productQuestions.question,
+  askerName: productQuestions.askerName,
+  createdAt: productQuestions.createdAt,
+  answer: productQuestions.answer,
+  answeredAt: productQuestions.answeredAt,
+  answeredByName: productQuestions.answeredByName,
+  status: productQuestions.status,
+  dataSource: productQuestions.dataSource,
 };
 
 /* ---------- overview ---------- */
@@ -429,6 +450,68 @@ adminRouter.post('/faqs', async (req, res) => {
 
   res.status(201);
   respond(res, c.zFaq, mapFaq(row));
+});
+
+/* ---------- product questions (Q&A moderation) ---------- */
+
+/**
+ * GET /api/admin/questions — every listing question, newest first, with the
+ * listing name. Unfiltered on purpose: this is the moderation queue, so
+ * pending and hidden rows must be visible (they are exactly the ones a
+ * moderator is looking for).
+ */
+adminRouter.get('/questions', async (_req, res) => {
+  const rows = await db
+    .select(adminQuestionCols)
+    .from(productQuestions)
+    .innerJoin(products, eq(productQuestions.productId, products.id))
+    .orderBy(desc(productQuestions.createdAt), desc(productQuestions.id));
+  respond(res, c.zAdminProductQuestionList, {
+    items: rows.map(mapAdminProductQuestion),
+    total: rows.length,
+  });
+});
+
+/**
+ * PATCH /api/admin/questions/:id — moderation: 'answered' publishes, 'hidden'
+ * suppresses. Status is the ONLY field moderation writes: the answer the seller
+ * wrote is kept in both directions, so un-hiding restores the original wording
+ * instead of leaving a stub.
+ *
+ * Moderating an unanswered question to 'answered' is refused (409): publishing
+ * it would put an empty answer in front of a buyer, and 'answered' is what makes
+ * a question public — the seller has to actually answer first.
+ */
+adminRouter.patch('/questions/:id', async (req, res) => {
+  const id = parseId(req);
+  const input = c.zModerateQuestionInput.safeParse(req.body ?? {});
+  if (!input.success) {
+    throw new HttpError(400, { error: 'validation_error', details: input.error.message });
+  }
+
+  const [existing] = await db
+    .select({ id: productQuestions.id, answer: productQuestions.answer })
+    .from(productQuestions)
+    .where(eq(productQuestions.id, id))
+    .limit(1);
+  if (!existing) throw new HttpError(404, { error: 'not_found' });
+  if (input.data.status === 'answered' && (existing.answer == null || existing.answer.trim() === '')) {
+    throw new HttpError(409, {
+      error: 'unanswered_question',
+      details: 'This question has no answer yet — the seller must answer it before it can be published.',
+    });
+  }
+
+  await db.update(productQuestions).set({ status: input.data.status }).where(eq(productQuestions.id, id));
+
+  const [row] = await db
+    .select(adminQuestionCols)
+    .from(productQuestions)
+    .innerJoin(products, eq(productQuestions.productId, products.id))
+    .where(eq(productQuestions.id, id))
+    .limit(1);
+
+  respond(res, c.zAdminProductQuestion, mapAdminProductQuestion(row));
 });
 
 /* ---------- support tickets ---------- */

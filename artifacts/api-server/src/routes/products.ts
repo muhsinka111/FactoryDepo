@@ -14,16 +14,37 @@
  *                                 A supplier can never edit another supplier's
  *                                 listing.
  *  - DELETE /api/products/:id   : same ownership rule as PATCH.
+ *  - GET    /api/products/:id/questions           : public; visibility depends
+ *                                 on who is asking (see the route).
+ *  - POST   /api/products/:id/questions           : any signed-in caller.
+ *  - POST   /api/products/:id/questions/:qid/answer : ONLY the supplier who owns
+ *                                 the listing, or an admin → 403 otherwise
+ *                                 (including the asker answering themselves).
  */
 import { Router } from 'express';
+import type { Request } from 'express';
 import { and, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
 import * as c from '@workspace/api-zod';
-import { db, products, productViews, suppliers, users } from '../db.js';
+import { db, products, productQuestions, productViews, suppliers, users } from '../db.js';
 import { requireAuth, requireRole, verifyToken } from '../auth.js';
-import { HttpError, mapProduct, parseId, respond, toNum } from '../http.js';
-import { callerContext, productColumns } from '../helpers.js';
+import { HttpError, mapProduct, mapProductQuestion, parseId, parseParamId, respond, toNum } from '../http.js';
+import { callerContext, productColumns, type CallerContext } from '../helpers.js';
 
 export const productsRouter = Router();
+
+/**
+ * Best-effort caller for a PUBLIC route: a valid Bearer token resolves the
+ * caller, anything else (absent, expired, forged) is treated as anonymous.
+ * A public read must never 401 because a stale token is sitting in
+ * localStorage — the anonymous view is simply the smaller one.
+ */
+async function optionalCaller(req: Request): Promise<CallerContext | null> {
+  const auth = req.headers.authorization;
+  const token = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  const payload = token ? verifyToken(token) : null;
+  if (!payload) return null;
+  return callerContext(payload.sub);
+}
 
 /** Columns for list + detail (supplierName via suppliers, trustScore via users). */
 const productCols = productColumns;
@@ -245,6 +266,182 @@ productsRouter.get('/:id', async (req, res) => {
   }
 
   respond(res, c.zProduct, mapProduct(row));
+});
+
+/* ---------------------------------------------------------------------------
+ * Product Q&A — "ask the seller a question".
+ *
+ * The listing page builds its FAQ out of these rows: a buyer asks, the seller
+ * answers, and only an ANSWERED question is public. A question is never
+ * published by the asker, and it is never answered by the asker.
+ * ------------------------------------------------------------------------ */
+
+/** Newest-first cap for one listing's Q&A. `total` reports the uncapped count. */
+const QUESTION_CAP = 100;
+
+/**
+ * GET /api/products/:id/questions — PUBLIC. Visibility is a property of the
+ * caller, not of the route:
+ *
+ *   anonymous                → answered questions only;
+ *   any signed-in caller     → answered, plus their OWN pending questions;
+ *   owning supplier / admin  → everything, including hidden ones.
+ *
+ * A `hidden` row is omitted even for its asker — suppression is a moderation
+ * decision, and echoing it back to the asker would defeat it. The response
+ * carries no `askerId`, so a pending question is visible to its author without
+ * exposing who else asked what.
+ */
+productsRouter.get('/:id/questions', async (req, res) => {
+  const id = parseId(req);
+
+  const [product] = await db
+    .select({ id: products.id, supplierId: products.supplierId })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!product) throw new HttpError(404, { error: 'not_found' });
+
+  const ctx = await optionalCaller(req);
+  const ownsListing = ctx?.supplierId != null && ctx.supplierId === toNum(product.supplierId);
+  const seesEverything = ctx != null && (ctx.isAdmin || ownsListing);
+
+  const conds: ReturnType<typeof and>[] = [eq(productQuestions.productId, id)];
+  if (!seesEverything) {
+    conds.push(
+      ctx
+        ? or(
+            eq(productQuestions.status, 'answered'),
+            and(eq(productQuestions.askerId, ctx.userId), eq(productQuestions.status, 'pending')),
+          )
+        : eq(productQuestions.status, 'answered'),
+    );
+  }
+  const where = and(...conds);
+
+  const [countRow, rows] = await Promise.all([
+    db.select({ total: sql<number>`count(*)` }).from(productQuestions).where(where),
+    db
+      .select()
+      .from(productQuestions)
+      .where(where)
+      .orderBy(desc(productQuestions.createdAt), desc(productQuestions.id))
+      .limit(QUESTION_CAP),
+  ]);
+
+  respond(res, c.zProductQuestionList, {
+    items: rows.map(mapProductQuestion),
+    total: toNum(countRow[0]?.total),
+  });
+});
+
+/**
+ * POST /api/products/:id/questions — ask the seller a question. Any signed-in
+ * caller may ask; an unknown listing is a 404.
+ *
+ * The row is always `pending` and always `platform`: publishing an answer is
+ * the seller's act, and a question asked through the API is real buying
+ * interest (only seed/import code may ever write 'demo').
+ */
+productsRouter.post('/:id/questions', requireAuth, async (req, res) => {
+  const id = parseId(req);
+  const input = c.zCreateProductQuestionInput.safeParse(req.body ?? {});
+  if (!input.success) {
+    throw new HttpError(400, { error: 'validation_error', details: input.error.message });
+  }
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const [product] = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!product) throw new HttpError(404, { error: 'not_found' });
+
+  const ctx = await callerContext(uid);
+  if (!ctx) throw new HttpError(401, { error: 'auth_required' });
+
+  const [row] = await db
+    .insert(productQuestions)
+    .values({
+      productId: id,
+      askerId: ctx.userId,
+      // Snapshot: a later rename must not relabel an already-asked question.
+      askerName: ctx.name,
+      question: input.data.question,
+      status: 'pending',
+      dataSource: 'platform',
+    })
+    .returning();
+
+  res.status(201);
+  respond(res, c.zProductQuestion, mapProductQuestion(row));
+});
+
+/**
+ * POST /api/products/:id/questions/:qid/answer — the seller answers.
+ *
+ * Ownership, not role: the caller must be the supplier whose row owns THIS
+ * listing, or an admin. A supplier who does not own the listing gets 403, and
+ * so does the asker answering their own question — a Q&A where the buyer writes
+ * both halves is worth nothing to a sourcing manager.
+ *
+ * The answer is stamped with who wrote it and when, and flips the row to
+ * `answered` in the same UPDATE, so a question can never be 'answered' with an
+ * empty answer text.
+ */
+productsRouter.post('/:id/questions/:qid/answer', requireAuth, async (req, res) => {
+  const id = parseId(req);
+  const qid = parseParamId(req, 'qid');
+  const input = c.zAnswerProductQuestionInput.safeParse(req.body ?? {});
+  if (!input.success) {
+    throw new HttpError(400, { error: 'validation_error', details: input.error.message });
+  }
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const [product] = await db
+    .select({ id: products.id, supplierId: products.supplierId })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!product) throw new HttpError(404, { error: 'not_found' });
+
+  const ctx = await callerContext(uid);
+  if (!ctx) throw new HttpError(401, { error: 'auth_required' });
+
+  const ownsListing = ctx.supplierId != null && ctx.supplierId === toNum(product.supplierId);
+  if (!ownsListing && !ctx.isAdmin) {
+    throw new HttpError(403, {
+      error: 'forbidden',
+      details: 'Only the supplier who owns this listing (or an admin) can answer its questions.',
+    });
+  }
+
+  const [existing] = await db
+    .select({ id: productQuestions.id })
+    .from(productQuestions)
+    .where(and(eq(productQuestions.id, qid), eq(productQuestions.productId, id)))
+    .limit(1);
+  if (!existing) throw new HttpError(404, { error: 'not_found' });
+
+  const [row] = await db
+    .update(productQuestions)
+    .set({
+      answer: input.data.answer,
+      answeredById: ctx.userId,
+      // On a listing the seller IS the company, so the answer is attributed to
+      // the supplier's company name (same source as product.supplierName); an
+      // admin moderating a listing answers under their own name.
+      answeredByName: ctx.supplierName ?? ctx.name,
+      answeredAt: new Date(),
+      status: 'answered',
+    })
+    .where(and(eq(productQuestions.id, qid), eq(productQuestions.productId, id)))
+    .returning();
+
+  respond(res, c.zProductQuestion, mapProductQuestion(row));
 });
 
 /**

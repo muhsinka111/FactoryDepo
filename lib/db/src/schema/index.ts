@@ -12,14 +12,15 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /**
- * FactoryDepo schema — 21 tables.
+ * FactoryDepo schema — 22 tables.
  *
  * Core marketplace tables (users, suppliers, products, rfqs, quotes,
  * inspections, orders) come from migrations/001_init.sql…008; the platform
  * tables the three role dashboards need (offers, threads, messages,
  * saved_lots, shipments, notifications, supplier_docs, feature_flags, banners,
  * faqs, support_tickets, product_views, payments, email_outbox) come from
- * migrations/009_platform_tables.sql.
+ * migrations/009_platform_tables.sql; the product Q&A table
+ * (product_questions) comes from migrations/021_product_questions.sql.
  *
  * Enum-like columns are plain TEXT with CHECK constraints enforced by the raw
  * boot migrations. No pgEnum here so the schema stays in sync with
@@ -347,6 +348,34 @@ export const productViews = pgTable('product_views', {
   createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
 });
 
+/**
+ * Product Q&A (migrations/021_product_questions.sql) — a buyer asks the seller
+ * a question on one listing and only the OWNING supplier (or an admin) may
+ * answer it. `askerName`/`answeredByName` are snapshots taken at write time so
+ * a renamed account cannot relabel an old question or answer.
+ */
+export const productQuestions = pgTable('product_questions', {
+  id: serial('id').primaryKey(),
+  productId: integer('productId')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  askerId: integer('askerId')
+    .notNull()
+    .references(() => users.id),
+  askerName: text('askerName').notNull(),
+  question: text('question').notNull(),
+  // NULL until the seller answers; a hidden row keeps its text.
+  answer: text('answer'),
+  answeredById: integer('answeredById').references(() => users.id),
+  answeredByName: text('answeredByName'),
+  answeredAt: timestamp('answeredAt', { withTimezone: true, mode: 'date' }),
+  // pending | answered | hidden
+  status: text('status').notNull().default('pending'),
+  // platform (a real buyer question) | demo (bootstrap seed data)
+  dataSource: text('dataSource').notNull().default('platform'),
+  createdAt: timestamp('createdAt', { withTimezone: true, mode: 'date' }).defaultNow(),
+});
+
 export const payments = pgTable('payments', {
   id: serial('id').primaryKey(),
   orderId: integer('orderId')
@@ -436,6 +465,9 @@ export type NewSupportTicket = typeof supportTickets.$inferInsert;
 
 export type ProductView = typeof productViews.$inferSelect;
 export type NewProductView = typeof productViews.$inferInsert;
+
+export type ProductQuestion = typeof productQuestions.$inferSelect;
+export type NewProductQuestion = typeof productQuestions.$inferInsert;
 
 export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;

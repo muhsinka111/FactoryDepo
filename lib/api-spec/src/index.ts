@@ -29,6 +29,9 @@ export const ROUTES: RouteDef[] = [
   { method: 'GET', path: '/api/products', auth: 'public', input: c.zProductListQuery, output: c.zProductList, desc: 'Search products: q, category, listingType, country, min/maxPrice, page, limit' },
   { method: 'GET', path: '/api/products/categories', auth: 'public', output: c.zCategoryCountList, desc: 'Live listing count per category — the UI offers only categories that hold stock' },
   { method: 'GET', path: '/api/products/:id', auth: 'public', output: c.zProduct, desc: 'Product detail' },
+  { method: 'GET', path: '/api/products/:id/questions', auth: 'public', output: c.zProductQuestionList, desc: 'Listing Q&A: answered questions publicly, the caller\'s own pending ones with a token, everything (incl. hidden) for the owning supplier or an admin' },
+  { method: 'POST', path: '/api/products/:id/questions', auth: 'user', input: c.zCreateProductQuestionInput, output: c.zProductQuestion, desc: 'Ask the seller a question (always written pending; only the seller can publish it)' },
+  { method: 'POST', path: '/api/products/:id/questions/:qid/answer', auth: 'supplier', input: c.zAnswerProductQuestionInput, output: c.zProductQuestion, desc: 'Answer a listing question — the supplier who owns the listing, or an admin, only' },
 
   { method: 'GET', path: '/api/suppliers', auth: 'public', output: c.zSupplierList, desc: 'Verified supplier directory' },
   { method: 'GET', path: '/api/suppliers/:id', auth: 'public', output: c.zSupplier, desc: 'Supplier profile' },
@@ -97,6 +100,8 @@ export const ROUTES: RouteDef[] = [
   { method: 'POST', path: '/api/admin/banners', auth: 'user', output: c.zBanner, desc: 'Admin only — create a banner' },
   { method: 'GET', path: '/api/admin/faqs', auth: 'user', output: c.zFaqList, desc: 'Admin only — FAQs' },
   { method: 'POST', path: '/api/admin/faqs', auth: 'user', output: c.zFaq, desc: 'Admin only — create an FAQ' },
+  { method: 'GET', path: '/api/admin/questions', auth: 'user', output: c.zAdminProductQuestionList, desc: 'Admin only — every listing question (pending/answered/hidden) with its listing name, newest first' },
+  { method: 'PATCH', path: '/api/admin/questions/:id', auth: 'user', input: c.zModerateQuestionInput, output: c.zAdminProductQuestion, desc: 'Admin only — moderate a question (answered|hidden); publishing an unanswered question is refused with 409' },
   { method: 'GET', path: '/api/admin/tickets', auth: 'user', output: c.zSupportTicketList, desc: 'Admin only — support tickets' },
   { method: 'PATCH', path: '/api/me', auth: 'user', output: c.zUser, desc: 'Update own profile (name/company/country/lang)' },
 ];
