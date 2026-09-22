@@ -56,13 +56,13 @@ const userSeeds: UserSeed[] = [
   { email: 'foshan@steel.cn', role: 'supplier', name: 'Chen Jie', company: 'Foshan Steel Co', country: 'China', trustScore: 89 },
   { email: 'shandong@mining.cn', role: 'supplier', name: 'Liu Yang', company: 'Shandong Mining Group', country: 'China', trustScore: 91 },
   { email: 'zhejiang@chemtech.cn', role: 'supplier', name: 'Zhao Min', company: 'Zhejiang Chemtech Co', country: 'China', trustScore: 90 },
-  { email: 'vietnam@minerals.vn', role: 'supplier', name: 'Nguyen Van Hieu', company: 'Vietnam Minerals JSC', country: 'Vietnam', trustScore: 87 },
+  { email: 'iberia@minerals.es', role: 'supplier', name: 'Javier Ortega', company: 'Iberia Minerals S.L.', country: 'Spain', trustScore: 87 },
   { email: 'bursa@aluminum.com.tr', role: 'supplier', name: 'Ali Yılmaz', company: 'Bursa Aluminum A.Ş.', country: 'Türkiye', trustScore: 86 },
   { email: 'istanbul@chemicals.com.tr', role: 'supplier', name: 'Emre Kaya', company: 'Istanbul Chemicals San.', country: 'Türkiye', trustScore: 82 },
   { email: 'ningbo@solar.cn', role: 'supplier', name: 'Xu Fang', company: 'Ningbo Solar Energy', country: 'China', trustScore: 88 },
-  { email: 'maharashtra@castings.in', role: 'supplier', name: 'Ravi Patel', company: 'Maharashtra Castings Pvt', country: 'India', trustScore: 80 },
+  { email: 'brescia@castings.it', role: 'supplier', name: 'Marco Ricci', company: 'Brescia Castings S.p.A.', country: 'Italy', trustScore: 80 },
   { email: 'berlin@praezision.de', role: 'supplier', name: 'Klaus Fischer', company: 'Berlin Präzision GmbH', country: 'Germany', trustScore: 92 },
-  { email: 'hanoi@packaging.vn', role: 'supplier', name: 'Tran Thi Mai', company: 'Hanoi Packaging JSC', country: 'Vietnam', trustScore: 79 },
+  { email: 'krakow@packaging.pl', role: 'supplier', name: 'Anna Kowalska', company: 'Kraków Packaging S.A.', country: 'Poland', trustScore: 79 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -88,13 +88,13 @@ const supplierSeeds: SupplierSeed[] = [
   { userEmail: 'shandong@mining.cn', companyName: 'Shandong Mining Group', country: 'China', city: 'Shandong', description: 'Antimony ore mining and concentrate processing with integrated smelting partnerships.', verifiedLevel: 3, rating: 4.9, inspectionsCount: 21, fulfillmentRate: 96.8, tags: ['Antimony Ore', 'Mining', 'Concentrates'], since: 2005 },
   { userEmail: 'supplier@factorydepo.com', companyName: 'Anatolian Machinery A.Ş.', country: 'Türkiye', city: 'İzmir', description: 'CNC machining, injection molding and industrial equipment manufacturer serving EU and MENA.', verifiedLevel: 2, rating: 4.8, inspectionsCount: 15, fulfillmentRate: 97.6, tags: ['CNC', 'Injection Molding', 'Machinery'], since: 2010 },
   { userEmail: 'zhejiang@chemtech.cn', companyName: 'Zhejiang Chemtech Co', country: 'China', city: 'Zhejiang', description: 'Battery-grade lithium carbonate and specialty chemicals for the energy storage supply chain.', verifiedLevel: 2, rating: 4.7, inspectionsCount: 17, fulfillmentRate: 96.2, tags: ['Lithium Carbonate', 'Battery Chemicals'], since: 2015 },
-  { userEmail: 'vietnam@minerals.vn', companyName: 'Vietnam Minerals JSC', country: 'Vietnam', city: 'Lao Cai', description: 'Tin and rare-earth concentrate exporter from northern Vietnam mining concessions.', verifiedLevel: 2, rating: 4.8, inspectionsCount: 12, fulfillmentRate: 95.9, tags: ['Tin', 'Concentrates', 'Rare Earth'], since: 2014 },
+  { userEmail: 'iberia@minerals.es', companyName: 'Iberia Minerals S.L.', country: 'Spain', city: 'Huelva', description: 'Tin and rare-earth concentrate exporter from southern Spanish mining concessions.', verifiedLevel: 2, rating: 4.8, inspectionsCount: 12, fulfillmentRate: 95.9, tags: ['Tin', 'Concentrates', 'Rare Earth'], since: 2014 },
   { userEmail: 'bursa@aluminum.com.tr', companyName: 'Bursa Aluminum A.Ş.', country: 'Türkiye', city: 'Bursa', description: 'Primary aluminum ingot casting plus extrusion and wheel production for automotive OEMs.', verifiedLevel: 2, rating: 4.7, inspectionsCount: 14, fulfillmentRate: 96.5, tags: ['Aluminum Ingot', 'Extrusion'], since: 2009 },
   { userEmail: 'istanbul@chemicals.com.tr', companyName: 'Istanbul Chemicals San.', country: 'Türkiye', city: 'Kocaeli', description: 'Construction chemicals, resins and polymer masterbatch producer in the Gebze industrial zone.', verifiedLevel: 1, rating: 4.6, inspectionsCount: 9, fulfillmentRate: 95.4, tags: ['Construction Chemicals', 'Resins'], since: 2016 },
   { userEmail: 'ningbo@solar.cn', companyName: 'Ningbo Solar Energy', country: 'China', city: 'Zhejiang', description: 'Mono PERC solar module and inverter manufacturer with 4GW annual capacity.', verifiedLevel: 2, rating: 4.8, inspectionsCount: 16, fulfillmentRate: 97.9, tags: ['Solar Panels', 'Mono PERC'], since: 2013 },
-  { userEmail: 'maharashtra@castings.in', companyName: 'Maharashtra Castings Pvt', country: 'India', city: 'Pune', description: 'Iron and alloy castings, forgings and machined components for infrastructure and automotive.', verifiedLevel: 1, rating: 4.5, inspectionsCount: 8, fulfillmentRate: 94.8, tags: ['Castings', 'Forgings'], since: 2017 },
+  { userEmail: 'brescia@castings.it', companyName: 'Brescia Castings S.p.A.', country: 'Italy', city: 'Brescia', description: 'Iron and alloy castings, forgings and machined components for infrastructure and automotive.', verifiedLevel: 1, rating: 4.5, inspectionsCount: 8, fulfillmentRate: 94.8, tags: ['Castings', 'Forgings'], since: 2017 },
   { userEmail: 'berlin@praezision.de', companyName: 'Berlin Präzision GmbH', country: 'Germany', city: 'Dresden', description: 'High-precision CNC turned and milled components, servo drives and industrial electronics.', verifiedLevel: 2, rating: 4.9, inspectionsCount: 11, fulfillmentRate: 98.2, tags: ['Precision Parts', 'CNC'], since: 2006 },
-  { userEmail: 'hanoi@packaging.vn', companyName: 'Hanoi Packaging JSC', country: 'Vietnam', city: 'Hanoi', description: 'Corrugated packaging, kraft paper and textile packing solutions for export industries.', verifiedLevel: 1, rating: 4.6, inspectionsCount: 7, fulfillmentRate: 95.1, tags: ['Packaging', 'Corrugated'], since: 2018 },
+  { userEmail: 'krakow@packaging.pl', companyName: 'Kraków Packaging S.A.', country: 'Poland', city: 'Kraków', description: 'Corrugated packaging, kraft paper and textile packing solutions for export industries.', verifiedLevel: 1, rating: 4.6, inspectionsCount: 7, fulfillmentRate: 95.1, tags: ['Packaging', 'Corrugated'], since: 2018 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -138,8 +138,8 @@ const productSeeds: ProductSeed[] = [
   { supplierName: 'Anatolian Machinery A.Ş.', name: 'CNC Lathe SL-20', category: 'Machinery', description: 'Slant-bed CNC lathe, 200mm chuck, 450mm turning length, Fanuc control.', price: 42000, unit: 'Set', moq: 1, originCountry: 'TR', verified: true },
   // ---- Industrial Equipment ----
   { supplierName: 'Anatolian Machinery A.Ş.', name: 'Screw Air Compressor 75kW', category: 'Industrial Equipment', description: 'Variable-speed rotary screw compressor, 75kW, 12.8 m³/min FAD.', price: 8500, unit: 'Set', moq: 2, originCountry: 'TR', verified: true },
-  { supplierName: 'Maharashtra Castings Pvt', name: 'Three-Phase Induction Motor 45kW', category: 'Industrial Equipment', description: 'IE3 induction motor, 45kW, 4-pole, foot mounted, IP55.', price: 1200, unit: 'pc', moq: 10, originCountry: 'IN', verified: false },
-  { supplierName: 'Maharashtra Castings Pvt', name: 'Industrial Gearbox 25:1', category: 'Industrial Equipment', description: 'Helical gearbox, ratio 25:1, torque 850 Nm, cast iron housing.', price: 3400, unit: 'pc', moq: 5, originCountry: 'IN', verified: false },
+  { supplierName: 'Brescia Castings S.p.A.', name: 'Three-Phase Induction Motor 45kW', category: 'Industrial Equipment', description: 'IE3 induction motor, 45kW, 4-pole, foot mounted, IP55.', price: 1200, unit: 'pc', moq: 10, originCountry: 'IT', verified: false },
+  { supplierName: 'Brescia Castings S.p.A.', name: 'Industrial Gearbox 25:1', category: 'Industrial Equipment', description: 'Helical gearbox, ratio 25:1, torque 850 Nm, cast iron housing.', price: 3400, unit: 'pc', moq: 5, originCountry: 'IT', verified: false },
   { supplierName: 'Anatolian Machinery A.Ş.', name: 'Hydraulic Press 200T', category: 'Industrial Equipment', description: 'Four-column hydraulic press, 200 ton capacity, PLC controlled.', price: 15500, unit: 'Set', moq: 1, originCountry: 'TR', verified: true },
   // ---- Electronics ----
   { supplierName: 'Berlin Präzision GmbH', name: 'Industrial PLC Controller', category: 'Electronics', description: 'Modular industrial PLC, 32 DI / 24 DO, Ethernet/IP, DIN-rail mount.', price: 180, unit: 'pc', moq: 50, originCountry: 'DE', verified: true },
@@ -147,11 +147,11 @@ const productSeeds: ProductSeed[] = [
   { supplierName: 'Berlin Präzision GmbH', name: 'Proximity Sensors M18', category: 'Electronics', description: 'Inductive proximity sensor M18, 8mm sensing distance, PNP NO.', price: 8.5, unit: 'pc', moq: 500, originCountry: 'DE', verified: true },
   // ---- Automotive ----
   { supplierName: 'Bursa Aluminum A.Ş.', name: 'Aluminum Alloy Wheel Rims 17"', category: 'Automotive', description: 'Die-cast aluminum alloy wheel, 17×7.5J, 5×114.3, silver painted.', price: 68, unit: 'pc', moq: 500, originCountry: 'TR', verified: true },
-  { supplierName: 'Maharashtra Castings Pvt', name: 'Brake Disc Rotors Cast Iron', category: 'Automotive', description: 'Vented cast iron brake disc, 300mm, balanced and coated.', price: 24, unit: 'pc', moq: 1000, originCountry: 'IN', verified: false },
-  { supplierName: 'Maharashtra Castings Pvt', name: 'Engine Valve Castings', category: 'Automotive', description: 'Stainless steel engine intake/exhaust valve forgings, 25-45mm head.', price: 6.8, unit: 'pc', moq: 2000, originCountry: 'IN', verified: false },
+  { supplierName: 'Brescia Castings S.p.A.', name: 'Brake Disc Rotors Cast Iron', category: 'Automotive', description: 'Vented cast iron brake disc, 300mm, balanced and coated.', price: 24, unit: 'pc', moq: 1000, originCountry: 'IT', verified: false },
+  { supplierName: 'Brescia Castings S.p.A.', name: 'Engine Valve Castings', category: 'Automotive', description: 'Stainless steel engine intake/exhaust valve forgings, 25-45mm head.', price: 6.8, unit: 'pc', moq: 2000, originCountry: 'IT', verified: false },
   // ---- Construction Materials ----
   { supplierName: 'Istanbul Chemicals San.', name: 'Portland Cement CEM I 42.5', category: 'Construction Materials', description: 'Portland cement CEM I 42.5R, 50kg bags, EN 197-1 certified.', price: 62, unit: 'MT', moq: 200, originCountry: 'TR', verified: false },
-  { supplierName: 'Maharashtra Castings Pvt', name: 'Cast Iron Manhole Covers', category: 'Construction Materials', description: 'EN 124 D400 ductile iron manhole cover and frame, 600mm round.', price: 58, unit: 'pc', moq: 500, originCountry: 'IN', verified: false },
+  { supplierName: 'Brescia Castings S.p.A.', name: 'Cast Iron Manhole Covers', category: 'Construction Materials', description: 'EN 124 D400 ductile iron manhole cover and frame, 600mm round.', price: 58, unit: 'pc', moq: 500, originCountry: 'IT', verified: false },
   { supplierName: 'Istanbul Chemicals San.', name: 'PVC Pipes 110mm', category: 'Construction Materials', description: 'uPVC pressure pipe 110mm PN10, 6m lengths, TS EN 1452.', price: 2.4, unit: 'm', moq: 1000, originCountry: 'TR', verified: false },
   { supplierName: 'Foshan Steel Co', name: 'Prefabricated Steel Structure', category: 'Construction Materials', description: 'Pre-engineered steel warehouse structure, 30×60m, hot-dip galvanized.', price: 48000, unit: 'Set', moq: 1, originCountry: 'CN', verified: true },
   // ---- Renewable Energy ----
@@ -160,13 +160,13 @@ const productSeeds: ProductSeed[] = [
   { supplierName: 'Zhejiang Chemtech Co', name: 'Lithium Battery Pack 48V 100Ah', category: 'Renewable Energy', description: 'LiFePO4 battery pack 48V 100Ah with BMS, for solar storage.', price: 890, unit: 'pc', moq: 50, originCountry: 'CN', verified: true },
   { supplierName: 'Ningbo Solar Energy', name: 'Wind Turbine Blade 55m', category: 'Renewable Energy', description: 'Fiberglass wind turbine blade 55m for 2.5MW class turbines.', price: 85000, unit: 'pc', moq: 2, originCountry: 'CN', verified: true },
   // ---- Packaging ----
-  { supplierName: 'Hanoi Packaging JSC', name: 'Corrugated Boxes 3-Layer', category: 'Packaging', description: '3-layer corrugated carton boxes, custom print, 300-800g/m² board.', price: 0.9, unit: 'pc', moq: 5000, originCountry: 'VN', verified: false },
-  { supplierName: 'Hanoi Packaging JSC', name: 'Kraft Paper Rolls 120gsm', category: 'Packaging', description: 'Virgin kraft paper roll, 120gsm, 1.6m width, for bag making.', price: 950, unit: 'MT', moq: 10, originCountry: 'VN', verified: false },
+  { supplierName: 'Kraków Packaging S.A.', name: 'Corrugated Boxes 3-Layer', category: 'Packaging', description: '3-layer corrugated carton boxes, custom print, 300-800g/m² board.', price: 0.9, unit: 'pc', moq: 5000, originCountry: 'PL', verified: false },
+  { supplierName: 'Kraków Packaging S.A.', name: 'Kraft Paper Rolls 120gsm', category: 'Packaging', description: 'Virgin kraft paper roll, 120gsm, 1.6m width, for bag making.', price: 950, unit: 'MT', moq: 10, originCountry: 'PL', verified: false },
   // ---- Plastic & Rubber ----
   { supplierName: 'Istanbul Chemicals San.', name: 'PP Granules Homo 100% Virgin', category: 'Plastic & Rubber', description: 'Homopolymer PP granules, MFI 11, virgin, for injection and film.', price: 1150, unit: 'MT', moq: 25, originCountry: 'TR', verified: false },
   { supplierName: 'Anatolian Machinery A.Ş.', name: 'Rubber Seals EPDM', category: 'Plastic & Rubber', description: 'EPDM rubber seals and gaskets, 40-90 Shore A, custom profiles.', price: 0.35, unit: 'pc', moq: 10000, originCountry: 'CN', verified: true },
   // ---- Textiles ----
-  { supplierName: 'Hanoi Packaging JSC', name: 'Polyester Yarn 150D', category: 'Textiles', description: 'Textured polyester yarn 150D/48F, SD, for weaving and knitting.', price: 1850, unit: 'MT', moq: 20, originCountry: 'VN', verified: false },
+  { supplierName: 'Kraków Packaging S.A.', name: 'Polyester Yarn 150D', category: 'Textiles', description: 'Textured polyester yarn 150D/48F, SD, for weaving and knitting.', price: 1850, unit: 'MT', moq: 20, originCountry: 'PL', verified: false },
 ];
 
 // ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ const rfqSeeds: RfqSeed[] = [
   { buyerEmail: 'berlin@industries.de', title: 'Solar Panel 550W 20000 pcs', category: 'Renewable Energy', description: '550W mono PERC modules for utility project in Sicily. Tier-1 bankability preferred.', quantity: 20000, unit: 'pc', targetCountry: 'Italy', status: 'open', deadline: daysFromNow(45) },
   { buyerEmail: 'gulf@sourcing.sa', title: 'Cast Iron Manhole Covers', category: 'Construction Materials', description: 'EN 124 D400 ductile iron covers, 600mm, 1500 pcs for municipal project.', quantity: 1500, unit: 'pc', targetCountry: 'Poland', status: 'open', deadline: null },
   { buyerEmail: 'berlin@industries.de', title: 'Aluminum Profiles Extrusion', category: 'Metals & Minerals', description: '6063-T5 custom extrusion profiles, 80 MT annual, anodized finish.', quantity: 80, unit: 'MT', targetCountry: 'Germany', status: 'quoted', deadline: daysFromNow(25) },
-  { buyerEmail: 'gulf@sourcing.sa', title: 'Textile Yarn Polyester', category: 'Textiles', description: 'Polyester yarn 150D for weaving, 40 MT trial order. Closed — awarded to local mill.', quantity: 40, unit: 'MT', targetCountry: 'Vietnam', status: 'closed', deadline: daysFromNow(-5) },
+  { buyerEmail: 'gulf@sourcing.sa', title: 'Textile Yarn Polyester', category: 'Textiles', description: 'Polyester yarn 150D for weaving, 40 MT trial order. Closed — awarded to local mill.', quantity: 40, unit: 'MT', targetCountry: 'Portugal', status: 'closed', deadline: daysFromNow(-5) },
 ];
 
 // ---------------------------------------------------------------------------
@@ -214,7 +214,7 @@ const quoteSeeds: QuoteSeed[] = [
   { rfqTitle: 'Steel Coil HRC 300 MT', supplierName: 'Foshan Steel Co', price: 548, leadTimeDays: 40, notes: 'FOB Tianjin, Q235B 3.0mm, three shipments of 100 MT.', status: 'accepted' },
   { rfqTitle: 'Steel Coil HRC 300 MT', supplierName: 'Foshan Steel Co', price: 555, leadTimeDays: 45, notes: 'Alternative offer, CIF İzmir, includes port handling.', status: 'rejected' },
   { rfqTitle: 'Solar Panel 550W 20000 pcs', supplierName: 'Ningbo Solar Energy', price: 0.19, leadTimeDays: 30, notes: 'Per-Watt price, 20000 pcs = 11MW, containerized delivery.', status: 'submitted' },
-  { rfqTitle: 'Cast Iron Manhole Covers', supplierName: 'Maharashtra Castings Pvt', price: 54, leadTimeDays: 50, notes: 'EN 124 D400, 600mm round, palletized, CE documents included.', status: 'submitted' },
+  { rfqTitle: 'Cast Iron Manhole Covers', supplierName: 'Brescia Castings S.p.A.', price: 54, leadTimeDays: 50, notes: 'EN 124 D400, 600mm round, palletized, CE documents included.', status: 'submitted' },
   { rfqTitle: 'Aluminum Profiles Extrusion', supplierName: 'Bursa Aluminum A.Ş.', price: 3120, leadTimeDays: 28, notes: 'Per MT, 6063-T5, anodized, EXW Bursa.', status: 'submitted' },
   { rfqTitle: 'Aluminum Profiles Extrusion', supplierName: 'Bursa Aluminum A.Ş.', price: 3080, leadTimeDays: 35, notes: 'Volume pricing for 80 MT annual contract, tooling included.', status: 'submitted' },
   { rfqTitle: '100 Tons Copper Cathode', supplierName: 'Jiangsu Xihua Metal Group', price: 8700, leadTimeDays: 45, notes: 'CIF Mersin option, staggered monthly delivery.', status: 'submitted' },

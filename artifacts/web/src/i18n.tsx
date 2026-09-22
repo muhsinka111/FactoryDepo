@@ -48,7 +48,12 @@ export interface LanguageDef {
   locale: string;
 }
 
-export const LANGUAGES: readonly LanguageDef[] = [
+/**
+ * Every locale this file carries a dictionary for. `LangCode` matches this list, so
+ * the partial dictionaries further down keep compiling (and stay ready) even while
+ * they are not offered to anyone.
+ */
+export const ALL_LANGUAGES: readonly LanguageDef[] = [
   { code: 'en', label: 'English', native: 'English', dir: 'ltr', locale: 'en-GB' },
   { code: 'tr', label: 'Turkish', native: 'Türkçe', dir: 'ltr', locale: 'tr-TR' },
   { code: 'ar', label: 'Arabic', native: 'العربية', dir: 'rtl', locale: 'ar' },
@@ -57,15 +62,32 @@ export const LANGUAGES: readonly LanguageDef[] = [
   { code: 'es', label: 'Spanish', native: 'Español', dir: 'ltr', locale: 'es-ES' },
 ];
 
-export const LANG_CODES: readonly LangCode[] = LANGUAGES.map((l) => l.code);
+/**
+ * Locales the interface OFFERS — the language switcher lists exactly these.
+ *
+ * A locale belongs here only once its dictionary translates EVERY key in `en`.
+ * Offering a partial dictionary is the defect this list exists to prevent: the
+ * chrome switches language and the pages stay English, because `lookup()` falls
+ * back to `en` per key. `en` and `tr` are complete today; `ar`, `ru`, `zh` and
+ * `es` are still partial (see `coverage()`), so the switcher offers two locales.
+ * Move a code up into this list the moment its dictionary is finished.
+ */
+const OFFERED_LANG_CODES: readonly LangCode[] = ['en', 'tr'];
 
-const LANG_BY_CODE: Record<LangCode, LanguageDef> = LANGUAGES.reduce(
+export const LANGUAGES: readonly LanguageDef[] = ALL_LANGUAGES.filter((l) =>
+  OFFERED_LANG_CODES.includes(l.code),
+);
+
+/** Every locale code that has a dictionary in this file — not the switcher's list. */
+export const LANG_CODES: readonly LangCode[] = ALL_LANGUAGES.map((l) => l.code);
+
+const LANG_BY_CODE: Record<LangCode, LanguageDef> = ALL_LANGUAGES.reduce(
   (acc, l) => { acc[l.code] = l; return acc; },
   {} as Record<LangCode, LanguageDef>,
 );
 
 export function isLangCode(value: unknown): value is LangCode {
-  return typeof value === 'string' && (LANG_CODES as readonly string[]).includes(value);
+  return typeof value === 'string' && (OFFERED_LANG_CODES as readonly string[]).includes(value);
 }
 
 export function dirFor(lang: LangCode): LangDir {
@@ -106,7 +128,14 @@ function fromNavigator(): LangCode | null {
   return null;
 }
 
-/** Stored choice → browser preference → English. */
+/**
+ * Stored choice → browser preference → English.
+ *
+ * Only offered locales pass through (see `isLangCode`): a stored preference for a
+ * locale whose dictionary is not complete is ignored here, so the UI degrades to
+ * the browser preference and then to English instead of rendering a
+ * half-translated screen.
+ */
 export function detectInitialLang(): LangCode {
   return readStoredLang() ?? fromNavigator() ?? 'en';
 }
@@ -265,6 +294,12 @@ export interface Dict {
   'topbar.notifications': string;
   'topbar.createAccountTitle': string;
   'topbar.account': string;
+
+  /* ---- app shell: the account line above the sidebar nav (App.tsx) ---- */
+  'side.account': string;
+  'side.supplierAccount': string;
+  'side.buyerAccount': string;
+  'side.fullAccess': string;
   'topbar.languageAria': string;
   'rail.allIndustries': string;
   'rail.howItWorks': string;
@@ -2043,6 +2078,12 @@ const en: Dict = {
   'topbar.notifications': 'Notifications',
   'topbar.createAccountTitle': 'Create account',
   'topbar.account': 'Account',
+
+  /* app shell — the account line above the sidebar nav (App.tsx) */
+  'side.account': 'Account',
+  'side.supplierAccount': 'Supplier account',
+  'side.buyerAccount': 'Buyer account',
+  'side.fullAccess': 'Full access',
   'topbar.languageAria': 'Interface language',
   'rail.allIndustries': 'All industries',
   'rail.howItWorks': 'How it works',
@@ -3819,6 +3860,12 @@ const tr: Partial<Record<DictKey, string>> = {
   'topbar.notifications': 'Bildirimler',
   'topbar.createAccountTitle': 'Hesap oluştur',
   'topbar.account': 'Hesap',
+
+  /* app shell — the account line above the sidebar nav (App.tsx) */
+  'side.account': 'Hesap',
+  'side.supplierAccount': 'Tedarikçi hesabı',
+  'side.buyerAccount': 'Alıcı hesabı',
+  'side.fullAccess': 'Tam erişim',
   'topbar.languageAria': 'Arayüz dili',
   'rail.allIndustries': 'Tüm sektörler',
   'rail.howItWorks': 'Nasıl çalışır',
@@ -11995,6 +12042,24 @@ export function statusLabel(lang: LangCode, status: string): string {
     : status.replace(/_/g, ' ');
 }
 
+/* --------------------------- active language mirror ---------------------- */
+
+/**
+ * Module-level mirror of the language the provider is rendering right now.
+ *
+ * React context only reaches components. A few module-level helpers resolve text
+ * that is not a dictionary key — `categoryImages.ts` picks a category blurb per
+ * language — and have no hook to read. LocaleProvider assigns this on every
+ * render, before its children render, so those helpers answer in the language the
+ * screen is actually drawn in.
+ */
+let activeLang: LangCode = 'en';
+
+/** The language the interface is currently rendered in. */
+export function getActiveLang(): LangCode {
+  return activeLang;
+}
+
 /* =============================== context ================================ */
 
 export interface I18nValue {
@@ -12019,6 +12084,14 @@ function applyDocumentLang(lang: LangCode): void {
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<LangCode>(() => detectInitialLang());
 
+  /**
+   * Keep the module-level mirror in step (see `getActiveLang`). Assigned during
+   * render, before children render, so a helper reading it never resolves text in
+   * the previous language; the assignment is idempotent, which the double-rendered
+   * StrictMode subtree relies on.
+   */
+  activeLang = lang;
+
   // Mirror the choice onto <html> and into storage whenever it changes.
   useEffect(() => {
     applyDocumentLang(lang);
@@ -12030,6 +12103,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   const setLang = useCallback((next: LangCode) => {
+    // The offered-locale guard: a locale whose dictionary is not complete cannot
+    // be switched to, so the interface can never end up half-translated.
     if (!isLangCode(next)) return;
     setLangState(next);
   }, []);

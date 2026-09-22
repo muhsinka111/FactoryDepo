@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Switch, Route, Redirect, useLocation } from 'wouter';
 import { useMe, getToken } from '@workspace/api-client-react';
+import { useI18n } from './i18n';
 import {
   Topbar, CategoryRail, Sidebar, BottomNav, AuthGateModal, Spinner,
   activeKeyFor, dashboardRole, navFor, homeFor,
@@ -68,6 +69,7 @@ function LegacyRfqDetail() {
 
 function Shell() {
   const [location, navigate] = useLocation();
+  const { t } = useI18n();
   const { data: user } = useMe();
   const loggedIn = !!getToken();
   const dash = dashboardRole(user?.role, loggedIn);
@@ -91,8 +93,12 @@ function Shell() {
             items={nav}
             activeKey={activeKey}
             who={{
-              name: user?.name ?? 'Account',
-              meta: dash === 'supplier' ? 'Supplier account' : dash === 'admin' ? 'Full access' : 'Buyer account',
+              // The sidebar is on every signed-in page, so nothing here may be a
+              // hardcoded English literal — it would leak into every translated UI.
+              name: user?.name ?? t('side.account'),
+              meta: dash === 'supplier'
+                ? t('side.supplierAccount')
+                : dash === 'admin' ? t('side.fullAccess') : t('side.buyerAccount'),
             }}
           />
         )}

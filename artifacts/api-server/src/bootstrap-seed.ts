@@ -35,7 +35,7 @@ export async function bootstrapSeedIfEmpty(): Promise<boolean> {
     { email: 'foshan@steel.cn', name: 'Chen Jie', role: 'supplier', company: 'Foshan Steel Co', country: 'China', trust: '89' },
     { email: 'shandong@mining.cn', name: 'Liu Yang', role: 'supplier', company: 'Shandong Mining Group', country: 'China', trust: '91' },
     { email: 'zhejiang@chemtech.cn', name: 'Zhao Min', role: 'supplier', company: 'Zhejiang Chemtech Co', country: 'China', trust: '90' },
-    { email: 'vietnam@minerals.vn', name: 'Nguyen Van Hieu', role: 'supplier', company: 'Vietnam Minerals JSC', country: 'Vietnam', trust: '87' },
+    { email: 'iberia@minerals.es', name: 'Javier Ortega', role: 'supplier', company: 'Iberia Minerals S.L.', country: 'Spain', trust: '87' },
     { email: 'berlin@praezision.de', name: 'Kai Müller', role: 'supplier', company: 'Berlin Präzision GmbH', country: 'Germany', trust: '92' },
     { email: 'bursa@aluminum.com.tr', name: 'Ali Yılmaz', role: 'supplier', company: 'Bursa Aluminum A.Ş.', country: 'Türkiye', trust: '86' },
   ];
@@ -67,7 +67,7 @@ export async function bootstrapSeedIfEmpty(): Promise<boolean> {
       { userId: uid('foshan@steel.cn'), companyName: 'Foshan Steel Co', country: 'China', city: 'Guangdong', description: 'Cold rolled and galvanized steel coil producer.', verifiedLevel: 2, rating: '4.8', inspectionsCount: 18, fulfillmentRate: '97.1', tags: ['Steel Coil', 'HRC', 'Galvanized'], since: 2012, dataSource: 'demo' },
       { userId: uid('shandong@mining.cn'), companyName: 'Shandong Mining Group', country: 'China', city: 'Shandong', description: 'Antimony ore mining and concentration.', verifiedLevel: 3, rating: '4.9', inspectionsCount: 21, fulfillmentRate: '96.8', tags: ['Antimony Ore', 'Mining', 'Concentrates'], since: 2005, dataSource: 'demo' },
       { userId: uid('zhejiang@chemtech.cn'), companyName: 'Zhejiang Chemtech Co', country: 'China', city: 'Zhejiang', description: 'Battery-grade lithium carbonate producer.', verifiedLevel: 2, rating: '4.7', inspectionsCount: 17, fulfillmentRate: '96.2', tags: ['Lithium Carbonate', 'Battery Chemicals'], since: 2015, dataSource: 'demo' },
-      { userId: uid('vietnam@minerals.vn'), companyName: 'Vietnam Minerals JSC', country: 'Vietnam', city: 'Lao Cai', description: 'Tin concentrate and rare earth minerals.', verifiedLevel: 2, rating: '4.8', inspectionsCount: 12, fulfillmentRate: '95.9', tags: ['Tin', 'Concentrates', 'Rare Earth'], since: 2014, dataSource: 'demo' },
+      { userId: uid('iberia@minerals.es'), companyName: 'Iberia Minerals S.L.', country: 'Spain', city: 'Huelva', description: 'Tin concentrate and rare earth minerals.', verifiedLevel: 2, rating: '4.8', inspectionsCount: 12, fulfillmentRate: '95.9', tags: ['Tin', 'Concentrates', 'Rare Earth'], since: 2014, dataSource: 'demo' },
       { userId: uid('berlin@praezision.de'), companyName: 'Berlin Präzision GmbH', country: 'Germany', city: 'Dresden', description: 'Precision parts and CNC machining.', verifiedLevel: 2, rating: '4.9', inspectionsCount: 11, fulfillmentRate: '98.2', tags: ['Precision Parts', 'CNC'], since: 2006, dataSource: 'demo' },
       { userId: uid('bursa@aluminum.com.tr'), companyName: 'Bursa Aluminum A.Ş.', country: 'Türkiye', city: 'Bursa', description: 'Aluminum ingot and extrusion profiles.', verifiedLevel: 2, rating: '4.7', inspectionsCount: 14, fulfillmentRate: '96.5', tags: ['Aluminum Ingot', 'Extrusion'], since: 2009, dataSource: 'demo' },
     ])
