@@ -76,7 +76,7 @@ h3{font-size:13.5px;font-weight:500}
 .wrap{max-width:1240px;margin:0 auto;padding:0 16px}
 /* Grid/flex children must be allowed to shrink below their content width or a
    long product name pushes the whole document wider than the viewport. */
-.hero-in>div,.sidecard,.cols>*,.steps>*,.svcs>*,.cats>*,.sups>*,.foot-grid>*,.card,.section-head>div{min-width:0}
+.hero-in>div,.sidecard,.cols>*,.steps>*,.flowsteps>*,.svcs>*,.cats>*,.sups>*,.trustband>*,.trust>div,.statstrip>*,.faq details,.foot-grid>*,.card,.section-head>div{min-width:0}
 .row{display:flex;align-items:center;gap:9px}
 .between{display:flex;align-items:center;justify-content:space-between;gap:9px}
 .muted{color:var(--mute);font-size:12px}
@@ -248,8 +248,8 @@ a.skip:focus{left:0}
 .cats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
 .cat{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;display:block}
 .cat:hover{border-color:#c3ccd8;box-shadow:var(--shadow)}
-.cat .art{aspect-ratio:16/9;background:#eef0f3}
-.cat .art img{width:100%;height:100%;object-fit:cover}
+.cat .art{display:block;aspect-ratio:16/9;background:#eef0f3;overflow:hidden}
+.cat .art img{display:block;width:100%;height:100%;object-fit:cover}
 .cat .nm{padding:8px 10px}
 .cat .nm b{display:block;font-size:12px;font-weight:600;color:var(--ink);line-height:1.25}
 .cat .nm span{font-size:11px;color:var(--faint)}
@@ -285,9 +285,47 @@ a.skip:focus{left:0}
 .foot-col a:hover{color:#fff}
 .foot-bottom{border-top:1px solid rgba(148,163,184,.22);padding:14px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#9aa5b1}
 
+/* ---------- enterprise hero: live stats strip (never an invented number) ---------- */
+.statstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:16px;max-width:620px;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.2);border-radius:var(--r);overflow:hidden}
+.stat{background:rgba(19,34,56,.78);padding:8px 11px;min-width:0}
+.stat .v{display:block;font-size:17px;font-weight:600;letter-spacing:-.3px;color:#fff;line-height:1.3}
+.stat .l{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#9aa5b1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statnote{margin:7px 0 0;font-size:11px;color:#8b96a5;max-width:64ch}
+
+/* ---------- enterprise: trust band ---------- */
+.trustband{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.trust{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;gap:10px;align-items:flex-start}
+.trust .ico{flex:none;width:30px;height:30px;border-radius:6px;background:var(--blue-l);color:var(--navy);display:grid;place-items:center}
+.trust .ico svg{display:block}
+.trust b{display:block;font-size:12.5px;font-weight:600;margin-bottom:3px}
+.trust p{margin:0;font-size:11.5px;color:var(--mute)}
+.trust:hover{border-color:#c3ccd8;box-shadow:var(--shadow)}
+
+/* ---------- enterprise: RFQ three-step flow ---------- */
+.flowsteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+
+/* ---------- enterprise: FAQ accordion (native details/summary) ---------- */
+.faq{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.faq details{border-bottom:1px solid var(--line-2)}
+.faq details:last-child{border-bottom:none}
+.faq summary{display:flex;align-items:center;gap:9px;padding:11px 13px;font-size:12.5px;font-weight:600;cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .q{flex:1;min-width:0}
+.faq summary .chev{flex:none;color:var(--mute);transition:transform .15s}
+.faq details[open] summary .chev{transform:rotate(180deg)}
+.faq summary:hover{background:var(--line-2)}
+.faq .ans{margin:0;padding:0 13px 12px;font-size:12.5px;color:#41505f;max-width:100ch}
+
+/* ---------- enterprise: listing-type tag on a product card ---------- */
+.lcard .lt{font-size:10.5px;color:var(--mute);background:var(--line-2);border-radius:3px;padding:1px 5px;white-space:nowrap}
+
 /* ---------- responsive ---------- */
 @media (max-width:1000px){
   .hero-in{grid-template-columns:1fr;gap:18px}
+  .trustband{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flowsteps{grid-template-columns:1fr}
   .cols{grid-template-columns:1fr}
   .cats{grid-template-columns:repeat(4,minmax(0,1fr))}
   .svcs{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -297,6 +335,11 @@ a.skip:focus{left:0}
 }
 @media (max-width:820px){
   .topbar .markets{display:none}
+  /* comfortable tap targets on touch-sized viewports */
+  .btn{min-height:34px}
+  .lcard .between .btn-sm{min-height:30px}
+  .faq summary{padding:13px 13px}
+  .statstrip{max-width:none}
   .topbar .authlinks .hide-s{display:none}
   .searchwrap{max-width:none}
   .feedgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -306,6 +349,8 @@ a.skip:focus{left:0}
   .section{padding:20px 0}
 }
 @media (max-width:560px){
+  .trustband{grid-template-columns:1fr}
+  .statstrip{grid-template-columns:1fr 1fr}
   .cats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .topbar .authlinks{display:none}
   .steps{grid-template-columns:1fr}
@@ -364,7 +409,7 @@ a.skip:focus{left:0}
 <body>
 <!-- The catalogue is 100% bootstrap demo data right now. Stated up front so a
      US/EU buyer is never led to believe these are live offers. -->
-<div class="demo-band" data-t="notice.demo"><b>Demo catalogue</b> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.</div>
+<div class="demo-band"><b data-t="notice.demoTitle">Demo catalogue</b><span data-t="notice.demoBody"> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.</span></div>
 <a class="skip" href="#listings" data-t="skip">Skip to listings</a>
 
 <!-- ============================ top bar ============================ -->
@@ -404,14 +449,15 @@ a.skip:focus{left:0}
 
 <nav class="rail" aria-label="Sections">
   <div class="rail-in">
-    <a href="#listings"><b data-t="rail.listings">Listings</b></a>
-    <a href="#requests" data-t="rail.requests">Requests</a>
+    <a href="#surplus"><b data-t="rail.stock">Ready stock</b></a>
+    <a href="#trust" data-t="rail.trust">Why us</a>
     <a href="#categories" data-t="rail.categories">Categories</a>
     <a href="#suppliers" data-t="rail.suppliers">Suppliers</a>
-    <a href="#verification" data-t="rail.verification">Verification</a>
+    <a href="#requests" data-t="rail.requests">Requests</a>
     <a href="#services" data-t="rail.services">Services</a>
+    <a href="#faq" data-t="rail.faq">FAQ</a>
     <span class="spacer" aria-hidden="true"></span>
-    <a href="/products" data-t="rail.browseAll">Browse all listings →</a>
+    <a href="/explore" data-t="rail.browseAll">Browse all listings →</a>
   </div>
 </nav>
 
@@ -424,25 +470,32 @@ a.skip:focus{left:0}
   <div class="hero-shade"></div>
   <div class="hero-in">
     <div>
-      <span class="eyebrow" data-t="hero.surplusEyebrow">Industrial sourcing, one chain of custody</span>
-      <h1><span data-t="hero.surplusLead">Sell your surplus stock,</span> <span class="g" data-t="hero.surplusAccent">buy the lot in one place</span><span data-t="hero.titleEnd">.</span></h1>
-      <p><span data-t="hero.surplusSub1">Factories and distributors in Türkiye, China, the USA and Europe list overproduction runs, slow-moving stock, factory seconds and container-ready lots.</span><br><span data-t="hero.surplusSub2">Anyone with stock can list it — no middlemen. Make an offer, or buy the whole lot at the listed price.</span></p>
+      <span class="eyebrow" data-t="hero.eyebrow2">B2B industrial marketplace</span>
+      <h1><span data-t="hero.h1Lead">Source industrial materials direct from</span> <span class="g" data-t="hero.h1Accent">verified factories</span><span data-t="hero.h1End">.</span></h1>
+      <p><span data-t="hero.valueProp">Ready stock, surplus lots and made-to-order production from listed suppliers — with the documents, inspection record and shipping milestones kept on one platform.</span></p>
       <div class="hero-ctas">
-        <a class="btn btn-lg btn-gold" href="/rfq" data-t="hero.ctaRfq">Post a request for quotation</a>
-        <a class="btn btn-lg btn-ghost" href="/products" data-t="hero.ctaBrowse">Browse the catalogue →</a>
+        <a class="btn btn-lg btn-gold" href="/explore" data-t="hero.ctaExplore">Explore ready stock</a>
+        <a class="btn btn-lg btn-ghost" href="/supplier/post" data-t="hero.ctaPost">Post your surplus</a>
       </div>
       <div class="trustline">
         <span><i>●</i> <span data-t="hero.trust1">Free to join</span></span>
         <span><i>●</i> <span data-t="hero.trust2">Same-origin live catalogue</span></span>
         <span><i>●</i> <span data-t="hero.trust3a">Seed rows are labelled</span> <em data-t="hero.trust3b">Demo</em></span>
       </div>
+      <div class="statstrip" id="counters" aria-live="polite">
+        <span class="stat"><span class="v">—</span><span class="l" data-t="stats.lots">Live listings</span></span>
+        <span class="stat"><span class="v">—</span><span class="l" data-t="stats.suppliers">Suppliers</span></span>
+        <span class="stat"><span class="v">—</span><span class="l" data-t="stats.categories">Categories</span></span>
+        <span class="stat"><span class="v">—</span><span class="l" data-t="stats.countries" data-t-attr="title:stats.countriesTitle">Countries</span></span>
+      </div>
+      <p class="statnote" data-t="stats.note">Read from the API when this page loads. A dash means the figure could not be read.</p>
       <div class="popular">
         <span data-t="hero.popular">Popular searches:</span>
-        <a href="/products?q=copper" data-t="hero.q.copper">Copper cathode</a>
-        <a href="/products?q=steel%20coil" data-t="hero.q.steel">Steel coil</a>
-        <a href="/products?q=pump" data-t="hero.q.pump">Industrial pump</a>
-        <a href="/products?q=lithium" data-t="hero.q.lithium">Lithium carbonate</a>
-        <a href="/products?q=cnc" data-t="hero.q.cnc">CNC machining</a>
+        <a href="/explore?q=copper" data-t="hero.q.copper">Copper cathode</a>
+        <a href="/explore?q=steel%20coil" data-t="hero.q.steel">Steel coil</a>
+        <a href="/explore?q=pump" data-t="hero.q.pump">Industrial pump</a>
+        <a href="/explore?q=lithium" data-t="hero.q.lithium">Lithium carbonate</a>
+        <a href="/explore?q=cnc" data-t="hero.q.cnc">CNC machining</a>
       </div>
     </div>
 
@@ -457,29 +510,53 @@ a.skip:focus{left:0}
   </div>
 </section>
 
-<!-- ===================== live counters (nothing hardcoded) ===================== -->
-<section class="section" style="padding-bottom:0">
+<!-- ============ trust band: what the platform actually does ============ -->
+<section class="section" id="trust">
   <div class="wrap">
-    <div class="stripe" id="counters">
-      <span class="load" data-t="counters.loading">Reading live totals from the catalogue…</span>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" data-t="trust.eyebrow">Why buyers start here</span>
+        <h2 data-t="trust.h2">Built for industrial purchasing</h2>
+        <p data-t="trust.sub">Four things this platform does today: verification, inspection, recorded payment status and tracked shipping. Nothing on this page promises coverage, response times or certifications we have not recorded.</p>
+      </div>
+      <a class="btn btn-ghost" href="/help" data-t="faq.cta">Read the help pages →</a>
+    </div>
+    <div class="trustband">
+      <div class="trust">
+        <span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6z"/><path d="M9 12.2l2.1 2.1L15.3 10"/></svg></span>
+        <div><b data-t="trust.t1">Verified supplier profiles</b><p data-t="trust.b1">Registration and export documents are reviewed and the checklist result is recorded on the supplier profile.</p></div>
+      </div>
+      <div class="trust">
+        <span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20.5 20.5L16 16"/><path d="M8.6 11.2l1.8 1.8 3.2-3.6"/></svg></span>
+        <div><b data-t="trust.t2">In-country factory inspection</b><p data-t="trust.b2">An inspector visits the site and photographs the line before a higher verification level is recorded.</p></div>
+      </div>
+      <div class="trust">
+        <span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 14.5h4"/></svg></span>
+        <div><b data-t="trust.t3">Payment recorded on the order</b><p data-t="trust.b3">Payment instructions are issued from the order and the outcome is written back to it. Funds move between buyer and supplier — FactoryDepo does not hold them in escrow.</p></div>
+      </div>
+      <div class="trust">
+        <span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V8h9v9z"/><path d="M12 11h4.5L19 14v3h-7z"/><circle cx="7" cy="17.6" r="1.6"/><circle cx="16.5" cy="17.6" r="1.6"/></svg></span>
+        <div><b data-t="trust.t4">Shipment milestones</b><p data-t="trust.b4">Order confirmed, quality check, carrier, transit, customs, delivered — each step timestamped on the order.</p></div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- =========================== newest listings =========================== -->
-<section class="section" id="listings">
+<section class="section" id="surplus">
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow" data-t="list.eyebrow">Live catalogue</span>
-        <h2 data-t="list.h2">Newest listings with photos</h2>
-        <p id="listingsSub"><span data-t="list.subLead">Every card below is a row returned by</span> <span class="mono">GET /api/products?hasImage=1</span> <span data-t="list.subA">at page load. Rows whose</span> <span class="mono">dataSource</span> <span data-t="list.subB">is</span> <b data-t="list.subC">demo</b> <span data-t="list.subD">are seed data and carry a Demo badge — they are not live offers.</span></p>
+        <span class="eyebrow" data-t="surplus.eyebrow">Ready stock</span>
+        <h2 data-t="surplus.h2">Surplus &amp; ready stock</h2>
+        <p id="listingsSub"><span data-t="surplus.authA">Every card below is a row returned by</span> <span class="mono">GET /api/products?hasImage=1</span> <span data-t="surplus.authB">at page load, newest first.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/products" data-t="list.cta">Browse all listings →</a>
+      <a class="btn btn-ghost" href="/explore" data-t="surplus.cta">Browse the full catalogue →</a>
     </div>
     <div class="feedgrid" id="featuredGrid" aria-live="polite">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
+    <p class="muted" style="margin:8px 0 0" data-t="surplus.typeNote">The type tag on each card is the row’s own listing type — surplus, overstock, seconds, liquidation, container lot or regular stock.</p>
   </div>
 </section>
 
@@ -488,21 +565,30 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow" data-t="req.eyebrow">Request board</span>
-        <h2 data-t="req.h2">Open sourcing requests</h2>
-        <p><span data-t="req.subA">Posted by buyers on FactoryDepo and read from</span> <span class="mono">GET /api/rfqs</span><span data-t="req.subB">. Quote counts and statuses are exactly what the API returns — no urgency timers, no invented activity.</span></p>
+        <span class="eyebrow" data-t="rfq.eyebrow">Request a quotation</span>
+        <h2 data-t="rfq.h2">Post what you need, compare real offers</h2>
+        <p data-t="rfq.sub">Three steps, no middlemen: describe the requirement, listed suppliers quote it, you compare the offers on the platform. The board below is read live from the API.</p>
       </div>
-      <a class="btn btn-ghost" href="/rfq" data-t="req.cta">See the request board →</a>
+      <a class="btn btn-ghost" href="/rfqs" data-t="rfq.ctaBoard">Open the request board →</a>
     </div>
-    <div class="card">
+    <div class="flowsteps">
+      <div class="step"><span class="n">01</span><b data-t="rfq.s1t">Describe the requirement</b><p data-t="rfq.s1b">Category, material, quantity, unit, target price and destination country.</p></div>
+      <div class="step"><span class="n">02</span><b data-t="rfq.s2t">Listed suppliers quote</b><p data-t="rfq.s2b">Suppliers answer with an offer; the quote count shown on a request is the API’s own count.</p></div>
+      <div class="step"><span class="n">03</span><b data-t="rfq.s3t">Compare and order</b><p data-t="rfq.s3b">Compare offers side by side, message the supplier and confirm the order on the platform.</p></div>
+    </div>
+    <div class="card" style="margin-top:12px">
       <div class="card-hd">
         <span class="pill p-blue">RFQ</span>
         <span class="muted" data-t="req.newest">Newest first</span>
-        <a class="link" href="/rfq" data-t="req.postOwn">Post your own request →</a>
+        <a class="link" href="/rfqs" data-t="req.postOwn">Post your own request →</a>
       </div>
       <div class="card-bd" id="rfqList" aria-live="polite">
         <div class="empty" data-t="req.loading">Loading requests…</div>
       </div>
+    </div>
+    <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-primary" href="/rfqs" data-t="rfq.ctaPost">Post a request</a>
+      <a class="btn btn-grey" href="/sign-in" data-t="rfq.ctaSignin">Sign in to post</a>
     </div>
   </div>
 </section>
@@ -512,13 +598,16 @@ a.skip:focus{left:0}
   <div class="wrap">
     <div class="section-head">
       <div>
-        <span class="eyebrow" data-t="cat.eyebrow">Browse</span>
+        <span class="eyebrow" data-t="cat.eyebrow2">Browse by category</span>
         <h2 data-t="cat.h2">Categories</h2>
-        <p><span data-t="cat.subA">Each tile shows the number of lots the catalogue currently returns for that category (</span><span class="mono">total</span> <span data-t="cat.subB">from</span> <span class="mono">GET /api/products?category=…</span><span data-t="cat.subC">). A dash means the count could not be read.</span></p>
+        <p><span data-t="cat.subA2">Counts below are the catalogue’s own, read once from</span> <span class="mono">GET /api/products/categories</span><span data-t="cat.subB2"> — highest volume first. A dash means the count could not be read.</span></p>
       </div>
-      <a class="btn btn-ghost" href="/categories" data-t="cat.ctaAll">All 25 categories →</a>
+      <a class="btn btn-ghost" href="/categories" data-t="cat.ctaAll2">Open the category index →</a>
     </div>
-    <div class="cats" id="catGrid"></div>
+    <div class="cats" id="catGrid" aria-live="polite">
+      <div class="skel" style="height:150px"></div><div class="skel" style="height:150px"></div><div class="skel" style="height:150px"></div>
+      <div class="skel" style="height:150px"></div><div class="skel" style="height:150px"></div><div class="skel" style="height:150px"></div>
+    </div>
   </div>
 </section>
 
@@ -531,7 +620,7 @@ a.skip:focus{left:0}
         <h2 data-t="more.h2">Further down the list</h2>
         <p data-t="more.sub">The next page of the same live response — the newest listings after the ones shown above.</p>
       </div>
-      <a class="btn btn-ghost" href="/products" data-t="more.cta">Refine with filters →</a>
+      <a class="btn btn-ghost" href="/explore" data-t="more.cta">Refine with filters →</a>
     </div>
     <div class="feedgrid" id="trendingGrid" aria-live="polite">
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -604,7 +693,7 @@ a.skip:focus{left:0}
         <p data-t="band.p">Describe the material, the quantity and the destination. Offers arrive in the platform, where you can compare them side by side.</p>
       </div>
       <div class="acts">
-        <a class="btn btn-lg btn-gold" href="/rfq" data-t="band.cta1">Post a request</a>
+        <a class="btn btn-lg btn-gold" href="/rfqs" data-t="band.cta1">Post a request</a>
         <a class="btn btn-lg btn-ghost" href="/sign-up" data-t="band.cta2">Create a free account</a>
       </div>
     </div>
@@ -614,9 +703,9 @@ a.skip:focus{left:0}
         <h3 data-t="panel.buyTitle">Buying</h3>
         <p data-t="panel.buyBody">Search the catalogue, compare lots and send a request for quotation. Sample orders and inspections can be added before you commit.</p>
         <div class="acts">
-          <a class="btn btn-grey btn-block" href="/products" data-t="panel.buyBtn1">Browse listings</a>
+          <a class="btn btn-grey btn-block" href="/explore" data-t="panel.buyBtn1">Browse listings</a>
           <a class="btn btn-grey btn-block" href="/suppliers" data-t="panel.buyBtn2">Find suppliers</a>
-          <a class="btn btn-grey btn-block" href="/rfq" data-t="band.cta1">Post a request</a>
+          <a class="btn btn-grey btn-block" href="/rfqs" data-t="band.cta1">Post a request</a>
         </div>
       </div>
       <div class="panel">
@@ -632,9 +721,31 @@ a.skip:focus{left:0}
         <p data-t="panel.helpBody">The help pages explain ordering, quotations and what each status means. No live-chat counter, no invented response times.</p>
         <div class="acts">
           <a class="btn btn-grey btn-block" href="/help" data-t="panel.helpBtn1">Read the help pages</a>
-          <a class="btn btn-grey btn-block" href="/products" data-t="panel.helpBtn2">Start from the catalogue</a>
+          <a class="btn btn-grey btn-block" href="/explore" data-t="panel.helpBtn2">Start from the catalogue</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ faq ================================ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" data-t="faq.eyebrow">Before you commit</span>
+        <h2 data-t="faq.h2">Questions buyers ask</h2>
+        <p data-t="faq.sub">Short answers on the things that decide a purchase. Where a feature does not exist yet, the answer says so.</p>
+      </div>
+      <a class="btn btn-ghost" href="/help" data-t="faq.cta">Read the help pages →</a>
+    </div>
+    <div class="faq">
+      <details><summary><span class="q" data-t="faq.q1">What is the minimum order quantity?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a1">Every listing carries the MOQ and the unit its supplier set; both are shown on the card and on the product page. If a listing shows no MOQ, the supplier did not set one.</p></details>
+      <details><summary><span class="q" data-t="faq.q2">Can I order a sample first?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a2">Ask the supplier from the product page, or post a request for quotation with the sample quantity. Sample terms are agreed directly with the supplier — the platform does not run a separate sample checkout yet.</p></details>
+      <details><summary><span class="q" data-t="faq.q3">How does factory inspection work?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a3">Verification is a recorded process: the company submits its details, documents are reviewed, an in-country inspector visits the site, and the result is written to the supplier profile — pass, or the gaps that failed.</p></details>
+      <details><summary><span class="q" data-t="faq.q4">What payment terms are available, and who holds the money?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a4">Terms are agreed between buyer and supplier on the order. The platform issues the payment instruction from the order and records the payment status against it. Funds are not held in escrow by FactoryDepo.</p></details>
+      <details><summary><span class="q" data-t="faq.q5">Can you ship to my country, and who arranges freight?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a5">State the destination country in your request for quotation and suppliers quote it. Once an order is placed, its shipment is tracked as milestones from order confirmed to delivered.</p></details>
+      <details><summary><span class="q" data-t="faq.q6">What does the verification badge mean?</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p class="ans" data-t="faq.a6">It reports the verification level recorded on the supplier profile — the directory treats level 2 and above as verified. Rows marked Demo are seed data, not live offers.</p></details>
     </div>
   </div>
 </section>
@@ -651,20 +762,19 @@ a.skip:focus{left:0}
       <div class="foot-col">
         <h4 data-t="foot.marketplace">Marketplace</h4>
         <ul>
-          <li><a href="/products" data-t="foot.allListings">All listings</a></li>
-          <li><a href="/products?q=copper" data-t="foot.copper">Copper</a></li>
-          <li><a href="/products?category=Steel" data-t="cat.steel">Steel</a></li>
+          <li><a href="/explore" data-t="foot.allListings">All listings</a></li>
+          <li><a href="/categories" data-t="rail.categories">Categories</a></li>
           <li><a href="/suppliers" data-t="rail.suppliers">Suppliers</a></li>
-          <li><a href="/rfq" data-t="req.eyebrow">Request board</a></li>
+          <li><a href="/rfqs" data-t="req.eyebrow">Request board</a></li>
+          <li><a href="/feed" data-t="foot.l.feed">Activity feed</a></li>
         </ul>
       </div>
       <div class="foot-col">
-        <h4 data-t="rail.services">Services</h4>
+        <h4 data-t="foot.col.suppliers">For suppliers</h4>
         <ul>
-          <li><a href="#services" data-t="svc.factory">Factory inspection</a></li>
-          <li><a href="#services" data-t="svc.lab">Laboratory testing</a></li>
-          <li><a href="#services" data-t="svc.freight">Freight &amp; shipping</a></li>
-          <li><a href="#verification" data-t="foot.howVerification">How verification works</a></li>
+          <li><a href="/supplier/post" data-t="foot.l.post">Post a listing</a></li>
+          <li><a href="/supplier/listings" data-t="foot.l.mylistings">My listings</a></li>
+          <li><a href="/help" data-t="foot.howVerification">How verification works</a></li>
         </ul>
       </div>
       <div class="foot-col">
@@ -2032,6 +2142,558 @@ a.skip:focus{left:0}
     }
   };
 
+  /* =====================================================================
+     ENTERPRISE LANDING COPY (added with the marketplace front page).
+
+     Why a second table: the dictionaries above are already shipped and
+     reviewed; the new copy for the hero, trust band, category index, RFQ
+     flow and FAQ is kept together here and merged into I18N immediately
+     below, so there is still exactly one entry per key per language — the
+     file's own pattern. English remains the source of truth and the
+     fallback for any key a language does not carry.
+     ===================================================================== */
+  var I18N_ADD = {
+    en: {
+      'hero.eyebrow2': 'B2B industrial marketplace',
+      'hero.h1Lead': 'Source industrial materials direct from',
+      'hero.h1Accent': 'verified factories',
+      'hero.h1End': '.',
+      'hero.valueProp': 'Ready stock, surplus lots and made-to-order production from listed suppliers — with the documents, inspection record and shipping milestones kept on one platform.',
+      'hero.ctaExplore': 'Explore ready stock',
+      'hero.ctaPost': 'Post your surplus',
+
+      'notice.demoTitle': 'Demo catalogue',
+      'notice.demoBody': ' — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.',
+      'stats.lots': 'Live listings',
+      'stats.suppliers': 'Suppliers',
+      'stats.categories': 'Categories',
+      'stats.countries': 'Countries',
+      'stats.countriesTitle': 'Distinct two-letter country codes on supplier profiles',
+      'stats.note': 'Read from the API when this page loads. A dash means the figure could not be read.',
+
+      'trust.eyebrow': 'Why buyers start here',
+      'trust.h2': 'Built for industrial purchasing',
+      'trust.sub': 'Four things this platform does today: verification, inspection, recorded payment status and tracked shipping. Nothing on this page promises coverage, response times or certifications we have not recorded.',
+      'trust.t1': 'Verified supplier profiles',
+      'trust.b1': 'Registration and export documents are reviewed and the checklist result is recorded on the supplier profile.',
+      'trust.t2': 'In-country factory inspection',
+      'trust.b2': 'An inspector visits the site and photographs the line before a higher verification level is recorded.',
+      'trust.t3': 'Payment recorded on the order',
+      'trust.b3': 'Payment instructions are issued from the order and the outcome is written back to it. Funds move between buyer and supplier — FactoryDepo does not hold them in escrow.',
+      'trust.t4': 'Shipment milestones',
+      'trust.b4': 'Order confirmed, quality check, carrier, transit, customs, delivered — each step timestamped on the order.',
+
+      'cat.eyebrow2': 'Browse by category',
+      'cat.subA2': 'Counts below are the catalogue’s own, read once from',
+      'cat.subB2': ' — highest volume first. A dash means the count could not be read.',
+      'cat.ctaAll2': 'Open the category index →',
+
+      'surplus.eyebrow': 'Ready stock',
+      'surplus.h2': 'Surplus & ready stock',
+      'surplus.authA': 'Every card below is a row returned by',
+      'surplus.authB': 'at page load, newest first.',
+      'surplus.cta': 'Browse the full catalogue →',
+      'surplus.typeNote': 'The type tag on each card is the row’s own listing type — surplus, overstock, seconds, liquidation, container lot or regular stock.',
+
+      'lt.stock': 'Stock',
+      'lt.surplus': 'Surplus',
+      'lt.overstock': 'Overstock',
+      'lt.liquidation': 'Liquidation',
+      'lt.seconds': 'Seconds',
+      'lt.container': 'Container lot',
+
+      'rfq.eyebrow': 'Request a quotation',
+      'rfq.h2': 'Post what you need, compare real offers',
+      'rfq.sub': 'Three steps, no middlemen: describe the requirement, listed suppliers quote it, you compare the offers on the platform. The board below is read live from the API.',
+      'rfq.s1t': 'Describe the requirement',
+      'rfq.s1b': 'Category, material, quantity, unit, target price and destination country.',
+      'rfq.s2t': 'Listed suppliers quote',
+      'rfq.s2b': 'Suppliers answer with an offer; the quote count shown on a request is the API’s own count.',
+      'rfq.s3t': 'Compare and order',
+      'rfq.s3b': 'Compare offers side by side, message the supplier and confirm the order on the platform.',
+      'rfq.ctaPost': 'Post a request',
+      'rfq.ctaBoard': 'Open the request board →',
+      'rfq.ctaSignin': 'Sign in to post',
+
+      'faq.eyebrow': 'Before you commit',
+      'faq.h2': 'Questions buyers ask',
+      'faq.sub': 'Short answers on the things that decide a purchase. Where a feature does not exist yet, the answer says so.',
+      'faq.cta': 'Read the help pages →',
+      'faq.q1': 'What is the minimum order quantity?',
+      'faq.a1': 'Every listing carries the MOQ and the unit its supplier set; both are shown on the card and on the product page. If a listing shows no MOQ, the supplier did not set one.',
+      'faq.q2': 'Can I order a sample first?',
+      'faq.a2': 'Ask the supplier from the product page, or post a request for quotation with the sample quantity. Sample terms are agreed directly with the supplier — the platform does not run a separate sample checkout yet.',
+      'faq.q3': 'How does factory inspection work?',
+      'faq.a3': 'Verification is a recorded process: the company submits its details, documents are reviewed, an in-country inspector visits the site, and the result is written to the supplier profile — pass, or the gaps that failed.',
+      'faq.q4': 'What payment terms are available, and who holds the money?',
+      'faq.a4': 'Terms are agreed between buyer and supplier on the order. The platform issues the payment instruction from the order and records the payment status against it. Funds are not held in escrow by FactoryDepo.',
+      'faq.q5': 'Can you ship to my country, and who arranges freight?',
+      'faq.a5': 'State the destination country in your request for quotation and suppliers quote it. Once an order is placed, its shipment is tracked as milestones from order confirmed to delivered.',
+      'faq.q6': 'What does the verification badge mean?',
+      'faq.a6': 'It reports the verification level recorded on the supplier profile — the directory treats level 2 and above as verified. Rows marked Demo are seed data, not live offers.',
+
+      'rail.stock': 'Ready stock',
+      'rail.trust': 'Why us',
+      'rail.faq': 'FAQ',
+
+      'foot.col.suppliers': 'For suppliers',
+      'foot.l.post': 'Post a listing',
+      'foot.l.mylistings': 'My listings',
+      'foot.l.feed': 'Activity feed'
+    },
+    tr: {
+      'hero.eyebrow2': 'B2B endüstriyel pazar yeri',
+      'hero.h1Lead': 'Endüstriyel malzemeyi doğrudan',
+      'hero.h1Accent': 'doğrulanmış fabrikalardan',
+      'hero.h1End': ' tedarik edin.',
+      'hero.valueProp': 'Listelenen tedarikçilerden hazır stok, fazla parti ve siparişe özel üretim — belgeler, denetim kaydı ve sevkiyat adımları tek platformda.',
+      'hero.ctaExplore': 'Hazır stoğu keşfet',
+      'hero.ctaPost': 'Fazla stoğunu listele',
+
+      'notice.demoTitle': 'Demo katalog',
+      'notice.demoBody': ' — gösterilen her ilan demo verisidir, gerçek bir teklif değildir. Gerçek tedarikçi ilanları eklendikçe yerini alacaktır.',
+      'stats.lots': 'Canlı ilan',
+      'stats.suppliers': 'Tedarikçi',
+      'stats.categories': 'Kategori',
+      'stats.countries': 'Ülke',
+      'stats.countriesTitle': 'Tedarikçi profillerindeki farklı iki harfli ülke kodları',
+      'stats.note': 'Bu sayfa yüklenirken API’den okunur. Tire, değerin okunamadığını gösterir.',
+
+      'trust.eyebrow': 'Alıcılar neden burada başlıyor',
+      'trust.h2': 'Endüstriyel satın alma için kuruldu',
+      'trust.sub': 'Bu platformun bugün yaptığı dört şey: doğrulama, denetim, kayıtlı ödeme durumu ve izlenen sevkiyat. Bu sayfa kapsam, yanıt süresi veya elimizde kaydı olmayan bir belge vaat etmez.',
+      'trust.t1': 'Doğrulanmış tedarikçi profilleri',
+      'trust.b1': 'Kayıt ve ihracat belgeleri incelenir, kontrol listesi sonucu tedarikçi profilinde kayıtlı kalır.',
+      'trust.t2': 'Ülkede yerinde fabrika denetimi',
+      'trust.b2': 'Daha yüksek bir doğrulama seviyesi kaydedilmeden önce denetçi tesisi ziyaret eder ve üretim hattını fotoğraflar.',
+      'trust.t3': 'Ödeme siparişe kaydedilir',
+      'trust.b3': 'Ödeme talimatı sipariş üzerinden verilir ve sonucu siparişe işlenir. Para alıcı ile tedarikçi arasında hareket eder — FactoryDepo parayı emanette tutmaz.',
+      'trust.t4': 'Sevkiyat adımları',
+      'trust.b4': 'Sipariş onaylandı, kalite kontrolü, taşıyıcıya teslim, transit, gümrük, teslim edildi — her adım siparişte zaman damgalı.',
+
+      'cat.eyebrow2': 'Kategoriye göre gez',
+      'cat.subA2': 'Aşağıdaki sayımlar kataloğun kendi verisidir; tek istekte şuradan okunur:',
+      'cat.subB2': ' — en yüksek hacim önce. Tire, sayımın okunamadığını gösterir.',
+      'cat.ctaAll2': 'Kategori dizinini aç →',
+
+      'surplus.eyebrow': 'Hazır stok',
+      'surplus.h2': 'Fazla stok ve hazır stok',
+      'surplus.authA': 'Aşağıdaki her kart şu uçtan dönen bir satırdır:',
+      'surplus.authB': '— sayfa yüklenirken okunur, en yeni önce.',
+      'surplus.cta': 'Tüm kataloğa göz at →',
+      'surplus.typeNote': 'Her karttaki tür etiketi satırın kendi ilan türüdür — fazla stok, aşırı stok, ikinci kalite, tasfiye, konteyner partisi veya normal stok.',
+
+      'lt.stock': 'Stok',
+      'lt.surplus': 'Fazla stok',
+      'lt.overstock': 'Aşırı stok',
+      'lt.liquidation': 'Tasfiye',
+      'lt.seconds': 'İkinci kalite',
+      'lt.container': 'Konteyner partisi',
+
+      'rfq.eyebrow': 'Teklif isteyin',
+      'rfq.h2': 'İhtiyacınızı yayınlayın, gerçek teklifleri karşılaştırın',
+      'rfq.sub': 'Üç adım, aracı yok: ihtiyacı tanımlayın, listelenen tedarikçiler teklif verir, teklifleri platformda karşılaştırırsınız. Aşağıdaki pano API’den canlı okunur.',
+      'rfq.s1t': 'İhtiyacı tanımlayın',
+      'rfq.s1b': 'Kategori, malzeme, miktar, birim, hedef fiyat ve varış ülkesi.',
+      'rfq.s2t': 'Listelenen tedarikçiler teklif verir',
+      'rfq.s2b': 'Tedarikçiler teklifle yanıt verir; bir talepte görünen teklif sayısı API’nin kendi sayısıdır.',
+      'rfq.s3t': 'Karşılaştırın ve sipariş verin',
+      'rfq.s3b': 'Teklifleri yan yana karşılaştırın, tedarikçiyle yazışın ve siparişi platformda onaylayın.',
+      'rfq.ctaPost': 'Talep yayınla',
+      'rfq.ctaBoard': 'Talep panosunu aç →',
+      'rfq.ctaSignin': 'Yayınlamak için giriş yapın',
+
+      'faq.eyebrow': 'Siparişten önce',
+      'faq.h2': 'Alıcıların sorduğu sorular',
+      'faq.sub': 'Satın almayı belirleyen konularda kısa yanıtlar. Bir özellik henüz yoksa yanıt bunu açıkça söyler.',
+      'faq.cta': 'Yardım sayfalarını oku →',
+      'faq.q1': 'Minimum sipariş miktarı nedir?',
+      'faq.a1': 'Her ilan, tedarikçisinin belirlediği MOQ ve birimi taşır; ikisi de kartta ve ürün sayfasında görünür. İlanda MOQ yoksa tedarikçi belirlememiştir.',
+      'faq.q2': 'Önce numune alabilir miyim?',
+      'faq.a2': 'Ürün sayfasından tedarikçiye sorun veya numune miktarıyla bir teklif talebi yayınlayın. Numune koşulları doğrudan tedarikçiyle kararlaştırılır — platformda ayrı bir numune satın alma akışı henüz yok.',
+      'faq.q3': 'Fabrika denetimi nasıl işler?',
+      'faq.a3': 'Doğrulama kayda geçen bir süreçtir: şirket bilgilerini iletir, belgeler incelenir, ülkesinde bir denetçi tesisi ziyaret eder ve sonuç tedarikçi profiline yazılır — geçti ya da başarısız olan eksikler.',
+      'faq.q4': 'Hangi ödeme koşulları var ve parayı kim tutuyor?',
+      'faq.a4': 'Koşullar sipariş üzerinde alıcı ile tedarikçi arasında kararlaştırılır. Platform ödeme talimatını siparişten üretir ve ödeme durumunu siparişe kaydeder. Para FactoryDepo tarafından emanette tutulmaz.',
+      'faq.q5': 'Ülkeme gönderim var mı, nakliyeyi kim ayarlar?',
+      'faq.a5': 'Teklif talebinizde varış ülkesini belirtin, tedarikçiler ona göre teklif verir. Sipariş verildikten sonra sevkiyat, sipariş onayından teslimata kadar adım adım izlenir.',
+      'faq.q6': 'Doğrulama rozeti ne anlama geliyor?',
+      'faq.a6': 'Tedarikçi profilinde kayıtlı doğrulama seviyesini gösterir — dizin 2 ve üzeri seviyeyi doğrulanmış sayar. Demo etiketli satırlar başlangıç verisidir, canlı teklif değildir.',
+
+      'rail.stock': 'Hazır stok',
+      'rail.trust': 'Neden biz',
+      'rail.faq': 'SSS',
+
+      'foot.col.suppliers': 'Tedarikçiler için',
+      'foot.l.post': 'İlan ver',
+      'foot.l.mylistings': 'İlanlarım',
+      'foot.l.feed': 'Etkinlik akışı'
+    },
+    ar: {
+      'hero.eyebrow2': 'سوق صناعي بين الشركات',
+      'hero.h1Lead': 'اشترِ المواد الصناعية مباشرة من',
+      'hero.h1Accent': 'مصانع موثّقة',
+      'hero.h1End': '.',
+      'hero.valueProp': 'مخزون جاهز ودفعات فائضة وإنتاج حسب الطلب من موردين مُدرجين — مع المستندات وسجل الفحص ومراحل الشحن في منصة واحدة.',
+      'hero.ctaExplore': 'استكشف المخزون الجاهز',
+      'hero.ctaPost': 'أعلن عن الفائض لديك',
+
+      'notice.demoTitle': 'كتالوج تجريبي',
+      'notice.demoBody': ' — كل إعلان معروض بيانات تجريبية وليس عرضًا حقيقيًا. سيتم استبداله بإعلانات موردين حقيقيين عند إضافتهم.',
+      'stats.lots': 'إعلانات حيّة',
+      'stats.suppliers': 'موردون',
+      'stats.categories': 'الفئات',
+      'stats.countries': 'الدول',
+      'stats.countriesTitle': 'رموز الدول المكوّنة من حرفين والموجودة في ملفات الموردين',
+      'stats.note': 'تُقرأ من الواجهة البرمجية عند تحميل الصفحة. الشرطة تعني تعذّر قراءة الرقم.',
+
+      'trust.eyebrow': 'لماذا يبدأ المشترون من هنا',
+      'trust.h2': 'مبنيّة للشراء الصناعي',
+      'trust.sub': 'أربعة أمور تنفّذها المنصة اليوم: التوثيق، والفحص، وحالة الدفع المسجّلة، وتتبّع الشحن. لا تعِد هذه الصفحة بتغطية أو زمن استجابة أو شهادات لا نملك سجلًا لها.',
+      'trust.t1': 'ملفات موردين موثّقة',
+      'trust.b1': 'تُراجَع مستندات التسجيل والتصدير وتُسجَّل نتيجة قائمة التحقق على ملف المورد.',
+      'trust.t2': 'فحص المصنع في بلد المنشأ',
+      'trust.b2': 'يزور المفتّش الموقع ويصوّر خط الإنتاج قبل تسجيل مستوى توثيق أعلى.',
+      'trust.t3': 'الدفع مسجّل على الطلب',
+      'trust.b3': 'تُصدَر تعليمات الدفع من الطلب وتُسجَّل النتيجة على الطلب نفسه. تنتقل الأموال بين المشتري والمورد — ولا تحتفظ FactoryDepo بها في حساب ضمان.',
+      'trust.t4': 'مراحل الشحن',
+      'trust.b4': 'تأكيد الطلب، اجتياز فحص الجودة، التسليم للناقل، أثناء النقل، التخليص الجمركي، التسليم — كل خطوة موقّتة على الطلب.',
+
+      'cat.eyebrow2': 'تصفّح حسب الفئة',
+      'cat.subA2': 'الأرقام أدناه من الكتالوج نفسه، تُقرأ بطلب واحد من',
+      'cat.subB2': ' — الأعلى حجمًا أولًا. الشرطة تعني تعذّر قراءة العدد.',
+      'cat.ctaAll2': 'افتح فهرس الفئات ←',
+
+      'surplus.eyebrow': 'مخزون جاهز',
+      'surplus.h2': 'الفائض والمخزون الجاهز',
+      'surplus.authA': 'كل بطاقة أدناه صفّ مُعاد من',
+      'surplus.authB': 'عند تحميل الصفحة، الأحدث أولًا.',
+      'surplus.cta': 'تصفّح الكتالوج الكامل ←',
+      'surplus.typeNote': 'شارة النوع على كل بطاقة هي نوع الإعلان الخاص بالصف نفسه — فائض، مخزون زائد، درجات ثانية، تصفية، دفعة حاوية أو مخزون عادي.',
+
+      'lt.stock': 'مخزون',
+      'lt.surplus': 'فائض',
+      'lt.overstock': 'مخزون زائد',
+      'lt.liquidation': 'تصفية',
+      'lt.seconds': 'درجات ثانية',
+      'lt.container': 'دفعة حاوية',
+
+      'rfq.eyebrow': 'اطلب عرض سعر',
+      'rfq.h2': 'انشر ما تحتاجه وقارن العروض الحقيقية',
+      'rfq.sub': 'ثلاث خطوات دون وسطاء: صِف المطلوب، ويقدّم الموردون المدرجون عروضهم، ثم تقارن العروض على المنصة. اللوحة أدناه تُقرأ حيًّا من الواجهة البرمجية.',
+      'rfq.s1t': 'صِف المطلوب',
+      'rfq.s1b': 'الفئة، المادة، الكمية، الوحدة، السعر المستهدف وبلد الوصول.',
+      'rfq.s2t': 'الموردون المدرجون يقدّمون عروضًا',
+      'rfq.s2b': 'يجيب الموردون بعرض، وعدد العروض المعروض على الطلب هو عدد الواجهة البرمجية نفسه.',
+      'rfq.s3t': 'قارن ثم اطلب',
+      'rfq.s3b': 'قارن العروض جنبًا إلى جنب، وتراسل المورد، ثم أكّد الطلب على المنصة.',
+      'rfq.ctaPost': 'انشر طلبًا',
+      'rfq.ctaBoard': 'افتح لوحة الطلبات ←',
+      'rfq.ctaSignin': 'سجّل الدخول للنشر',
+
+      'faq.eyebrow': 'قبل أن تلتزم',
+      'faq.h2': 'أسئلة يطرحها المشترون',
+      'faq.sub': 'إجابات مختصرة عن الأمور التي تحسم الشراء. وإذا لم تكن الميزة موجودة بعد، تقول الإجابة ذلك.',
+      'faq.cta': 'اقرأ صفحات المساعدة ←',
+      'faq.q1': 'ما هو الحد الأدنى للطلب؟',
+      'faq.a1': 'كل إعلان يحمل الحد الأدنى للطلب والوحدة كما حدّدهما المورد، ويظهران على البطاقة وعلى صفحة المنتج. وإذا لم يظهر حد أدنى، فالمورد لم يحدّده.',
+      'faq.q2': 'هل يمكنني طلب عيّنة أولًا؟',
+      'faq.a2': 'اسأل المورد من صفحة المنتج، أو انشر طلب عرض سعر بكمية العيّنة. تُتفق شروط العيّنة مباشرة مع المورد — ولا توفّر المنصة حتى الآن مسار شراء منفصل للعيّنات.',
+      'faq.q3': 'كيف يعمل فحص المصنع؟',
+      'faq.a3': 'التوثيق عملية مسجّلة: تُقدّم الشركة بياناتها، وتُراجَع المستندات، ويزور مفتّش في بلد المنشأ الموقع، وتُكتب النتيجة على ملف المورد — نجاح، أو النقائص التي أخفقت.',
+      'faq.q4': 'ما شروط الدفع المتاحة ومن يحتفظ بالمال؟',
+      'faq.a4': 'يُتفق المشتري والمورد على الشروط في الطلب. وتُصدر المنصة تعليمات الدفع من الطلب وتُسجّل حالة الدفع عليه. ولا تحتفظ FactoryDepo بالأموال في حساب ضمان.',
+      'faq.q5': 'هل تشحنون إلى بلدي، ومن يرتّب الشحن؟',
+      'faq.a5': 'اذكر بلد الوصول في طلب عرض السعر وسيقدّم الموردون عروضهم على هذا الأساس. وبعد إنشاء الطلب تُتابَع شحنته عبر مراحل من تأكيد الطلب حتى التسليم.',
+      'faq.q6': 'ماذا تعني شارة التوثيق؟',
+      'faq.a6': 'تُبيّن مستوى التوثيق المسجّل على ملف المورد — ويعتبر الدليل المستوى 2 وما فوق موثّقًا. والصفوف المعلّمة بـ Demo هي بيانات أولية وليست عروضًا حيّة.',
+
+      'rail.stock': 'مخزون جاهز',
+      'rail.trust': 'لماذا نحن',
+      'rail.faq': 'الأسئلة الشائعة',
+
+      'foot.col.suppliers': 'للموردين',
+      'foot.l.post': 'انشر إعلانًا',
+      'foot.l.mylistings': 'إعلاناتي',
+      'foot.l.feed': 'تدفّق النشاط'
+    },
+    ru: {
+      'hero.eyebrow2': 'Промышленная B2B-площадка',
+      'hero.h1Lead': 'Промышленные материалы напрямую от',
+      'hero.h1Accent': 'проверенных заводов',
+      'hero.h1End': '.',
+      'hero.valueProp': 'Готовый склад, излишки и производство под заказ от размещённых поставщиков — документы, акт проверки и этапы отгрузки на одной платформе.',
+      'hero.ctaExplore': 'Смотреть готовый склад',
+      'hero.ctaPost': 'Разместить излишки',
+
+      'notice.demoTitle': 'Демо-каталог',
+      'notice.demoBody': ' — все показанные объявления являются демонстрационными данными, а не реальным предложением. По мере подключения поставщиков их заменят настоящие.',
+      'stats.lots': 'Активных лотов',
+      'stats.suppliers': 'Поставщики',
+      'stats.categories': 'Категории',
+      'stats.countries': 'Страны',
+      'stats.countriesTitle': 'Различные двухбуквенные коды стран в профилях поставщиков',
+      'stats.note': 'Значения читаются из API при загрузке страницы. Прочерк означает, что число не удалось получить.',
+
+      'trust.eyebrow': 'Почему покупатели начинают здесь',
+      'trust.h2': 'Создано для промышленных закупок',
+      'trust.sub': 'Четыре вещи, которые платформа делает сегодня: верификация, инспекция, зафиксированный статус оплаты и отслеживаемая отгрузка. Страница не обещает охвата, сроков ответа или сертификатов, которых у нас нет в записях.',
+      'trust.t1': 'Проверенные профили поставщиков',
+      'trust.b1': 'Регистрационные и экспортные документы проверяются, результат фиксируется в профиле поставщика.',
+      'trust.t2': 'Инспекция завода на месте',
+      'trust.b2': 'Инспектор выезжает на площадку и фотографирует линию до присвоения более высокого уровня верификации.',
+      'trust.t3': 'Оплата фиксируется в заказе',
+      'trust.b3': 'Платёжная инструкция формируется из заказа, результат записывается обратно в заказ. Деньги идут между покупателем и поставщиком — FactoryDepo не держит их в эскроу.',
+      'trust.t4': 'Этапы отгрузки',
+      'trust.b4': 'Заказ подтверждён, контроль качества, передача перевозчику, в пути, таможня, доставлено — каждый шаг с отметкой времени в заказе.',
+
+      'cat.eyebrow2': 'Каталог по категориям',
+      'cat.subA2': 'Числа ниже — из самого каталога, читаются одним запросом к',
+      'cat.subB2': ' — сначала самые крупные. Прочерк означает, что число не удалось получить.',
+      'cat.ctaAll2': 'Открыть каталог категорий →',
+
+      'surplus.eyebrow': 'Готовый склад',
+      'surplus.h2': 'Излишки и готовый склад',
+      'surplus.authA': 'Каждая карточка ниже — строка, возвращённая',
+      'surplus.authB': 'при загрузке страницы, сначала новые.',
+      'surplus.cta': 'Смотреть весь каталог →',
+      'surplus.typeNote': 'Метка типа на карточке — это собственный тип лота: излишки, сверхзапас, второй сорт, распродажа, контейнерная партия или обычный склад.',
+
+      'lt.stock': 'Склад',
+      'lt.surplus': 'Излишки',
+      'lt.overstock': 'Сверхзапас',
+      'lt.liquidation': 'Распродажа',
+      'lt.seconds': 'Второй сорт',
+      'lt.container': 'Контейнер',
+
+      'rfq.eyebrow': 'Запрос предложения',
+      'rfq.h2': 'Опубликуйте запрос и сравните реальные предложения',
+      'rfq.sub': 'Три шага без посредников: опишите потребность, размещённые поставщики присылают предложения, вы сравниваете их на платформе. Доска ниже читается из API в реальном времени.',
+      'rfq.s1t': 'Опишите потребность',
+      'rfq.s1b': 'Категория, материал, количество, единица, целевая цена и страна назначения.',
+      'rfq.s2t': 'Размещённые поставщики отвечают',
+      'rfq.s2b': 'Поставщики отвечают предложением; число предложений у запроса — это значение из API.',
+      'rfq.s3t': 'Сравните и закажите',
+      'rfq.s3b': 'Сравните предложения рядом, напишите поставщику и подтвердите заказ на платформе.',
+      'rfq.ctaPost': 'Разместить запрос',
+      'rfq.ctaBoard': 'Открыть доску запросов →',
+      'rfq.ctaSignin': 'Войдите, чтобы разместить',
+
+      'faq.eyebrow': 'До того как заказать',
+      'faq.h2': 'Вопросы покупателей',
+      'faq.sub': 'Короткие ответы о том, что решает покупку. Если функции ещё нет, ответ об этом говорит прямо.',
+      'faq.cta': 'Читать раздел помощи →',
+      'faq.q1': 'Каков минимальный объём заказа?',
+      'faq.a1': 'В каждом лоте указаны минимальный объём и единица, заданные поставщиком; они видны на карточке и на странице товара. Если минимума нет, поставщик его не задал.',
+      'faq.q2': 'Можно сначала заказать образец?',
+      'faq.a2': 'Спросите поставщика на странице товара или разместите запрос предложения с количеством образца. Условия образца согласуются напрямую с поставщиком — отдельной оплаты образцов на платформе пока нет.',
+      'faq.q3': 'Как проходит инспекция завода?',
+      'faq.a3': 'Верификация — это процесс с записью: компания подаёт данные, документы проверяются, инспектор выезжает на площадку, результат фиксируется в профиле поставщика — пройдено или выявленные несоответствия.',
+      'faq.q4': 'Какие условия оплаты и кто держит деньги?',
+      'faq.a4': 'Условия согласуют покупатель и поставщик в заказе. Платформа формирует платёжную инструкцию из заказа и фиксирует статус оплаты по нему. FactoryDepo не держит средства в эскроу.',
+      'faq.q5': 'Доставляете ли вы в мою страну и кто организует перевозку?',
+      'faq.a5': 'Укажите страну назначения в запросе предложения — поставщики учтут её в предложении. После оформления заказа его отгрузка отслеживается по этапам от подтверждения до доставки.',
+      'faq.q6': 'Что означает значок верификации?',
+      'faq.a6': 'Показывает уровень верификации, записанный в профиле поставщика — каталог считает проверенными уровень 2 и выше. Строки с меткой Demo — стартовые данные, а не живые предложения.',
+
+      'rail.stock': 'Готовый склад',
+      'rail.trust': 'Почему мы',
+      'rail.faq': 'Вопросы',
+
+      'foot.col.suppliers': 'Поставщикам',
+      'foot.l.post': 'Разместить лот',
+      'foot.l.mylistings': 'Мои лоты',
+      'foot.l.feed': 'Лента событий'
+    },
+    zh: {
+      'hero.eyebrow2': 'B2B 工业市场',
+      'hero.h1Lead': '工业材料直接采购自',
+      'hero.h1Accent': '已核验工厂',
+      'hero.h1End': '。',
+      'hero.valueProp': '来自在列供应商的现货、余料与定制生产——单据、验厂记录与物流节点集中在一个平台上。',
+      'hero.ctaExplore': '浏览现货',
+      'hero.ctaPost': '发布您的余料',
+
+      'notice.demoTitle': '演示目录',
+      'notice.demoBody': ' — 展示的所有商品均为演示数据，并非真实报价。随着真实供应商入驻将逐步替换。',
+      'stats.lots': '在架商品',
+      'stats.suppliers': '供应商',
+      'stats.categories': '分类',
+      'stats.countries': '国家/地区',
+      'stats.countriesTitle': '供应商档案中出现的不同两位国家代码数量',
+      'stats.note': '页面加载时从 API 读取。短横线表示该数字无法读取。',
+
+      'trust.eyebrow': '买家为何从这里开始',
+      'trust.h2': '为工业采购而建',
+      'trust.sub': '平台今天真正做的四件事：供应商核验、验厂、付款状态记录、物流跟踪。本页不承诺任何未经记录的覆盖范围、响应时长或认证。',
+      'trust.t1': '已核验的供应商档案',
+      'trust.b1': '审核注册与出口单据，清单核对结果记录在供应商档案中。',
+      'trust.t2': '当地工厂验厂',
+      'trust.b2': '在记录更高核验等级之前，检验员到场走访并拍摄生产线。',
+      'trust.t3': '付款记录在订单上',
+      'trust.b3': '付款指令由订单生成，结果回写到订单。资金在买方与供应商之间流转——FactoryDepo 不代持资金。',
+      'trust.t4': '物流节点',
+      'trust.b4': '订单确认、质检通过、交付承运、运输中、清关、已送达——每一步都在订单上带有时间戳。',
+
+      'cat.eyebrow2': '按分类浏览',
+      'cat.subA2': '以下数量来自目录自身，一次性从',
+      'cat.subB2': '读取 — 数量多的排在前。短横线表示无法读取。',
+      'cat.ctaAll2': '打开分类索引 →',
+
+      'surplus.eyebrow': '现货',
+      'surplus.h2': '余料与现货',
+      'surplus.authA': '以下每张卡片都来自',
+      'surplus.authB': '，页面加载时读取，最新的在前。',
+      'surplus.cta': '浏览完整目录 →',
+      'surplus.typeNote': '卡片上的类型标签就是该行自身的商品类型——余料、超储、次品、清仓、整柜或常规现货。',
+
+      'lt.stock': '现货',
+      'lt.surplus': '余料',
+      'lt.overstock': '超储',
+      'lt.liquidation': '清仓',
+      'lt.seconds': '次品',
+      'lt.container': '整柜',
+
+      'rfq.eyebrow': '询价',
+      'rfq.h2': '发布需求，比较真实报价',
+      'rfq.sub': '三步，无中间商：描述需求、在列供应商报价、在平台上比价。下方看板实时读取 API。',
+      'rfq.s1t': '描述需求',
+      'rfq.s1b': '分类、材质、数量、单位、目标价格与目的国。',
+      'rfq.s2t': '在列供应商报价',
+      'rfq.s2b': '供应商以报价回应；需求上显示的报价数就是 API 返回的数量。',
+      'rfq.s3t': '比价并下单',
+      'rfq.s3b': '并排比较报价、联系供应商，并在平台上确认订单。',
+      'rfq.ctaPost': '发布需求',
+      'rfq.ctaBoard': '打开需求看板 →',
+      'rfq.ctaSignin': '登录后发布',
+
+      'faq.eyebrow': '下单之前',
+      'faq.h2': '买家常问',
+      'faq.sub': '关于影响采购决策的问题，简短作答。若功能尚未上线，答案会直说。',
+      'faq.cta': '阅读帮助页面 →',
+      'faq.q1': '最小起订量是多少？',
+      'faq.a1': '每个商品都带有供应商设定的起订量与单位，并显示在卡片和商品页上。若未显示起订量，说明供应商未设置。',
+      'faq.q2': '可以先要样品吗？',
+      'faq.a2': '可在商品页向供应商提问，或按样品数量发布询价。样品条款与供应商直接商定——平台目前没有单独的样品购买流程。',
+      'faq.q3': '验厂是怎么进行的？',
+      'faq.a3': '核验是有记录的过程：企业提交资料、审核单据、当地检验员到场走访，结果写入供应商档案——通过，或列出未通过的项。',
+      'faq.q4': '有哪些付款条件？资金由谁保管？',
+      'faq.a4': '付款条件由买卖双方在订单上约定。平台根据订单生成付款指令，并把付款状态记录在订单上。FactoryDepo 不代管资金。',
+      'faq.q5': '能运到我的国家吗？运费由谁安排？',
+      'faq.a5': '在询价中写明目的国，供应商据此报价。下单后，货物按“订单确认→已送达”的节点跟踪。',
+      'faq.q6': '核验标识是什么意思？',
+      'faq.a6': '它显示供应商档案中记录的核验等级——目录将 2 级及以上视为已核验。标记为 Demo 的行是初始数据，不是真实报价。',
+
+      'rail.stock': '现货',
+      'rail.trust': '为何选择我们',
+      'rail.faq': '常见问题',
+
+      'foot.col.suppliers': '供应商专区',
+      'foot.l.post': '发布商品',
+      'foot.l.mylistings': '我的商品',
+      'foot.l.feed': '动态流'
+    },
+    es: {
+      'hero.eyebrow2': 'Mercado industrial B2B',
+      'hero.h1Lead': 'Compra materiales industriales directamente a',
+      'hero.h1Accent': 'fábricas verificadas',
+      'hero.h1End': '.',
+      'hero.valueProp': 'Stock disponible, lotes excedentes y producción a medida de proveedores listados — con documentos, acta de inspección e hitos de envío en una sola plataforma.',
+      'hero.ctaExplore': 'Explorar stock disponible',
+      'hero.ctaPost': 'Publicar tu excedente',
+
+      'notice.demoTitle': 'Catálogo de demostración',
+      'notice.demoBody': ' — todos los anuncios mostrados son datos de demostración, no ofertas reales. Se sustituirán por anuncios de proveedores reales.',
+      'stats.lots': 'Anuncios en vivo',
+      'stats.suppliers': 'Proveedores',
+      'stats.categories': 'Categorías',
+      'stats.countries': 'Países',
+      'stats.countriesTitle': 'Códigos de país de dos letras distintos en los perfiles de proveedor',
+      'stats.note': 'Se leen de la API al cargar la página. Un guion significa que el dato no se pudo leer.',
+
+      'trust.eyebrow': 'Por qué empiezan aquí los compradores',
+      'trust.h2': 'Hecho para la compra industrial',
+      'trust.sub': 'Cuatro cosas que esta plataforma hace hoy: verificación, inspección, estado de pago registrado y envío con seguimiento. Esta página no promete coberturas, tiempos de respuesta ni certificaciones que no tengamos registradas.',
+      'trust.t1': 'Perfiles de proveedor verificados',
+      'trust.b1': 'Se revisan los documentos de registro y exportación y el resultado de la lista de comprobación queda registrado en el perfil del proveedor.',
+      'trust.t2': 'Inspección de fábrica en origen',
+      'trust.b2': 'Un inspector visita las instalaciones y fotografía la línea antes de registrar un nivel de verificación superior.',
+      'trust.t3': 'Pago registrado en el pedido',
+      'trust.b3': 'Las instrucciones de pago se emiten desde el pedido y el resultado se escribe en él. Los fondos circulan entre comprador y proveedor — FactoryDepo no los retiene en depósito.',
+      'trust.t4': 'Hitos del envío',
+      'trust.b4': 'Pedido confirmado, control de calidad, entrega al transportista, tránsito, aduana, entregado — cada paso con marca de tiempo en el pedido.',
+
+      'cat.eyebrow2': 'Explorar por categoría',
+      'cat.subA2': 'Los recuentos de abajo son del propio catálogo, leídos en una sola consulta a',
+      'cat.subB2': ' — primero los de mayor volumen. Un guion significa que el recuento no se pudo leer.',
+      'cat.ctaAll2': 'Abrir el índice de categorías →',
+
+      'surplus.eyebrow': 'Stock disponible',
+      'surplus.h2': 'Excedentes y stock disponible',
+      'surplus.authA': 'Cada tarjeta de abajo es una fila devuelta por',
+      'surplus.authB': 'al cargar la página, lo más nuevo primero.',
+      'surplus.cta': 'Ver el catálogo completo →',
+      'surplus.typeNote': 'La etiqueta de tipo de cada tarjeta es el tipo de anuncio de la propia fila — excedente, sobrestock, segundas, liquidación, lote de contenedor o stock normal.',
+
+      'lt.stock': 'Stock',
+      'lt.surplus': 'Excedente',
+      'lt.overstock': 'Sobrestock',
+      'lt.liquidation': 'Liquidación',
+      'lt.seconds': 'Segundas',
+      'lt.container': 'Lote de contenedor',
+
+      'rfq.eyebrow': 'Solicitar cotización',
+      'rfq.h2': 'Publica lo que necesitas y compara ofertas reales',
+      'rfq.sub': 'Tres pasos, sin intermediarios: describe la necesidad, los proveedores listados cotizan y comparas las ofertas en la plataforma. El tablón de abajo se lee en vivo de la API.',
+      'rfq.s1t': 'Describe la necesidad',
+      'rfq.s1b': 'Categoría, material, cantidad, unidad, precio objetivo y país de destino.',
+      'rfq.s2t': 'Los proveedores listados cotizan',
+      'rfq.s2b': 'Los proveedores responden con una oferta; el número de ofertas que muestra una solicitud es el de la propia API.',
+      'rfq.s3t': 'Compara y pide',
+      'rfq.s3b': 'Compara ofertas en paralelo, escribe al proveedor y confirma el pedido en la plataforma.',
+      'rfq.ctaPost': 'Publicar una solicitud',
+      'rfq.ctaBoard': 'Abrir el tablón de solicitudes →',
+      'rfq.ctaSignin': 'Inicia sesión para publicar',
+
+      'faq.eyebrow': 'Antes de comprometerte',
+      'faq.h2': 'Preguntas de compradores',
+      'faq.sub': 'Respuestas breves sobre lo que decide una compra. Si una función aún no existe, la respuesta lo dice.',
+      'faq.cta': 'Leer las páginas de ayuda →',
+      'faq.q1': '¿Cuál es el pedido mínimo?',
+      'faq.a1': 'Cada anuncio incluye el pedido mínimo y la unidad que fijó su proveedor; ambos aparecen en la tarjeta y en la página del producto. Si un anuncio no muestra mínimo, el proveedor no lo fijó.',
+      'faq.q2': '¿Puedo pedir una muestra antes?',
+      'faq.a2': 'Pregunta al proveedor desde la página del producto o publica una solicitud de cotización con la cantidad de muestra. Las condiciones de la muestra se acuerdan directamente con el proveedor — la plataforma aún no tiene un proceso de compra de muestras.',
+      'faq.q3': '¿Cómo funciona la inspección de fábrica?',
+      'faq.a3': 'La verificación es un proceso registrado: la empresa presenta sus datos, se revisan los documentos, un inspector visita las instalaciones y el resultado se escribe en el perfil del proveedor — aprobado o los puntos fallidos.',
+      'faq.q4': '¿Qué condiciones de pago hay y quién custodia el dinero?',
+      'faq.a4': 'Las condiciones se acuerdan entre comprador y proveedor en el pedido. La plataforma emite la instrucción de pago desde el pedido y registra el estado del pago en él. FactoryDepo no custodia los fondos en depósito.',
+      'faq.q5': '¿Enviáis a mi país y quién organiza el flete?',
+      'faq.a5': 'Indica el país de destino en tu solicitud de cotización y los proveedores cotizarán en consecuencia. Una vez hecho el pedido, su envío se sigue por hitos desde “pedido confirmado” hasta “entregado”.',
+      'faq.q6': '¿Qué significa la insignia de verificación?',
+      'faq.a6': 'Indica el nivel de verificación registrado en el perfil del proveedor — el directorio considera verificado el nivel 2 y superior. Las filas marcadas Demo son datos iniciales, no ofertas reales.',
+
+      'rail.stock': 'Stock disponible',
+      'rail.trust': 'Por qué nosotros',
+      'rail.faq': 'FAQ',
+
+      'foot.col.suppliers': 'Para proveedores',
+      'foot.l.post': 'Publicar un anuncio',
+      'foot.l.mylistings': 'Mis anuncios',
+      'foot.l.feed': 'Actividad reciente'
+    }
+  };
+  /* Merge: one entry per key per language, the newer copy wins. */
+  (function () {
+    for (var code in I18N_ADD) {
+      if (!Object.prototype.hasOwnProperty.call(I18N_ADD, code)) continue;
+      if (!Object.prototype.hasOwnProperty.call(I18N, code)) I18N[code] = {};
+      var add = I18N_ADD[code];
+      for (var k in add) {
+        if (Object.prototype.hasOwnProperty.call(add, k)) I18N[code][k] = add[k];
+      }
+    }
+  })();
+
   function isLangCode(v) {
     return typeof v === 'string' && Object.prototype.hasOwnProperty.call(LANG_BY_CODE, v);
   }
@@ -2177,7 +2839,10 @@ a.skip:focus{left:0}
 
   /* ===================================================================
      2. DATA LAYER — every number on the page originates here.
-     Same-origin only (the API server serves this file at / and /api/*).
+     Same origin first (in production the API server serves this file at / and
+     /api/*), then the local preview origin, then the legacy dev port — see
+     API_CANDIDATES below. No figure is ever invented: an unreachable API leaves
+     the em dash that the markup already shows.
      =================================================================== */
 
   /* ---------- small helpers ---------- */
@@ -2266,6 +2931,8 @@ a.skip:focus{left:0}
     return '<img src="' + esc(img) + '" alt="' + esc(p.name) + '" loading="lazy" class="' + esc(cls || '') + '">';
   }
   function productCard(p) {
+    /* the row's own listing type, translated; an unknown type shows no tag */
+    var lt = p.listingType ? T('lt.' + p.listingType) : '';
     var moq = p.moq != null
       ? esc(T('card.moq', { n: num(p.moq), unit: p.unit || '' }))
       : esc(T('card.moqNone'));
@@ -2277,7 +2944,8 @@ a.skip:focus{left:0}
       '<div class="bd">' +
         '<h3><a href="/products/' + esc(p.id) + '">' + esc(p.name) + '</a></h3>' +
         '<div class="meta"><b>' + esc(p.supplierName || T('card.unknownSupplier')) + '</b></div>' +
-        '<div class="meta">' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') + '</div>' +
+        '<div class="meta">' + esc(p.category || '') + ' · ' + esc(p.originCountry || '') +
+          (lt ? ' · <span class="lt">' + esc(lt) + '</span>' : '') + '</div>' +
         '<div class="meta">' + moq + '</div>' +
         '<div class="between" style="margin-top:auto;padding-top:5px">' +
           '<span class="price">' + money(p) + '<span> / ' + esc(p.unit || '') + '</span></span>' +
@@ -2301,7 +2969,14 @@ a.skip:focus{left:0}
     }, true);
   }
 
-  var API_CANDIDATES = ['', 'http://localhost:9091'];
+  /* Origin chain, tried in order. '' is the production origin (the API server
+     serves this file at / and /api/* on the same host); http://localhost:9095 is
+     this project's own API during local preview (the page is then opened from a
+     static server, so the same-origin attempt 404s); 9091 is the older local port
+     kept last so an existing dev machine still finds it. A candidate that fails
+     is simply skipped — the next one is tried, and if all fail the page prints an
+     em dash instead of a number. */
+  var API_CANDIDATES = ['', 'http://localhost:9095', 'http://localhost:9091'];
   function apiJson(path) {
     var i = 0;
     function attempt() {
@@ -2336,33 +3011,37 @@ a.skip:focus{left:0}
   /* ---------- render state ----------
      Everything the renderers need is kept here so a language switch can redraw
      the generated copy without refetching anything. */
-  var counters = { products: null, suppliers: null, verified: null, rfqs: null, anyLoaded: false };
+  var counters = { products: null, suppliers: null, verified: null, rfqs: null, categories: null, countries: null, anyLoaded: false };
   var gridState = { mode: 'loading', head: [], tail: [] };
   var heroState = { mode: 'loading', item: null };
   var supState = { mode: 'loading', items: [] };
   var rfqState = { mode: 'loading', items: [], total: null };
-  var catState = { counts: {} };
+  var catState = { mode: 'loading', items: [], counts: {} };
+  var CAT_KEY = {}, CAT_IMG = {};
 
   /* ---------- renderers ---------- */
+  /* The hero stats strip. Four figures, each either the API's own value or an
+     em dash — this function has no third state and cannot invent one. */
   function renderCounters() {
     if (!countersEl || !counters.anyLoaded) return;
     function v(x) { return x == null ? '—' : num(x); }
+    function cell(value, key, titleKey) {
+      return '<span class="stat"><span class="v">' + v(value) + '</span>' +
+        '<span class="l"' + (titleKey && T(titleKey) ? ' title="' + esc(T(titleKey)) + '"' : '') + '>' +
+        esc(T(key)) + '</span></span>';
+    }
     countersEl.innerHTML =
-      '<span><b>' + v(counters.products) + '</b> ' + esc(tn(counters.products, 'counters.lots')) + '</span>' +
-      '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.suppliers) + '</b> ' + esc(tn(counters.suppliers, 'counters.suppliers')) + '</span>' +
-      '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.verified) + '</b> ' + esc(tn(counters.verified, 'counters.verified')) + '</span>' +
-      '<span class="sep" aria-hidden="true"></span>' +
-      '<span><b>' + v(counters.rfqs) + '</b> ' + esc(tn(counters.rfqs, 'counters.requests')) + '</span>' +
-      '<span class="muted">' + esc(counters.products == null ? T('counters.unavailable') : T('counters.source')) + '</span>';
+      cell(counters.products, 'stats.lots') +
+      cell(counters.suppliers, 'stats.suppliers') +
+      cell(counters.categories, 'stats.categories') +
+      cell(counters.countries, 'stats.countries', 'stats.countriesTitle');
   }
 
   function renderGrids() {
     if (gridState.mode === 'loading') return; /* skeletons stay */
     if (gridState.mode === 'empty') {
       var none = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.emptyTitle')) + '</b>' +
-        esc(T('list.emptyBody')) + ' <a href="/products">' + esc(T('list.emptyLink')) + '</a>.</div>';
+        esc(T('list.emptyBody')) + ' <a href="/explore">' + esc(T('list.emptyLink')) + '</a>.</div>';
       if (featuredGrid) featuredGrid.innerHTML = none;
       if (moreGrid) moreGrid.innerHTML = none;
       return;
@@ -2370,7 +3049,7 @@ a.skip:focus{left:0}
     if (gridState.mode === 'error') {
       if (featuredGrid) {
         featuredGrid.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.errorTitle')) + '</b>' +
-          esc(T('list.errorBody')) + ' <a href="/products">' + esc(T('list.errorLink')) + '</a>.</div>';
+          esc(T('list.errorBody')) + ' <a href="/explore">' + esc(T('list.errorLink')) + '</a>.</div>';
       }
       if (moreGrid) moreGrid.innerHTML = '';
       return;
@@ -2380,7 +3059,7 @@ a.skip:focus{left:0}
       moreGrid.innerHTML = gridState.tail.length
         ? gridState.tail.map(productCard).join('')
         : '<div class="empty" style="grid-column:1/-1"><b>' + esc(T('list.tailTitle')) + '</b>' +
-          esc(T('list.tailBody')) + ' <a href="/products">' + esc(T('list.tailLink')) + '</a>.</div>';
+          esc(T('list.tailBody')) + ' <a href="/explore">' + esc(T('list.tailLink')) + '</a>.</div>';
     }
   }
 
@@ -2462,12 +3141,12 @@ a.skip:focus{left:0}
     if (!rfqList || rfqState.mode === 'loading') return;
     if (rfqState.mode === 'error') {
       rfqList.innerHTML = '<div class="empty"><b>' + esc(T('req.errorTitle')) + '</b>' + esc(T('req.errorBody')) +
-        ' <a href="/rfq">' + esc(T('req.errorLink')) + '</a>.</div>';
+        ' <a href="/rfqs">' + esc(T('req.errorLink')) + '</a>.</div>';
       return;
     }
     if (!rfqState.items.length) {
       rfqList.innerHTML = '<div class="empty"><b>' + esc(T('req.emptyTitle')) + '</b>' + esc(T('req.emptyBody')) +
-        ' <a href="/rfq">' + esc(T('req.emptyLink')) + '</a>.</div>';
+        ' <a href="/rfqs">' + esc(T('req.emptyLink')) + '</a>.</div>';
       return;
     }
     rfqList.innerHTML = rfqState.items.slice(0, 5).map(function (r) {
@@ -2482,18 +3161,22 @@ a.skip:focus{left:0}
         '<span class="t"><b>' + esc(r.title) + '</b><span>' + esc(meta) +
           (dl ? ' · ' + esc(T('req.deadline', { d: dl })) : '') + '</span></span>' +
         st +
-        '<a class="btn btn-sm btn-grey" href="/rfq/' + esc(r.id) + '">' + esc(T('card.view')) + '</a>' +
+        '<a class="btn btn-sm btn-grey" href="/rfqs/' + esc(r.id) + '">' + esc(T('card.view')) + '</a>' +
       '</div>';
     }).join('') +
     (rfqState.total != null && rfqState.total > 5
       ? '<div class="muted" style="padding-top:9px">' + esc(T('req.showMoreLead')) + ' ' + num(rfqState.total) +
-        ' — <a href="/rfq">' + esc(T('req.showMoreLink')) + '</a>.</div>'
+        ' — <a href="/rfqs">' + esc(T('req.showMoreLink')) + '</a>.</div>'
       : '');
   }
 
   /* Category tiles: the displayed name is translated, but the category VALUE
-     sent to /api/products?category=… stays the catalogue's English name. */
-  var CATEGORIES = [
+     sent to /explore?category=… stays the catalogue's English name.
+     This list is the FALLBACK: the tiles are normally built from
+     GET /api/products/categories, which returns the catalogue's own grouping
+     and counts. The list below is used only when that request fails (each name
+     then gets its own count probe, and an unreadable count stays an em dash). */
+  var FALLBACK_CATS = [
     ['Metals & Minerals', 'cat.metals', '/assets/products/copper-cathode.jpg'],
     ['Steel', 'cat.steel', '/assets/products/hot-rolled-coil.jpg'],
     ['Chemicals', 'cat.chemicals', '/assets/products/caustic-soda.jpg'],
@@ -2520,14 +3203,37 @@ a.skip:focus{left:0}
     ['Aerospace', 'cat.aerospace', '/assets/products/cat-aerospace.jpg'],
     ['Hardware & Fasteners', 'cat.hardware', '/assets/products/cat-fasteners.jpg']
   ];
+  /* name → translation key / tile photo, for the fallback list above */
+  FALLBACK_CATS.forEach(function (c) { CAT_KEY[c[0]] = c[1]; CAT_IMG[c[0]] = c[2]; });
   function renderCats() {
     if (!catGrid) return;
-    catGrid.innerHTML = CATEGORIES.map(function (c, i) {
-      var href = '/products?category=' + encodeURIComponent(c[0]);
-      var cnt = catState.counts[i];
+    if (catState.mode === 'loading') return; /* skeletons stay until the index is read */
+    var rows;
+    if (catState.items.length) {
+      /* live grouping + live counts from GET /api/products/categories */
+      rows = catState.items.map(function (c) {
+        return {
+          name: c.category,
+          key: CAT_KEY[c.category] || null,
+          img: CAT_IMG[c.category] || null,
+          count: typeof c.count === 'number' ? c.count : null
+        };
+      });
+    } else {
+      /* fallback: the categories this page already knew about, counts probed one
+         by one — a failed probe leaves the em dash in place */
+      rows = FALLBACK_CATS.map(function (c) {
+        var n = catState.counts[c[0]];
+        return { name: c[0], key: c[1], img: c[2], count: typeof n === 'number' ? n : null };
+      });
+    }
+    catGrid.innerHTML = rows.map(function (r) {
+      var href = '/explore?category=' + encodeURIComponent(r.name);
+      var label = r.key ? T(r.key) : r.name;
+      if (!label) label = r.name;
       return '<a class="cat" href="' + esc(href) + '">' +
-        '<span class="art"><img src="' + esc(c[2]) + '" alt="" aria-hidden="true" loading="lazy"></span>' +
-        '<span class="nm"><b>' + esc(T(c[1])) + '</b><span>' + (cnt == null ? '—' : esc(tn(cnt, 'unit.lots'))) + '</span></span>' +
+        (r.img ? '<span class="art"><img src="' + esc(r.img) + '" alt="" aria-hidden="true"></span>' : '<span class="art"></span>') +
+        '<span class="nm"><b>' + esc(label) + '</b><span>' + (r.count == null ? '\u2014' : esc(num(r.count) + ' ' + tn(r.count, 'unit.lots'))) + '</span></span>' +
       '</a>';
     }).join('');
   }
@@ -2637,6 +3343,18 @@ a.skip:focus{left:0}
       counters.suppliers = d && typeof d.total === 'number' ? d.total : null;
       var verified = items.filter(function (s) { return Number(s.verifiedLevel) >= 2; }).length;
       counters.verified = counters.suppliers == null ? null : verified;
+      /* Countries: counted only when this response is the complete list
+         (items.length === total). Country values that are not two-letter codes
+         (the seed data also carries a literal "Global") are not counted as a
+         country, and a partial list yields null → the strip shows a dash. */
+      if (counters.suppliers != null && items.length === counters.suppliers) {
+        var seen = {};
+        items.forEach(function (s) {
+          var cc = String((s && s.country) || '').trim().toUpperCase();
+          if (/^[A-Z]{2}$/.test(cc)) seen[cc] = 1;
+        });
+        counters.countries = Object.keys(seen).length;
+      }
       counters.anyLoaded = true;
       supState.mode = 'ok';
       supState.items = items;
@@ -2669,17 +3387,38 @@ a.skip:focus{left:0}
       renderRfqs();
     });
 
-  /* ---------- 4. categories, each with its own live count ---------- */
-  CATEGORIES.forEach(function (c, i) {
-    apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
-      .then(function (d) {
-        if (d && typeof d.total === 'number') {
-          catState.counts[i] = d.total;
-          renderCats();
-        }
-      })
-      .catch(function () { /* leave the em dash — never guess a count */ });
-  });
+  /* ---------- 4. category index: the catalogue's own grouping + counts ----------
+     One request. If it fails, the known category list is probed one name at a
+     time and any count that still cannot be read stays an em dash. */
+  apiJson('/api/products/categories')
+    .then(function (d) {
+      var items = (d && d.items) || [];
+      if (!items.length) throw new Error('empty');
+      catState.mode = 'ok';
+      catState.items = items;
+      counters.categories = items.length;
+      counters.anyLoaded = true;
+      renderCats();
+      renderCounters();
+    })
+    .catch(function () {
+      catState.mode = 'error';
+      catState.items = [];
+      counters.categories = null;
+      counters.anyLoaded = true;
+      renderCats();
+      renderCounters();
+      FALLBACK_CATS.forEach(function (c) {
+        apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
+          .then(function (d) {
+            if (d && typeof d.total === 'number') {
+              catState.counts[c[0]] = d.total;
+              renderCats();
+            }
+          })
+          .catch(function () { /* leave the em dash — never guess a count */ });
+      });
+    });
 
   /* ---------- 5. search → the marketplace search route ---------- */
   var form = document.getElementById('searchForm');
@@ -2688,7 +3427,7 @@ a.skip:focus{left:0}
     form.addEventListener('submit', function (e) {
       if (e && typeof e.preventDefault === 'function') e.preventDefault();
       var v = (input.value || '').trim();
-      window.location.href = '/products' + (v ? '?q=' + encodeURIComponent(v) : '');
+      window.location.href = '/explore' + (v ? '?q=' + encodeURIComponent(v) : '');
     });
   }
 
