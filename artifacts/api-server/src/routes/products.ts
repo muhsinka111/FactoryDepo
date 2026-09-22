@@ -78,7 +78,8 @@ productsRouter.get('/', async (req, res) => {
   if (!parsed.success) {
     throw new HttpError(400, { error: 'validation_error', details: parsed.error.message });
   }
-  const { q, category, listingType, country, minPrice, maxPrice, hasImage, mine, page, limit } = parsed.data;
+  const { q, category, listingType, country, minPrice, maxPrice, supplierId, hasImage, mine, page, limit } =
+    parsed.data;
 
   // `mine` is validated by the same schema as everything else; it arrives in
   // parsed.data, not as a raw string.
@@ -114,6 +115,9 @@ productsRouter.get('/', async (req, res) => {
   if (category) conds.push(eq(products.category, category));
   if (listingType) conds.push(eq(products.listingType, listingType));
   if (country) conds.push(eq(products.originCountry, country));
+  // Public per-supplier scope. `mine` wins when both are present (a supplier
+  // asking for its own listings must never be widened by a body-supplied id).
+  if (supplierId != null && scopedSupplierId == null) conds.push(eq(products.supplierId, supplierId));
   if (minPrice != null) conds.push(gte(products.price, String(minPrice)));
   if (maxPrice != null) conds.push(lte(products.price, String(maxPrice)));
   if (hasImage === 1) conds.push(sql`${products.imageKey} IS NOT NULL`);

@@ -91,6 +91,11 @@ export const zProductListQuery = z.object({
   country: z.string().max(60).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  // supplierId scopes the list to one supplier's own listings (public: the
+  // "more from this supplier" rail on a product page, and the supplier store
+  // page). Unlike `mine` it needs no token — a supplier's published listings
+  // are public information.
+  supplierId: z.coerce.number().int().positive().optional(),
   hasImage: z.coerce.number().int().min(0).max(1).optional(),
   // mine=1 scopes the list to the caller's own listings (supplier dashboard).
   // Requires auth; ignored for anonymous callers, who get the public catalogue.

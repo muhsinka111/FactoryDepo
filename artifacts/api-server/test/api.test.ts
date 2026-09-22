@@ -142,6 +142,41 @@ test('?mine=1 scopes listings and requires a token', { skip }, async () => {
   assert.equal((asBuyer.body as { total: number }).total, 0, 'a buyer must not see the catalogue under "mine"');
 });
 
+test('?supplierId= scopes the public catalogue to one supplier', { skip }, async () => {
+  const supplier = await register('supplier', `sp${uniq()}`);
+  const created = await call('POST', '/api/products', {
+    name: `IT supplier-scope probe ${uniq()}`,
+    category: 'Machinery',
+    description: 'created by integration test',
+    price: 42,
+    currency: 'USD',
+    unit: 'Set',
+    moq: 1,
+    quantityAvailable: 3,
+    originCountry: 'Türkiye',
+  }, supplier.token);
+  assert.equal(created.status, 201, `product create failed: ${created.status} ${created.text}`);
+  const created2 = created.body as { id: number; supplierId: number };
+
+  // The filter is public: listing a supplier's published stock needs no token.
+  const scoped = await call('GET', `/api/products?supplierId=${created2.supplierId}&limit=100`);
+  assert.equal(scoped.status, 200, `public supplierId filter failed: ${scoped.status} ${scoped.text}`);
+  const items = (scoped.body as { items: { id: number; supplierId: number }[] }).items;
+  assert.ok(items.length > 0, 'the supplier we just listed under must have at least one listing');
+  assert.ok(
+    items.every((p) => p.supplierId === created2.supplierId),
+    'every row must belong to the requested supplier',
+  );
+  assert.ok(items.some((p) => p.id === created2.id), 'the new listing must be in its own supplier scope');
+
+  // A non-numeric id is a validation error, not a silent full-catalogue read.
+  const bad = await call('GET', '/api/products?supplierId=abc');
+  assert.equal(bad.status, 400, 'an invalid supplierId must be rejected');
+
+  const cleanup = await call('DELETE', `/api/products/${created2.id}`, undefined, supplier.token);
+  assert.ok(cleanup.status === 204 || cleanup.status === 200, `cleanup failed: ${cleanup.status}`);
+});
+
 test('a supplier cannot edit or delete another supplier\'s listing', { skip }, async () => {
   const a = await register('supplier', `a${uniq()}`);
   const b = await register('supplier', `b${uniq()}`);
