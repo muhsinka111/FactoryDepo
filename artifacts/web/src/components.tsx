@@ -17,7 +17,7 @@ import { LANGUAGES, useI18n, isLangCode, statusLabel, type DictKey, type LangCod
 export type NavKey =
   | 'feed' | 'explore' | 'categories' | 'sell' | 'offers-buyer' | 'rfqs' | 'orders' | 'shipments'
   | 'messages' | 'saved' | 'notifications' | 'help' | 'profile'
-  | 'listings' | 'post' | 'offers-sup' | 'rfq-opps' | 'verification'
+  | 'listings' | 'post' | 'shop' | 'offers-sup' | 'rfq-opps' | 'verification'
   | 'overview' | 'admin-suppliers' | 'admin-verify' | 'admin-listings'
   | 'admin-rfqs' | 'admin-payments' | 'sources' | 'growth' | 'features' | 'suppliers';
 
@@ -50,6 +50,7 @@ export const NAV_BUYER: NavItem[] = [
 
 export const NAV_SUPPLIER: NavItem[] = [
   { key: 'listings', icon: '📦', label: 'nav.listings', path: '/supplier/listings' },
+  { key: 'shop', icon: '🏪', label: 'nav.shop', path: '/supplier/shop' },
   { key: 'post', icon: '➕', label: 'nav.post', path: '/supplier/post' },
   { key: 'categories', icon: '🗂️', label: 'nav.categories', path: '/categories' },
   { key: 'offers-sup', icon: '🏷️', label: 'nav.offersSup', path: '/supplier/offers' },

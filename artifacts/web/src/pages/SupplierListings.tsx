@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import {
   useProducts,
+  useProduct,
   useDeleteProduct,
   useMe,
   useDashboardStats,
@@ -44,9 +45,18 @@ import { useI18n } from '../i18n';
  * Every filter, the sort and the pager run in memory over the caller's own
  * stock, which the page loads in one request (`limit=100`, the API's cap).
  *
- * Edit reuses the Post stock form in an inline modal: the row being edited is
- * already in memory from this very list, so there is no second fetch and no
- * route change — the form itself (SupplierPost's ListingForm) is shared.
+ * Edit reuses the Post stock form in an inline modal (SupplierPost's
+ * ListingForm): price, currency, MOQ, available quantity, unit, status, stock
+ * type, location, lead time and description are all editable there, together
+ * with the listing's photo gallery (add / remove). The modal also pulls the
+ * row's DETAIL record, because `media` and `pulledReason` are only returned by
+ * GET /api/products/:id — the list route carries neither.
+ *
+ * A listing the desk pulled is marked as pulled, with the desk's own reason,
+ * and its Edit control is DISABLED with the honest sentence explaining why:
+ * the API refuses a seller's edit of a pulled listing with 409
+ * `listing_pulled`, so offering the form would only produce a mystery failure.
+ * Its delete and its photos still work — those routes are not moderated.
  *
  * Honesty rules applied here
  *  • `total` is the number the API reports for the query, never the page length.
@@ -73,7 +83,8 @@ const PAGE_SIZE = 20;
 const LOAD_LIMIT = 100;
 
 type SortKey = 'new' | 'old' | 'price_desc' | 'price_asc' | 'stock';
-type StatusKey = 'all' | 'active' | 'sold_out';
+/** `pulled` is the moderation state, not the listing's own status. */
+type StatusKey = 'all' | 'active' | 'sold_out' | 'pulled';
 
 /**
  * Deep-linked status filter — `/supplier/listings?status=sold_out` is the
@@ -82,7 +93,17 @@ type StatusKey = 'all' | 'active' | 'sold_out';
  */
 function statusFromUrl(): StatusKey {
   const raw = new URLSearchParams(window.location.search).get('status');
-  return raw === 'active' || raw === 'sold_out' ? raw : 'all';
+  return raw === 'active' || raw === 'sold_out' || raw === 'pulled' ? raw : 'all';
+}
+
+/** Set when the wizard could not attach every photo to a newly created lot. */
+function noticeFromUrl(): boolean {
+  return new URLSearchParams(window.location.search).get('notice') === 'photos';
+}
+
+/** A listing the desk pulled: frozen for its seller, visible to its seller. */
+function isPulled(p: Product): boolean {
+  return p.moderationStatus === 'pulled';
 }
 
 function money(currency: string, amount: number): string {
@@ -122,18 +143,20 @@ function errorText(e: unknown, fallback: string): string {
 /** Exports exactly the rows handed in — no hidden columns, no recomputed values. */
 function exportRowsCsv(rows: Product[]): void {
   const head = [
-    'id', 'name', 'category', 'listingType', 'status', 'price', 'currency', 'unit',
-    'moq', 'quantityAvailable', 'stockValue', 'originCountry', 'purityGrade',
-    'dataSource', 'createdAt',
+    'id', 'name', 'category', 'listingType', 'status', 'moderationStatus', 'price',
+    'currency', 'unit', 'moq', 'quantityAvailable', 'stockValue', 'originCountry',
+    'location', 'leadTimeDays', 'purityGrade', 'dataSource', 'createdAt',
   ];
   const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const lines = [head.join(',')];
   for (const p of rows) {
     lines.push(
       [
-        p.id, p.name, p.category, p.listingType, p.status, p.price, p.currency, p.unit,
-        p.moq, p.quantityAvailable, (p.price * p.quantityAvailable).toFixed(2),
-        p.originCountry, p.purityGrade ?? '', p.dataSource, p.createdAt,
+        p.id, p.name, p.category, p.listingType, p.status, p.moderationStatus ?? 'visible',
+        p.price, p.currency, p.unit, p.moq, p.quantityAvailable,
+        (p.price * p.quantityAvailable).toFixed(2), p.originCountry,
+        p.location ?? '', p.leadTimeDays ?? '', p.purityGrade ?? '',
+        p.dataSource, p.createdAt,
       ].map(cell).join(','),
     );
   }
@@ -203,6 +226,31 @@ function DeleteModal({
   );
 }
 
+/**
+ * What the desk recorded about a pulled listing. `pulledReason` / `pulledAt`
+ * come from the DETAIL route only (the list route strips them for everyone),
+ * so this reads the row's own record — nothing here is inferred, and a missing
+ * reason is simply not shown.
+ */
+function PulledNote({ id }: { id: number }) {
+  const { t, locale } = useI18n();
+  const detail = useProduct(id);
+  const reason = detail.data?.pulledReason ?? null;
+  const at = detail.data?.pulledAt ?? null;
+  return (
+    <>
+      <span className="pullnote">⚠ {t('listings.pulledLocked')}</span>
+      {reason ? (
+        <span className="pullreason">{t('listings.pulledReason')}: {reason}</span>
+      ) : null}
+      {at ? (
+        <span className="pullreason">{t('listings.pulledAt', { date: shortDate(at, locale) })}</span>
+      ) : null}
+      <span className="pullreason">{t('listings.pulledContact')}</span>
+    </>
+  );
+}
+
 /** Edit modal — the shared Post stock form, prefilled with this row. */
 function EditModal({
   product,
@@ -214,6 +262,10 @@ function EditModal({
   onSaved: () => void;
 }) {
   const { t } = useI18n();
+  // The list record carries no gallery; the detail record does (owner/admin).
+  const detail = useProduct(product.id);
+  const live = detail.data ?? product;
+  const pulled = isPulled(product);
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" style={{ width: 'min(720px,100%)' }} onClick={(e) => e.stopPropagation()}>
@@ -222,7 +274,22 @@ function EditModal({
           <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
-          <ListingForm product={product} onCancel={onClose} onSaved={onSaved} />
+          {pulled ? (
+            // Belt and braces: the Edit button is disabled for a pulled row, and
+            // the form is refused here too rather than letting the seller run into
+            // the API's 409 listing_pulled.
+            <div className="pullbar">
+              <span className="ic">⚠</span>
+              <span>
+                {t('listings.pulledLocked')} {t('listings.pulledContact')}
+              </span>
+            </div>
+          ) : (
+            <>
+              <p className="hint" style={{ marginTop: 0 }}>{t('listings.editSub')}</p>
+              <ListingForm product={live} onCancel={onClose} onSaved={onSaved} />
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -243,7 +310,10 @@ export default function SupplierListings() {
   const [sort, setSort] = useState<SortKey>('new');
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState<Product | null>(null);
-  const [notice, setNotice] = useState('');
+  // The wizard sends the seller here with ?notice=photos when a newly created
+  // listing could not take every photo.
+  const [notice, setNotice] = useState(() =>
+    noticeFromUrl() ? t('listings.photoAttachFailedNotice') : '');
 
   /** The seller's whole stock in one request; every control below is in-memory. */
   const res = useProducts({ mine: 1, limit: LOAD_LIMIT }, { enabled: ready });
@@ -255,7 +325,10 @@ export default function SupplierListings() {
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const filtered = items.filter((p) => {
-      if (status !== 'all' && p.status !== status) return false;
+      // `pulled` filters the moderation state; the other values filter the
+      // listing's own status. Both are real API fields, never derived here.
+      if (status === 'pulled' && !isPulled(p)) return false;
+      if (status !== 'all' && status !== 'pulled' && p.status !== status) return false;
       if (listingType && p.listingType !== listingType) return false;
       if (needle) {
         const hay = `${p.name} ${p.category}`.toLowerCase();
@@ -313,6 +386,7 @@ export default function SupplierListings() {
   );
 
   const soldOut = useMemo(() => items.filter((p) => p.status === 'sold_out').length, [items]);
+  const pulledCount = useMemo(() => items.filter(isPulled).length, [items]);
   const lowStock = useMemo(
     () => items.filter((p) => p.quantityAvailable > 0 && p.quantityAvailable <= p.moq * 2).length,
     [items],
@@ -443,6 +517,14 @@ export default function SupplierListings() {
                 // kit styles `.attn a` (an anchor), and the filter is in the URL.
                 href: '/supplier/listings?status=sold_out',
               },
+              {
+                // A pulled listing is not the seller's mistake to guess at:
+                // the row itself carries the desk's reason (see PulledNote).
+                icon: '🚫',
+                label: t('listings.pulledCount'),
+                count: pulledCount,
+                href: '/supplier/listings?status=pulled',
+              },
             ]}
           />
           {lowStock > 0 && (
@@ -505,6 +587,7 @@ export default function SupplierListings() {
             { value: 'all', label: t('rfq.statusAll') },
             { value: 'active', label: t('status.active') },
             { value: 'sold_out', label: t('status.sold_out') },
+            { value: 'pulled', label: t('listings.pulled') },
           ]}
         />
         <ToolSelect
@@ -594,8 +677,9 @@ export default function SupplierListings() {
                 {pageRows.map((p) => {
                   const low = p.quantityAvailable > 0 && p.quantityAvailable <= p.moq * 2;
                   const days = daysSince(p.createdAt);
+                  const pulled = isPulled(p);
                   return (
-                    <tr key={p.id}>
+                    <tr key={p.id} className={pulled ? 'pullrow' : undefined}>
                       <td>
                         <div className="row" style={{ alignItems: 'flex-start', gap: 9 }}>
                           <span className="thumb">
@@ -606,13 +690,18 @@ export default function SupplierListings() {
                               <Link href={`/products/${p.id}`} className="cellmain">{p.name}</Link>
                               {p.dataSource === 'demo' && <DemoTag />}
                               {p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
+                              {pulled ? (
+                                <span className="pill pullpill">🚫 {t('listings.pulled')}</span>
+                              ) : null}
                             </div>
                             <span className="cellsub">
                               {t('listings.lotRef', { id: p.id })}
                               {p.originCountry ? ` · ${p.originCountry}` : ''}
+                              {p.location ? ` · ${p.location}` : ''}
                               {p.purityGrade ? ` · ${p.purityGrade}` : ''}
                               {p.imageKey ? '' : ` · ${t('listings.noPhotoInline')}`}
                             </span>
+                            {pulled ? <PulledNote id={p.id} /> : null}
                           </div>
                         </div>
                       </td>
@@ -646,9 +735,15 @@ export default function SupplierListings() {
                       </td>
                       <td className="tight">
                         <div className="rowact">
+                          {/* Disabled on purpose for a pulled listing: its seller's
+                              PATCH is refused with 409 listing_pulled, so the form
+                              must not be offered at all. The reason is spelled out
+                              next to the lot name above. */}
                           <button
                             className="btn btn-sm btn-ghost"
                             onClick={() => { setNotice(''); setEditing(p); }}
+                            disabled={pulled}
+                            title={pulled ? t('listings.pulledLocked') : undefined}
                           >
                             {t('action.edit')}
                           </button>

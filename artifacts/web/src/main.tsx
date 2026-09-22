@@ -7,6 +7,8 @@ import './styles.css';
 // Enterprise extension layer (product page + dashboard kit). Additive only —
 // styles.css stays the design authority for tokens and shared chrome.
 import './styles/enterprise.css';
+// Seller shop tools (shop editor, photo galleries, pulled-listing marking).
+import './styles/shop.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

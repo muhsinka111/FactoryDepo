@@ -35,6 +35,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 // supplier
 const SupplierListings = lazy(() => import('./pages/SupplierListings'));
 const SupplierPost = lazy(() => import('./pages/SupplierPost'));
+const ShopProfile = lazy(() => import('./pages/ShopProfile'));
 const SupplierOffers = lazy(() => import('./pages/SupplierOffers'));
 const SupplierVerification = lazy(() => import('./pages/SupplierVerification'));
 // admin
@@ -131,6 +132,7 @@ function Shell() {
             {/* ---------- supplier ---------- */}
             <Route path="/supplier/listings" component={SupplierListings} />
             <Route path="/supplier/post" component={SupplierPost} />
+            <Route path="/supplier/shop" component={ShopProfile} />
             <Route path="/supplier/offers" component={SupplierOffers} />
             <Route path="/supplier/rfq-opportunities" component={RfqExchange} />
             <Route path="/supplier/verification" component={SupplierVerification} />

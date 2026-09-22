@@ -868,6 +868,7 @@ export interface Dict {
   'post.photoPlaceholder': string;
   'post.photoHintLead': string;
   'post.photoHintTail': string;
+  'post.previewGalleryNote': string;
   'post.preview': string;
   'post.save': string;
   'post.saving': string;
@@ -1974,6 +1975,107 @@ export interface Dict {
   'dash.hidden': string;
   'dash.answer': string;
   'dash.answerPlaceholder': string;
+  'nav.shop': string;
+  'shop.title': string;
+  'shop.sub': string;
+  'shop.signInSub': string;
+  'shop.notSignedIn': string;
+  'shop.notSignedInBody': string;
+  'shop.supplierOnly': string;
+  'shop.supplierOnlyBody': string;
+  'shop.loadErrorTitle': string;
+  'shop.loadErrorBody': string;
+  'shop.noSupplierTitle': string;
+  'shop.noSupplierBody': string;
+  'shop.loading': string;
+  'shop.profileCard': string;
+  'shop.contactCard': string;
+  'shop.company': string;
+  'shop.country': string;
+  'shop.city': string;
+  'shop.address': string;
+  'shop.about': string;
+  'shop.aboutPlaceholder': string;
+  'shop.contactEmail': string;
+  'shop.contactPhone': string;
+  'shop.website': string;
+  'shop.incoterms': string;
+  'shop.leadTime': string;
+  'shop.leadTimeHint': string;
+  'shop.paymentTerms': string;
+  'shop.clearsHint': string;
+  'shop.publicHint': string;
+  'shop.logo': string;
+  'shop.logoHint': string;
+  'shop.logoUpload': string;
+  'shop.logoReplace': string;
+  'shop.logoRemove': string;
+  'shop.uploading': string;
+  'shop.noLogo': string;
+  'shop.logoUploaded': string;
+  'shop.logoRemoved': string;
+  'shop.logoFailed': string;
+  'shop.save': string;
+  'shop.saving': string;
+  'shop.saved': string;
+  'shop.errSave': string;
+  'shop.errName': string;
+  'shop.errCountry': string;
+  'shop.errEmail': string;
+  'shop.errLead': string;
+  'shop.unsaved': string;
+  'shop.upToDate': string;
+  'shop.listingCount': string;
+  'shop.viewPublic': string;
+  'shop.verification': string;
+  'shop.verifiedLevel': string;
+  'shop.level': string;
+  'shop.notGranted': string;
+  'shop.verificationNote': string;
+  'shop.verificationLink': string;
+  'shop.asStored': string;
+  'action.remove': string;
+  'post.statusHint': string;
+  'post.statusNew': string;
+  'shop.manageListings': string;
+  'post.location': string;
+  'post.locationHint': string;
+  'post.leadTime': string;
+  'post.leadTimeHint': string;
+  'post.stockType': string;
+  'post.status': string;
+  'post.errLocation': string;
+  'post.errLead': string;
+  'post.noClearHint': string;
+  'post.review': string;
+  'post.photos': string;
+  'post.photosHint': string;
+  'post.addPhotos': string;
+  'post.uploading': string;
+  'post.noPhotos': string;
+  'post.photosOnSave': string;
+  'post.pendingPhoto': string;
+  'post.photoUploaded': string;
+  'post.photoRemoved': string;
+  'post.photoUploadFailed': string;
+  'post.photoAttachFailed': string;
+  'post.photoDetachFailed': string;
+  'listings.editSub': string;
+  'listings.gallery': string;
+  'listings.galleryEmpty': string;
+  'listings.addPhoto': string;
+  'listings.removePhoto': string;
+  'listings.photoAdded': string;
+  'listings.photoRemoved': string;
+  'listings.photoErr': string;
+  'listings.photoAttachFailedNotice': string;
+  'listings.pulled': string;
+  'listings.pulledLocked': string;
+  'listings.pulledContact': string;
+  'listings.pulledReason': string;
+  'listings.pulledAt': string;
+  'listings.pulledCount': string;
+  'listings.noLocation': string;
   'dash.submitAnswer': string;
 }
 
@@ -2626,7 +2728,7 @@ const en: Dict = {
   'listings.col.status': 'Status',
   'listings.col.posted': 'Posted',
   'listings.lotRef': 'lot #{id}',
-  'listings.noPhotoInline': 'no photo',
+  'listings.noPhotoInline': 'no cover image',
   'listings.demoNoteLead': 'A lot marked',
   'listings.demoNoteTail':
     'is seed data supplied by the marketplace, not stock posted by you. Deleting it removes it for everyone.',
@@ -2679,11 +2781,12 @@ const en: Dict = {
   'post.purity': 'Purity / grade',
   'post.purityPlaceholder': '99.99% / Grade A',
   'post.optional': 'Optional.',
-  'post.photoUrl': 'Photo URL',
+  'post.photoUrl': 'Cover image URL',
   'post.photoPlaceholder': 'https://…/copper-cathode.jpg',
-  'post.photoHintLead': 'File upload is not built yet.',
+  'post.photoHintLead': 'This URL is the cover image on the catalogue card.',
   'post.photoHintTail':
-    'Paste a public link to the photo and it is stored as this lot’s image. Lots without a photo show a plain placeholder.',
+    'Uploaded photos go to the listing gallery (the Photos section). Lots with no image at all show a plain placeholder.',
+  'post.previewGalleryNote': "{n} uploaded photo(s) sit in the listing gallery; the catalogue card uses the cover image URL above.",
   'post.preview': 'Preview — if nothing loads, the link is not a direct image.',
   'post.save': 'Save changes',
   'post.saving': 'Saving…',
@@ -2702,7 +2805,7 @@ const en: Dict = {
   'post.provenance': 'Provenance',
   'post.platformListing': 'Platform listing',
   'post.photo': 'Photo',
-  'post.urlOnly': 'URL only — upload not built',
+  'post.urlOnly': 'Cover URL + uploaded gallery',
   'post.buyerPaysBy': 'Buyer pays by',
   'post.bankTransfer': 'Bank transfer',
   'post.noMetrics':
@@ -3777,6 +3880,107 @@ const en: Dict = {
   'dash.hidden': 'Hidden',
   'dash.answer': 'Answer',
   'dash.answerPlaceholder': 'Write the answer the buyer will see…',
+  'nav.shop': "My shop",
+  'shop.title': "Your shop",
+  'shop.sub': "The company details, logo and contact information buyers see on your shop page.",
+  'shop.signInSub': "Edit the company profile behind your listings.",
+  'shop.notSignedIn': "You are not signed in",
+  'shop.notSignedInBody': "Your shop profile is private to your supplier account. Sign in to edit it.",
+  'shop.supplierOnly': "Supplier accounts only",
+  'shop.supplierOnlyBody': "This page edits a supplier shop. Your account role is {role}.",
+  'shop.loadErrorTitle': "Your shop could not be loaded",
+  'shop.loadErrorBody': "The API did not return your company record. Try again — if it keeps failing, sign in again.",
+  'shop.noSupplierTitle': "No company record on this account",
+  'shop.noSupplierBody': "This account is a supplier but has no company row yet — the FactoryDepo desk creates it.",
+  'shop.loading': "Loading your shop…",
+  'shop.profileCard': "Company profile",
+  'shop.contactCard': "Contact details",
+  'shop.company': "Company name",
+  'shop.country': "Country",
+  'shop.city': "City",
+  'shop.address': "Address",
+  'shop.about': "About the company",
+  'shop.aboutPlaceholder': "What you make, capacity, certifications, who you already supply…",
+  'shop.contactEmail': "Contact e-mail",
+  'shop.contactPhone': "Contact phone",
+  'shop.website': "Website",
+  'shop.incoterms': "Incoterms",
+  'shop.leadTime': "Typical lead time (days)",
+  'shop.leadTimeHint': "Days from order to dispatch, as a rule — each listing can state its own.",
+  'shop.paymentTerms': "Payment terms",
+  'shop.clearsHint': "Leave a field empty to remove it from your shop page.",
+  'shop.publicHint': "These details are what buyers see on your shop page.",
+  'shop.logo': "Company logo",
+  'shop.logoHint': "One image up to 2 MB (JPG, PNG, WEBP or GIF).",
+  'shop.logoUpload': "Upload logo",
+  'shop.logoReplace': "Replace logo",
+  'shop.logoRemove': "Remove logo",
+  'shop.uploading': "Uploading…",
+  'shop.noLogo': "No logo uploaded",
+  'shop.logoUploaded': "Logo updated.",
+  'shop.logoRemoved': "Logo removed.",
+  'shop.logoFailed': "The logo was not uploaded — a logo must be an image file of at most 2 MB.",
+  'shop.save': "Save shop profile",
+  'shop.saving': "Saving…",
+  'shop.saved': "Shop profile saved.",
+  'shop.errSave': "The shop profile could not be saved.",
+  'shop.errName': "Company name must be at least 2 characters.",
+  'shop.errCountry': "Choose a country.",
+  'shop.errEmail': "That contact e-mail is not valid.",
+  'shop.errLead': "Lead time must be a whole number between 0 and 365.",
+  'shop.unsaved': "Unsaved changes",
+  'shop.upToDate': "All changes saved",
+  'shop.listingCount': "Published listings",
+  'shop.viewPublic': "Open public shop page",
+  'shop.verification': "Verification",
+  'shop.verifiedLevel': "Verification level",
+  'shop.level': "Level {n}",
+  'shop.notGranted': "Not granted",
+  'shop.verificationNote': "The verification level is granted by the FactoryDepo verification desk after your documents are reviewed — you cannot set it here.",
+  'shop.verificationLink': "See your document status",
+  'shop.asStored': "as stored",
+  'action.remove': "Remove",
+  'post.statusHint': "Active keeps the lot orderable; Sold out leaves it online but closed to orders.",
+  'post.statusNew': "A new lot is published as Active.",
+  'shop.manageListings': "Manage my listings",
+  'post.location': "Stock location",
+  'post.locationHint': "Where the stock physically sits — a city and country code buyers will ask about.",
+  'post.leadTime': "Lead time (days)",
+  'post.leadTimeHint': "Days from the order to dispatch.",
+  'post.stockType': "Stock type",
+  'post.status': "Listing status",
+  'post.errLocation': "Location must be at most 120 characters.",
+  'post.errLead': "Lead time must be a whole number between 0 and 365.",
+  'post.noClearHint': "An emptied Location or Lead time is left unchanged — the listing API has no way to clear them.",
+  'post.review': "Review & publish",
+  'post.photos': "Photos",
+  'post.photosHint': "Upload photos of the actual lot: image files only, up to 2 MB each.",
+  'post.addPhotos': "Add photos",
+  'post.uploading': "Uploading…",
+  'post.noPhotos': "No photos on this listing yet.",
+  'post.photosOnSave': "Photos are attached to the listing the moment it is created.",
+  'post.pendingPhoto': "Uploaded — attached when the listing is created.",
+  'post.photoUploaded': "Photo uploaded.",
+  'post.photoRemoved': "Photo removed.",
+  'post.photoUploadFailed': "The photo was not uploaded — photos must be image files of at most 2 MB each.",
+  'post.photoAttachFailed': "The listing was saved, but {n} photo(s) could not be attached.",
+  'post.photoDetachFailed': "The photo could not be removed from the listing.",
+  'listings.editSub': "Change price, stock, location or photos — the listing stays live.",
+  'listings.gallery': "Photos",
+  'listings.galleryEmpty': "No photos on this listing yet.",
+  'listings.addPhoto': "Add photo",
+  'listings.removePhoto': "Remove",
+  'listings.photoAdded': "Photo added to the listing.",
+  'listings.photoRemoved': "Photo removed from the listing.",
+  'listings.photoErr': "The photo could not be added to the listing.",
+  'listings.photoAttachFailedNotice': "The listing was created, but some photos could not be attached — add them from the listing editor.",
+  'listings.pulled': "Pulled",
+  'listings.pulledLocked': "Pulled from the catalogue by the FactoryDepo desk — editing is locked on this listing.",
+  'listings.pulledContact': "Contact the desk if you think this is wrong.",
+  'listings.pulledReason': "Desk note",
+  'listings.pulledAt': "Pulled on {date}",
+  'listings.pulledCount': "Pulled listings",
+  'listings.noLocation': "no location",
   'dash.submitAnswer': 'Submit answer',
 };
 
@@ -4428,7 +4632,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'listings.col.status': 'Durum',
   'listings.col.posted': 'Yayınlandı',
   'listings.lotRef': 'lot #{id}',
-  'listings.noPhotoInline': 'fotoğraf yok',
+  'listings.noPhotoInline': 'kapak görseli yok',
   'listings.demoNoteLead': 'Demo işaretli bir lot,',
   'listings.demoNoteTail':
     'sizin yayınladığınız stok değil pazar yerinin sağladığı örnek veridir. Silmek onu herkes için kaldırır.',
@@ -4481,11 +4685,12 @@ const tr: Partial<Record<DictKey, string>> = {
   'post.purity': 'Saflık / kalite',
   'post.purityPlaceholder': '%99,99 / A kalite',
   'post.optional': 'İsteğe bağlı.',
-  'post.photoUrl': 'Fotoğraf URL’si',
+  'post.photoUrl': 'Kapak görseli adresi',
   'post.photoPlaceholder': 'https://…/bakir-katot.jpg',
-  'post.photoHintLead': 'Dosya yükleme henüz yapılmadı.',
+  'post.photoHintLead': 'Bu adres, katalog kartındaki kapak görselidir.',
   'post.photoHintTail':
-    'Fotoğrafın herkese açık bağlantısını yapıştırın, bu lotun görseli olarak saklanır. Fotoğrafsız lotlar sade bir yer tutucu gösterir.',
+    'Yüklenen fotoğraflar ilan galerisine gider (Fotoğraflar bölümü). Hiç görseli olmayan lotlar sade bir yer tutucu gösterir.',
+  'post.previewGalleryNote': "Yüklediğiniz {n} fotoğraf ilan galerisinde durur; katalog kartı yukarıdaki kapak görseli adresini kullanır.",
   'post.preview': 'Önizleme — hiçbir şey yüklenmiyorsa bağlantı doğrudan bir görsel değildir.',
   'post.save': 'Değişiklikleri kaydet',
   'post.saving': 'Kaydediliyor…',
@@ -4504,7 +4709,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'post.provenance': 'Kaynak',
   'post.platformListing': 'Platform ilanı',
   'post.photo': 'Fotoğraf',
-  'post.urlOnly': 'Yalnızca URL — yükleme yok',
+  'post.urlOnly': 'Kapak adresi + yüklenen galeri',
   'post.buyerPaysBy': 'Alıcı ödeme yöntemi',
   'post.bankTransfer': 'Banka havalesi',
   'post.noMetrics':
@@ -5578,6 +5783,107 @@ const tr: Partial<Record<DictKey, string>> = {
   'dash.hidden': 'Gizli',
   'dash.answer': 'Cevap',
   'dash.answerPlaceholder': 'Alıcının göreceği cevabı yazın…',
+  'nav.shop': "Mağazam",
+  'shop.title': "Mağazanız",
+  'shop.sub': "Alıcıların mağaza sayfanızda gördüğü firma bilgileri, logo ve iletişim bilgileri.",
+  'shop.signInSub': "İlanlarınızın arkasındaki firma profilini düzenleyin.",
+  'shop.notSignedIn': "Giriş yapmadınız",
+  'shop.notSignedInBody': "Mağaza profiliniz yalnızca tedarikçi hesabınıza açıktır. Düzenlemek için giriş yapın.",
+  'shop.supplierOnly': "Yalnızca tedarikçi hesapları",
+  'shop.supplierOnlyBody': "Bu sayfa bir tedarikçi mağazasını düzenler. Hesabınızın rolü: {role}.",
+  'shop.loadErrorTitle': "Mağazanız yüklenemedi",
+  'shop.loadErrorBody': "API firma kaydınızı döndürmedi. Tekrar deneyin; sorun sürerse yeniden giriş yapın.",
+  'shop.noSupplierTitle': "Bu hesapta firma kaydı yok",
+  'shop.noSupplierBody': "Bu hesap tedarikçi ancak henüz firma kaydı yok — kaydı FactoryDepo masası oluşturur.",
+  'shop.loading': "Mağazanız yükleniyor…",
+  'shop.profileCard': "Firma profili",
+  'shop.contactCard': "İletişim bilgileri",
+  'shop.company': "Firma adı",
+  'shop.country': "Ülke",
+  'shop.city': "Şehir",
+  'shop.address': "Adres",
+  'shop.about': "Firma hakkında",
+  'shop.aboutPlaceholder': "Ne ürettiğiniz, kapasiteniz, belgeleriniz, hâlihazırda kime tedarik ettiğiniz…",
+  'shop.contactEmail': "İletişim e-postası",
+  'shop.contactPhone': "İletişim telefonu",
+  'shop.website': "Web sitesi",
+  'shop.incoterms': "Teslim koşulları (Incoterms)",
+  'shop.leadTime': "Ortalama tedarik süresi (gün)",
+  'shop.leadTimeHint': "Genelde siparişten sevkiyata kadar geçen gün sayısı; her ilan kendi süresini belirtebilir.",
+  'shop.paymentTerms': "Ödeme koşulları",
+  'shop.clearsHint': "Bir alanı boş bırakırsanız mağaza sayfanızdan kaldırılır.",
+  'shop.publicHint': "Alıcılar mağaza sayfanızda bu bilgileri görür.",
+  'shop.logo': "Firma logosu",
+  'shop.logoHint': "En fazla 2 MB tek görsel (JPG, PNG, WEBP veya GIF).",
+  'shop.logoUpload': "Logo yükle",
+  'shop.logoReplace': "Logoyu değiştir",
+  'shop.logoRemove': "Logoyu kaldır",
+  'shop.uploading': "Yükleniyor…",
+  'shop.noLogo': "Logo yüklenmedi",
+  'shop.logoUploaded': "Logo güncellendi.",
+  'shop.logoRemoved': "Logo kaldırıldı.",
+  'shop.logoFailed': "Logo yüklenemedi — logo, en fazla 2 MB boyutunda bir görsel dosyası olmalıdır.",
+  'shop.save': "Mağaza profilini kaydet",
+  'shop.saving': "Kaydediliyor…",
+  'shop.saved': "Mağaza profili kaydedildi.",
+  'shop.errSave': "Mağaza profili kaydedilemedi.",
+  'shop.errName': "Firma adı en az 2 karakter olmalıdır.",
+  'shop.errCountry': "Bir ülke seçin.",
+  'shop.errEmail': "İletişim e-postası geçerli değil.",
+  'shop.errLead': "Tedarik süresi 0 ile 365 arasında tam sayı olmalıdır.",
+  'shop.unsaved': "Kaydedilmemiş değişiklikler",
+  'shop.upToDate': "Tüm değişiklikler kaydedildi",
+  'shop.listingCount': "Yayındaki ilanlar",
+  'shop.viewPublic': "Herkese açık mağaza sayfasını aç",
+  'shop.verification': "Doğrulama",
+  'shop.verifiedLevel': "Doğrulama seviyesi",
+  'shop.level': "Seviye {n}",
+  'shop.notGranted': "Verilmedi",
+  'shop.verificationNote': "Doğrulama seviyesi, belgeleriniz incelendikten sonra FactoryDepo doğrulama masası tarafından verilir — buradan siz ayarlayamazsınız.",
+  'shop.verificationLink': "Belge durumunuzu görün",
+  'shop.asStored': "kayıtlı değer",
+  'action.remove': "Kaldır",
+  'post.statusHint': "Aktif lot siparişe açık kalır; Tükendi ilanı yayında bırakır ama siparişe kapatır.",
+  'post.statusNew': "Yeni lot Aktif olarak yayınlanır.",
+  'shop.manageListings': "İlanlarımı yönet",
+  'post.location': "Stok konumu",
+  'post.locationHint': "Stoğun fiziksel olarak bulunduğu yer — alıcıların soracağı şehir ve ülke kodu.",
+  'post.leadTime': "Tedarik süresi (gün)",
+  'post.leadTimeHint': "Siparişten sevkiyata kadar geçen gün sayısı.",
+  'post.stockType': "Stok tipi",
+  'post.status': "İlan durumu",
+  'post.errLocation': "Konum en fazla 120 karakter olabilir.",
+  'post.errLead': "Tedarik süresi 0 ile 365 arasında tam sayı olmalıdır.",
+  'post.noClearHint': "Boş bırakılan Konum veya Tedarik süresi değiştirilmemiş sayılır — ilan API’sinde bunları temizleme yolu yok.",
+  'post.review': "Özet ve yayınla",
+  'post.photos': "Fotoğraflar",
+  'post.photosHint': "Gerçek partinin fotoğraflarını yükleyin: yalnızca görsel dosyaları, her biri en fazla 2 MB.",
+  'post.addPhotos': "Fotoğraf ekle",
+  'post.uploading': "Yükleniyor…",
+  'post.noPhotos': "Bu ilanda henüz fotoğraf yok.",
+  'post.photosOnSave': "Fotoğraflar ilan oluşturulduğu anda ilana eklenir.",
+  'post.pendingPhoto': "Yüklendi — ilan oluşturulduğunda eklenecek.",
+  'post.photoUploaded': "Fotoğraf yüklendi.",
+  'post.photoRemoved': "Fotoğraf kaldırıldı.",
+  'post.photoUploadFailed': "Fotoğraf yüklenemedi — fotoğraflar en fazla 2 MB boyutunda görsel dosyaları olmalıdır.",
+  'post.photoAttachFailed': "İlan kaydedildi ancak {n} fotoğraf eklenemedi.",
+  'post.photoDetachFailed': "Fotoğraf ilandan kaldırılamadı.",
+  'listings.editSub': "Fiyatı, stoğu, konumu veya fotoğrafları değiştirin — ilan yayında kalır.",
+  'listings.gallery': "Fotoğraflar",
+  'listings.galleryEmpty': "Bu ilanda henüz fotoğraf yok.",
+  'listings.addPhoto': "Fotoğraf ekle",
+  'listings.removePhoto': "Kaldır",
+  'listings.photoAdded': "Fotoğraf ilana eklendi.",
+  'listings.photoRemoved': "Fotoğraf ilandan kaldırıldı.",
+  'listings.photoErr': "Fotoğraf ilana eklenemedi.",
+  'listings.photoAttachFailedNotice': "İlan oluşturuldu ancak bazı fotoğraflar eklenemedi — bunları ilan düzenleyicisinden ekleyebilirsiniz.",
+  'listings.pulled': "Kaldırıldı",
+  'listings.pulledLocked': "FactoryDepo masası tarafından katalogdan kaldırıldı — bu ilanda düzenleme kilitli.",
+  'listings.pulledContact': "Bunun yanlış olduğunu düşünüyorsanız masayla iletişime geçin.",
+  'listings.pulledReason': "Masa notu",
+  'listings.pulledAt': "{date} tarihinde kaldırıldı",
+  'listings.pulledCount': "Kaldırılan ilanlar",
+  'listings.noLocation': "konum yok",
   'dash.submitAnswer': 'Cevabı gönder',
 };
 
