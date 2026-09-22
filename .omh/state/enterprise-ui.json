@@ -1,0 +1,53 @@
+{
+  "instance_id": "enterprise-ui",
+  "mode": "ralph",
+  "active": true,
+  "phase": "execute",
+  "iteration": 3,
+  "goal": "Raise FactoryDepo's three user-facing surfaces (product detail, landing, buyer/supplier/admin dashboards) to enterprise/Alibaba-grade B2B quality, rendered from real API data.",
+  "plan": ".omh/plans/ralplan-factorydepo-enterprise-ui.md",
+  "branch": "design",
+  "worktree": "C:/Users/Hp/FactoryDepo/.worktrees/design",
+  "note": "The omh_state plugin toolset is NOT loaded in this profile, so this run keeps its state in this file by hand (no omh_state lock exists, therefore no lock to release).",
+  "tasks": [
+    { "id": "T1", "title": "Product Q&A API (ask / answer / moderate)", "passes": true, "commit": "01196f8" },
+    { "id": "T2", "title": "i18n strings for the enterprise product page and dashboards", "passes": true, "commit": "7657e1a" },
+    { "id": "T3", "title": "Enterprise landing page", "passes": true, "commit": "82f18a3" },
+    { "id": "T4", "title": "Shared dashboard kit + enterprise CSS layer + public supplierId filter", "passes": true, "commit": "afe9baa" },
+    { "id": "T5", "title": "Product detail page rebuild", "passes": true, "commit": "87daf7a" },
+    { "id": "T6", "title": "Buyer dashboard (orders, offers, messages, saved)", "passes": true, "commit": "3717a19+5144db4" },
+    { "id": "T7", "title": "Supplier dashboard (listings, offers, post)", "passes": true, "commit": "15feb29" },
+    { "id": "T8", "title": "Admin console (overview, listings)", "passes": true, "commit": "a0cc0ff" },
+    { "id": "T8b", "title": "Orchestrator fixes: phone-width topbar overflow, kit attention-button/timeline rows", "passes": true, "commit": "8de2999" },
+    { "id": "T8c", "title": "Orchestrator fix: real per-market counts endpoint + honest origin filter + market scope", "passes": true, "commit": "02b8aa4" },
+    { "id": "T9", "title": "Country filter alias-aware + tests for /products/countries and admin Q&A PATCH", "passes": false, "discovered": true, "wave": 3 },
+    { "id": "T10", "title": "Supplier surfaces: drop fabricated trust metrics, always demo-tag demo rows, stop the store-URL leak, true admin Sources copy, paginate the giant lists, localise notifications", "passes": false, "discovered": true, "wave": 3 },
+    { "id": "T11", "title": "Product page: gate the unbacked inspection claim, honest Verified badge, add the missing Make-an-offer CTA", "passes": false, "discovered": true, "wave": 3 },
+    { "id": "T12", "title": "Purge India/Vietnam from seeders, served landing candidates and the live seeded RFQ row; i18n gaps (sidebar, category blurbs, complete locales only)", "passes": false, "discovered": true, "wave": 3 }
+  ],
+  "evidence": {
+    "typecheck": "clean (8 workspace projects)",
+    "build": "clean",
+    "api_integration": "26/26 pass (TEST_BASE_URL=http://localhost:9095)",
+    "ui_smoke": "OK — 340 checks, 33 links, 25 categories, 6 stock types",
+    "mobile_390": "/explore, /help, /products/5412, signed-in /feed all exactly 390px wide, no overflow culprits",
+    "reviews": {
+      "architect": "APPROVE_WITH_PROVISO — .omh/reviews/architect-final-review.md",
+      "honesty_i18n": "4 blockers + 7 majors — .omh/reviews/honesty-and-i18n-audit.md",
+      "qa_dogfood": "0 blockers, 2 majors (no buyer offer entry point, unpaginated supplier directories) — .omh/reviews/qa-dogfood-findings.md"
+    }
+  },
+  "completed_task_learnings": [
+    "Windows Chrome clamps --window-size to ~500px: a TRUE phone layout must be emulated with Emulation.setDeviceMetricsOverride + mobile:false, otherwise the probe measures a 512px viewport and hides real overflow.",
+    "express.static/sendFile refuses a path containing a dot-segment, so a worktree at '.worktrees/design' cannot serve the SPA locally — use `vite preview` (or run from a non-dot path). Production is unaffected.",
+    "The dev DB stores a mix of country spellings ('TR' and 'Türkiye', 'CN' and 'China'). Any count or filter must normalise through one alias map, otherwise a market is split in two and a filter misses rows.",
+    "The integration suite is not re-runnable back-to-back: ~22 anonymous registers + logins per run against the 30/min write limiter and the 10/15min login limiter produce 429s that look like regressions.",
+    "Rate limiting is in-memory and keyed per IP for /api and per authenticated user for writes; a burst of test traffic locks out the seeded demo accounts too, so gate runs must be spaced."
+  ],
+  "error_fingerprints": [
+    { "category": "implementation-bug", "error_key": "count-vs-filter-divergence-after-alias-merge", "round": 1, "task": "T9" },
+    { "category": "implementation-bug", "error_key": "unbacked-trust-claim-rendered-unconditionally", "round": 1, "task": "T11" },
+    { "category": "implementation-bug", "error_key": "demo-provenance-tag-suppressed-by-verified-badge", "round": 1, "task": "T10" },
+    { "category": "implementation-bug", "error_key": "excluded-market-still-seeded-and-served", "round": 1, "task": "T12" }
+  ]
+}
