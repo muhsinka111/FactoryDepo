@@ -102,12 +102,22 @@ Two tiers, in-memory (single instance — would need Redis behind a load balance
 
 ## Deploy
 - Railway: `railway link --project "factorydepo"` first (CLI defaults to another project — always re-link).
-- **Status (last verified 2026-09-17):** prod is UP at https://www.factorydepo.com
-  (`/api/healthz` → `{"status":"ok","db":"up"}`, 5,402 products), but the deploy that brought it
-  back came from the **local CLI** (`railway deployment list --json` → `cliCaller: agent_unknown:node`,
-  i.e. `railway up`), *not* from GitHub. `origin/main` is far behind the working branch, so the
-  repo is still not the source of truth for production: **push before expecting a GitHub-sourced
-  deploy**, and re-check with `bash scripts/where-are-we.sh` instead of trusting this note.
+- **`railway up` from a git worktree deploys the WRONG TREE.** The CLI resolves the
+  project directory through git's common dir, so running it inside
+  `.worktrees/<branch>` uploads the **primary checkout** (whatever branch that tree
+  happens to be on), not the worktree you are standing in. Symptom: the build
+  succeeds, the deployment is `SUCCESS`/`RUNNING`, and production still serves the
+  old code — check the container's boot log for the migration list (a missing new
+  migration is the fingerprint) or hit an endpoint the new build adds.
+  Correct path: export the commit and deploy from outside any git repo —
+  `git archive --format=tar HEAD | tar -x -C $LOCALAPPDATA/Temp/fd-deploy`, then
+  `cd $LOCALAPPDATA/Temp/fd-deploy && railway up --project <id> --service api --environment production -c -y`.
+- **Status (last verified 2026-09-22):** prod is UP at https://www.factorydepo.com.
+  Deploys come from the local CLI (`railway up`), *not* from GitHub: `origin/main` and
+  `origin/design` carry the app work, but a GitHub-sourced deploy is still not wired
+  up, so **pushing alone does not ship anything**. Re-check with
+  `bash scripts/where-are-we.sh` and by reading the running deployment's boot log
+  instead of trusting this note.
 - `railway.json` at root pins
   `NODE_ENV=production`, which is required for the APP_SECRET/SITE_URL fail-fast checks.
 - Required env on Railway: `APP_SECRET` (32+ chars — the server refuses to boot without it),
