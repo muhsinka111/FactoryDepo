@@ -146,6 +146,27 @@ export const MARKET_COUNTRIES: [string, string, string][] = [
   ['DE', '🇩🇪', 'Germany'], ['NL', '🇳🇱', 'Netherlands'], ['IT', '🇮🇹', 'Italy'],
 ];
 
+/**
+ * Stored rows hold the ISO CODE ('TR', 'CN', …) while COUNTRIES in
+ * @workspace/api-spec holds display names — so a picker that offers the names as
+ * option VALUES rewrites the record into a second representation the moment a
+ * seller saves it. Every picker therefore writes the code and shows the name.
+ */
+export const COUNTRY_CODES: Record<string, string> = {
+  'Türkiye': 'TR', China: 'CN', USA: 'US', Germany: 'DE', Netherlands: 'NL',
+  Italy: 'IT', Spain: 'ES', Poland: 'PL', France: 'FR', 'United Kingdom': 'GB',
+};
+
+/** The ISO code stored for a COUNTRIES entry (an unknown name comes back as it is). */
+export function countryCode(name: string): string {
+  return COUNTRY_CODES[name] ?? name;
+}
+
+/** The display name for a stored country value; an unmapped value comes back as it is. */
+export function countryName(stored: string): string {
+  return Object.keys(COUNTRY_CODES).find((n) => COUNTRY_CODES[n] === stored) ?? stored;
+}
+
 /* ============================== chrome pieces ============================= */
 
 /**

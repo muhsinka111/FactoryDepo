@@ -46,6 +46,8 @@ import {
   Verified,
   StockTypeBadge,
   STOCK_TYPES,
+  countryCode,
+  countryName,
   requireAuthGate,
 } from '../components';
 import { PageHeader, SectionCard } from '../dash';
@@ -510,7 +512,7 @@ export function ListingForm({ onSaved, onCancel, product, stepped = false, aside
           </div>
           <div className="bd">
             <h3>{form.name.trim() || t('common.notSet')}</h3>
-            <div className="meta">{form.originCountry || t('post.notStated')}</div>
+            <div className="meta">{form.originCountry ? countryName(form.originCountry) : t('post.notStated')}</div>
             <div className="meta">{form.category}</div>
             {hasMoq ? <div className="meta">{t('cards.moq')} {moq.toLocaleString(locale)} {unit}</div> : null}
             {/* The card shows `imageKey` (the cover URL), not the gallery — say so
@@ -566,15 +568,17 @@ export function ListingForm({ onSaved, onCancel, product, stepped = false, aside
             onChange={(e) => set('originCountry', e.target.value)}
           >
             <option value="">{t('post.notStated')}</option>
-            {/* A stored value outside COUNTRIES (seeded rows hold 'TR') stays
-                visible and selected, marked as stored, instead of the select
-                silently falling back to its first option. */}
-            {form.originCountry && !COUNTRIES.some((c) => c === form.originCountry) ? (
+            {/* The option VALUE is the ISO code because that is what a stored
+                row holds (COUNTRIES only carries the display names): offering the
+                names as values would rewrite every saved listing into a second
+                representation. An unmapped stored value stays visible instead of
+                the select falling back to its first option. */}
+            {form.originCountry && !COUNTRIES.some((c) => countryCode(c as string) === form.originCountry) ? (
               <option value={form.originCountry}>
-                {form.originCountry} — {t('shop.asStored')}
+                {countryName(form.originCountry)} — {t('shop.asStored')}
               </option>
             ) : null}
-            {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {COUNTRIES.map((c) => <option key={c} value={countryCode(c as string)}>{c}</option>)}
           </select>
         </div>
         <div className="field">
@@ -839,7 +843,7 @@ export function ListingForm({ onSaved, onCancel, product, stepped = false, aside
           </tr>
           <tr>
             <td className="k">{t('post.originCountry')}</td>
-            <td className="v">{form.originCountry || t('post.notStated')}</td>
+            <td className="v">{form.originCountry ? countryName(form.originCountry) : t('post.notStated')}</td>
           </tr>
           <tr>
             <td className="k">{t('post.location')}</td>

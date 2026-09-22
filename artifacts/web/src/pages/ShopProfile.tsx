@@ -10,7 +10,7 @@ import {
 import type { ApiError } from '@workspace/api-client-react';
 import type { MyShop, UpdateShopProfileInput } from '@workspace/api-zod';
 import { COUNTRIES } from '@workspace/api-spec';
-import { DemoTag, Empty, Spinner, requireAuthGate } from '../components';
+import { DemoTag, Empty, Spinner, countryCode, countryName, requireAuthGate } from '../components';
 import { PageHeader, KpiRow, Kpi, SectionCard, EmptyState, metric } from '../dash';
 import { useI18n, type I18nValue } from '../i18n';
 
@@ -147,14 +147,17 @@ function mediaUrl(id: number | null | undefined): string | null {
 }
 
 /**
- * The picker is COUNTRIES ∪ the stored value. A row that already holds a value
- * outside the list keeps it, visibly, instead of the select silently falling
- * back to its first option (which would rewrite the record on save).
+ * The picker is the market list ∪ the stored value. COUNTRIES holds display
+ * names, but every stored row holds the ISO code, so the option VALUE is the
+ * code and only the label is human — a picker written the other way round
+ * silently rewrites 'TR' into 'Türkiye' on the first save. A value outside the
+ * market list keeps its place, visibly, instead of the select falling back to
+ * its first option.
  */
 function countryOptions(stored: string): { value: string; label: string; extra: boolean }[] {
-  const list = COUNTRIES.map((c) => ({ value: c as string, label: c as string, extra: false }));
+  const list = COUNTRIES.map((c) => ({ value: countryCode(c as string), label: c as string, extra: false }));
   if (stored && !list.some((o) => o.value === stored)) {
-    list.unshift({ value: stored, label: stored, extra: true });
+    list.unshift({ value: stored, label: countryName(stored), extra: true });
   }
   return list;
 }
@@ -569,7 +572,7 @@ export default function ShopProfile() {
                 </tr>
                 <tr>
                   <td className="k">{t('shop.country')}</td>
-                  <td className="v">{row?.country || '—'}</td>
+                  <td className="v">{row?.country ? countryName(row.country) : '—'}</td>
                 </tr>
               </tbody>
             </table>

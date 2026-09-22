@@ -5840,7 +5840,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'shop.level': "Seviye {n}",
   'shop.notGranted': "Verilmedi",
   'shop.verificationNote': "Doğrulama seviyesi, belgeleriniz incelendikten sonra FactoryDepo doğrulama masası tarafından verilir — buradan siz ayarlayamazsınız.",
-  'shop.verificationLink': "Belge durumunuzu görün",
+  'shop.verificationLink': "Belgelerinizin durumunu görün",
   'shop.asStored': "kayıtlı değer",
   'action.remove': "Kaldır",
   'post.statusHint': "Aktif lot siparişe açık kalır; Tükendi ilanı yayında bırakır ama siparişe kapatır.",
