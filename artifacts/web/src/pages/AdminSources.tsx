@@ -26,8 +26,8 @@ import { useI18n, type DictKey } from '../i18n';
  * administrator confirms it and attests it. There is no bulk-import button and no
  * import endpoint behind one (that part of the old copy was accurate, and stays).
  *
- * Three strings need dictionary keys and are kept in honest English until they
- * land (reported, not invented):
+ * The three honest-intake strings and their translations (they live in i18n.tsx
+ * as admin.sources.sub / admin.sources.step1Body / admin.sources.supplierHint):
  *
  *   'admin.sources.sub'
  *     EN: Two paths fill this list: companies that registered themselves
@@ -59,12 +59,9 @@ import { useI18n, type DictKey } from '../i18n';
  *         tedarikçinin kendi kaydından veya satırın içe aktarıldığı dizin
  *         kaydından gelir.
  */
-const TRUE_INTAKE_SUB =
-  'Two paths fill this list: companies that registered themselves (attested individually below) and records imported from third-party B2B directory sources. An imported row keeps its source label, is shown to buyers as an imported directory record — never with the source directory’s store URL — and is never presented as a company that signed up. No bulk-import or scraping endpoint exists.';
-const TRUE_STEP1_BODY =
-  'Most supplier rows are created by the supplier itself — there is no create-supplier endpoint, by design. Rows imported from a B2B directory source carry that source instead.';
-const TRUE_SUPPLIER_HINT =
-  'Only suppliers without an attestation are listed. Company details come from the supplier’s own registration, or from the directory record the row was imported from.';
+/* The three honest-intake strings are dictionary keys now:
+   `admin.sources.sub`, `admin.sources.step1Body`, `admin.sources.supplierHint`
+   (en + tr in i18n.tsx) — the screen renders them through t(). */
 
 /**
  * The intake table renders one page at a time. GET /api/admin/suppliers returns
@@ -268,7 +265,7 @@ export default function AdminSources() {
   return (
     <View
       title={t('nav.sources')}
-      sub={TRUE_INTAKE_SUB}
+      sub={t('admin.sources.sub')}
       actions={<Link href="/admin/suppliers" className="btn btn-sm btn-ghost">{t('admin.sources.allSuppliers')}</Link>}
     >
       <div className="cols">
@@ -276,7 +273,7 @@ export default function AdminSources() {
           <div className="hd"><h2>{t('admin.sources.howTitle')}</h2></div>
           <div className="bd" style={{ lineHeight: 1.7 }}>
             <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <li><b>{t('admin.sources.step1Lead')}</b> {TRUE_STEP1_BODY}</li>
+              <li><b>{t('admin.sources.step1Lead')}</b> {t('admin.sources.step1Body')}</li>
               <li><b>{t('admin.sources.step2Lead')}</b> {t('admin.sources.step2Body')}</li>
               <li><b>{t('admin.sources.step3Lead')}</b> <Link href="/admin/verification">{t('nav.adminVerify')}</Link> {t('admin.sources.step3Tail')}</li>
               <li><b>{t('admin.sources.step4Lead')}</b>{t('admin.sources.step4Body')}</li>
@@ -355,7 +352,7 @@ export default function AdminSources() {
                     ))}
                   </select>
                   <div className="hint">
-                    {TRUE_SUPPLIER_HINT}
+                    {t('admin.sources.supplierHint')}
                   </div>
                 </div>
 

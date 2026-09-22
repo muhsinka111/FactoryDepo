@@ -408,36 +408,12 @@ function ContactModal({
 }
 
 /**
- * Strings this page needs that the dictionary does not carry yet.
- *
- * `i18n.tsx` is a single-writer file, so these render as honest English text
- * rather than as a raw key (a missing key would print `pd.makeOffer` to the
- * buyer). The key each one wants is noted here for the dictionary's owner:
- *
- *   pd.makeOffer     'Make an offer'                        / 'Teklif ver'
- *   pd.offerIntro    'Name the unit price and the quantity you want. The seller
- *                    is notified and can accept, reject or answer with their
- *                    own price.'                            / 'İstediğiniz birim fiyatı ve miktarı belirtin. Satıcı bilgilendirilir; kabul edebilir, reddedebilir veya kendi fiyatıyla yanıtlayabilir.'
- *   pd.offerSubmit   'Send offer'                           / 'Teklifi gönder'
- *   pd.offerSent     'Offer sent'                           / 'Teklif gönderildi'
- *   pd.offerSentBody 'The seller sees it with the price and quantity you named,
- *                    and can accept, reject or answer it.' / 'Satıcı teklifinizi belirttiğiniz fiyat ve miktarla görür; kabul edebilir, reddedebilir veya yanıtlayabilir.'
- *   pd.offerErr      'Could not send your offer.'           / 'Teklifiniz gönderilemedi.'
- *   pd.offerErrPrice 'Your offer price must be a number greater than zero.' / 'Teklif fiyatınız sıfırdan büyük bir sayı olmalı.'
- *   pd.mobileOffer   'Offer'                                / 'Teklif'
+ * The one-tap offer's labels come from the shared dictionary (`pd.makeOffer`,
+ * `pd.offerIntro`, `pd.offerSubmit`, `pd.offerSent`, `pd.offerSentBody`,
+ * `pd.offerErr`, `pd.offerErrPrice`, `pd.mobileOffer` in i18n.tsx) — the page
+ * used to carry English placeholders here while that file was owned by another
+ * writer; they are gone, so the offer flow reads in the interface language.
  */
-const L = {
-  makeOffer: 'Make an offer',
-  offerIntro:
-    'Name the unit price and the quantity you want. The seller is notified and can accept, reject or answer with their own price.',
-  offerSubmit: 'Send offer',
-  offerSent: 'Offer sent',
-  offerSentBody:
-    'The seller sees it with the price and quantity you named, and can accept, reject or answer it.',
-  offerErr: 'Could not send your offer.',
-  offerErrPrice: 'Your offer price must be a number greater than zero.',
-  mobileOffer: 'Offer',
-};
 
 /**
  * The buyer's offer — the owner's one-tap negotiation, and the only way an
@@ -473,7 +449,7 @@ function OfferModal({
   const submit = async () => {
     setErr(null);
     if (!priceOk) {
-      setErr(L.offerErrPrice);
+      setErr(t('pd.offerErrPrice'));
       return;
     }
     try {
@@ -487,7 +463,7 @@ function OfferModal({
       setDone(row.id);
     } catch (e) {
       // The API's own words — never a softened or invented message.
-      setErr((e as ApiError).message || L.offerErr);
+      setErr((e as ApiError).message || t('pd.offerErr'));
     }
   };
 
@@ -495,7 +471,7 @@ function OfferModal({
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="mh">
-          <h2>{done != null ? L.offerSent : L.makeOffer}</h2>
+          <h2>{done != null ? t('pd.offerSent') : t('pd.makeOffer')}</h2>
           <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
         </div>
         <div className="mb">
@@ -504,7 +480,7 @@ function OfferModal({
               <p className="strong" style={{ marginTop: 0 }}>
                 {t('offers.offerRef', { id: done })}
               </p>
-              <p className="muted" style={{ marginTop: 6 }}>{L.offerSentBody}</p>
+              <p className="muted" style={{ marginTop: 6 }}>{t('pd.offerSentBody')}</p>
               <div className="row" style={{ gap: 8, marginTop: 14 }}>
                 <Link href="/offers" className="btn btn-primary">{t('myoffers.titleBuyer')}</Link>
                 <button className="btn btn-grey" onClick={onClose}>{t('pd.close')}</button>
@@ -515,7 +491,7 @@ function OfferModal({
               <p className="muted" style={{ margin: '0 0 12px' }}>
                 {t('pd.contactTarget')}: {product.supplierName}
               </p>
-              <p className="muted" style={{ marginTop: 0 }}>{L.offerIntro}</p>
+              <p className="muted" style={{ marginTop: 0 }}>{t('pd.offerIntro')}</p>
 
               <div className="f2">
                 <div className="field">
@@ -579,7 +555,7 @@ function OfferModal({
               disabled={createOffer.isPending || !priceOk}
               onClick={submit}
             >
-              {createOffer.isPending ? t('offers.sending') : L.offerSubmit}
+              {createOffer.isPending ? t('offers.sending') : t('pd.offerSubmit')}
             </button>
           </div>
         )}
@@ -1058,7 +1034,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                       : t('product.buyNowPrice', { price: money(p.price, p.currency), unit: p.unit })}
                   </button>
                   <button className="btn btn-primary" onClick={gated(() => setOffer(true))}>
-                    {L.makeOffer}
+                    {t('pd.makeOffer')}
                   </button>
                   <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
                     {t('pd.requestQuotation')}
@@ -1355,7 +1331,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
           {t('pd.mobileBuy')}
         </button>
         <button className="btn btn-primary" onClick={gated(() => setOffer(true))}>
-          {L.mobileOffer}
+          {t('pd.mobileOffer')}
         </button>
         <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
           {t('pd.mobileQuote')}

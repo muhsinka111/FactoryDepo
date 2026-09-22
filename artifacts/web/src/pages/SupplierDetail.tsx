@@ -4,8 +4,8 @@ import { View, Empty, ProductCard, Verified, DemoTag, Stars, requireAuthGate } f
 import { useI18n } from '../i18n';
 
 /*
- * Two strings on this page have no dictionary key yet, so they stay English and
- * are reported for translation instead of being invented as keys:
+ * The two notes on this page and their translations (they live in i18n.tsx as
+ * supplierDetail.importedRecord / demoMetricsNote):
  *
  *   'supplierDetail.importedRecord'
  *     EN: Supplier record origin: imported from a third-party B2B directory
@@ -21,10 +21,8 @@ import { useI18n } from '../i18n';
  *     TR: Bu bir örnek veri satırıdır. Ona ait puan, denetim veya teslim
  *         performansı kaydı yoktur; ilgili satırlar “—” gösterir.
  */
-const IMPORTED_RECORD_NOTE =
-  'Supplier record origin: imported from a third-party B2B directory record. The company details are as published there; the source directory and its store URL are not published on this page.';
-const DEMO_METRICS_NOTE =
-  'This is seed data. No rating, inspection or fulfilment figure exists for it, so those rows read “—”.';
+/* The origin note is `supplierDetail.importedRecord` and the seed-row note is
+   `supplierDetail.demoMetricsNote`; both live in i18n.tsx (en + tr). */
 
 /**
  * Imported records are detectable by the note the importer wrote into
@@ -180,7 +178,7 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
                 the company's own words and it carries a competitor directory's
                 storefront URL, which a buyer-facing page must not publish. */}
             {imported ? (
-              <p style={{ margin: 0 }}>{IMPORTED_RECORD_NOTE}</p>
+              <p style={{ margin: 0 }}>{t('supplierDetail.importedRecord')}</p>
             ) : (
               <p style={{ margin: 0 }}>
                 {about !== '' ? scrubSource(about) : t('supplierDetail.noDescription')}
@@ -230,7 +228,7 @@ export default function SupplierDetail({ params }: { params?: { id?: string } })
           {/* A seeded row has no measured figure to show. Saying why the cells are
               empty is the honest complement to the Demo tag in the header. */}
           {isDemo && (
-            <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>{DEMO_METRICS_NOTE}</div>
+            <div className="bd muted" style={{ borderTop: '1px solid var(--line-2)' }}>{t('supplierDetail.demoMetricsNote')}</div>
           )}
         </div>
 

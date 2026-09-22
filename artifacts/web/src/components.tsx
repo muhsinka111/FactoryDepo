@@ -132,11 +132,13 @@ export function homeFor(dash: DashboardRole | null): string {
 export { CATEGORIES as RAIL_CATEGORIES } from '@workspace/api-spec';
 
 /**
- * Markets shown in the topbar strip. Codes are the values the catalogue
- * actually stores (`originCountry`), so the link filters the same rows the
- * count was taken from; the strip is limited to the marketplace's declared
- * scope (Türkiye, China, USA + Europe) — India and Vietnam are excluded by
- * owner policy and must never be offered here.
+ * Markets shown in the topbar strip. Each entry's code is the filter value the
+ * link sends, and the catalogue's `country` filter is alias-aware
+ * (routes/products.ts), so a code matches every stored spelling of that market
+ * ('TR' and 'Türkiye' are one market) and the figure the strip shows is the
+ * figure the filtered list returns. The strip is limited to the marketplace's
+ * declared scope (Türkiye, China, USA + Europe) — India and Vietnam are excluded
+ * by owner policy and must never be offered here.
  */
 export const MARKET_COUNTRIES: [string, string, string][] = [
   ['TR', '🇹🇷', 'Türkiye'], ['CN', '🇨🇳', 'China'], ['US', '🇺🇸', 'USA'],
@@ -727,7 +729,14 @@ export function ProductCard({ p, onSave }: { p: Product; onSave?: (p: Product) =
               <span className="ph-note">{t('cards.noPhoto')}</span>
             </div>
           )}
-        {p.verified && <span className="vtag"><Verified /></span>}
+        {/* The tick claims a verification, so it may only appear where one can be
+            stood behind. `products.verified` alone is not that: the seeder sets it
+            on demo rows whose supplier never reached the level-2 bar the product
+            page enforces (ProductDetail.tsx, SupplierPanel). A demo row therefore
+            shows its provenance tag instead of a verification it cannot prove; a
+            real row keeps the tick. If the API ever puts the supplier's level on
+            list rows, derive this from the same level-2 rule as the detail page. */}
+        {p.verified && p.dataSource !== 'demo' && <span className="vtag"><Verified /></span>}
         {p.dataSource === 'demo' && <span className="ptag"><DemoTag /></span>}
         {p.listingType && p.listingType !== 'stock' && (
           <span className="atag"><StockTypeBadge type={p.listingType} /></span>

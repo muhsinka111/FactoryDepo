@@ -300,6 +300,31 @@ export interface Dict {
   'side.supplierAccount': string;
   'side.buyerAccount': string;
   'side.fullAccess': string;
+
+  /* ---- trust surfaces: provenance, seed-data notes, notification sentences ---- */
+  'supplierDetail.importedRecord': string;
+  'supplierDetail.demoMetricsNote': string;
+  'notes.body.newMessage': string;
+  'notes.body.newEnquiry': string;
+  'notes.body.shipmentDelivered': string;
+  'notes.body.shipmentAdvanced': string;
+  'notes.body.paymentRecorded': string;
+  'notes.body.paymentConfirmed': string;
+  'notes.body.paymentRejected': string;
+  'notes.body.offerState': string;
+  'notes.body.newOffer': string;
+  'notes.body.newOrder': string;
+
+  /* ---- product page: one-tap offer (ProductDetail.tsx) ---- */
+  'pd.makeOffer': string;
+  'pd.offerIntro': string;
+  'pd.offerSubmit': string;
+  'pd.offerSent': string;
+  'pd.offerSentBody': string;
+  'pd.offerErr': string;
+  'pd.offerErrPrice': string;
+  'pd.mobileOffer': string;
+
   'topbar.languageAria': string;
   'rail.allIndustries': string;
   'rail.howItWorks': string;
@@ -2084,6 +2109,28 @@ const en: Dict = {
   'side.supplierAccount': 'Supplier account',
   'side.buyerAccount': 'Buyer account',
   'side.fullAccess': 'Full access',
+  /* An imported record states its origin without publishing the source
+     directory's name or store URL; a seed row explains why its cells are '—'. */
+  'supplierDetail.importedRecord': 'Supplier record origin: imported from a third-party B2B directory record. The company details are as published there; the source directory and its store URL are not published on this page.',
+  'supplierDetail.demoMetricsNote': 'This is a seed data row. No rating, inspection or fulfilment record exists for it, so those rows read “—”.',
+  'notes.body.newMessage': '{name} sent you a message.',
+  'notes.body.newEnquiry': '{name} opened an enquiry with you.',
+  'notes.body.shipmentDelivered': 'Order #{id} was delivered.',
+  'notes.body.shipmentAdvanced': 'Shipment for order #{id} advanced.',
+  'notes.body.paymentRecorded': 'Payment of {currency} {amount} recorded for order #{id} — awaiting confirmation.',
+  'notes.body.paymentConfirmed': 'Payment for order #{id} was confirmed.',
+  'notes.body.paymentRejected': 'Payment for order #{id} was rejected.',
+  'notes.body.offerState': 'Offer #{id} · {state}',
+  'notes.body.newOffer': 'New offer #{id} on your listing “{product}”.',
+  'notes.body.newOrder': 'New order #{id} for {product}.',
+  'pd.makeOffer': 'Make an offer',
+  'pd.offerIntro': 'Name the unit price and the quantity you want. The seller is notified and can accept, reject or answer with their own price.',
+  'pd.offerSubmit': 'Send offer',
+  'pd.offerSent': 'Offer sent',
+  'pd.offerSentBody': 'The seller sees it with the price and quantity you named, and can accept, reject or answer it.',
+  'pd.offerErr': 'Could not send your offer.',
+  'pd.offerErrPrice': 'Your offer price must be a number greater than zero.',
+  'pd.mobileOffer': 'Offer',
   'topbar.languageAria': 'Interface language',
   'rail.allIndustries': 'All industries',
   'rail.howItWorks': 'How it works',
@@ -3453,7 +3500,7 @@ const en: Dict = {
   'admin.sources.srcPlatformShown': 'Shown as real supply, with the supplier\'s own documents behind it',
   'admin.sources.srcScrapedMeaning': 'Not a value. Scraped listings are not kept on this platform.',
   'admin.sources.srcScrapedShown': 'Nothing to show — there is no third source',
-  'admin.sources.step1Body': 'A supplier row exists only because the supplier created it — there is no create-supplier endpoint, by design.',
+  'admin.sources.step1Body': 'Most supplier rows are created by the supplier itself — there is no create-supplier endpoint, by design. Rows imported from a B2B directory source carry that source instead.',
   'admin.sources.step1Lead': 'The company registers its own account.',
   'admin.sources.step2Body': 'from its verification screen: business licence, registration, certifications.',
   'admin.sources.step2Lead': 'The supplier submits its own documents',
@@ -3464,8 +3511,8 @@ const en: Dict = {
   'admin.sources.step5BodyLead': 'Those listings carry',
   'admin.sources.step5BodyTail': 'and are shown to buyers as real supply.',
   'admin.sources.step5Lead': 'The supplier posts its own stock.',
-  'admin.sources.sub': 'Manual supplier intake: a company joins by registering itself, and an administrator attests it. No directory is imported, and no catalogue is scraped.',
-  'admin.sources.supplierHint': 'Only suppliers without an attestation are listed. Company details come from the supplier\'s own registration.',
+  'admin.sources.sub': 'Two paths fill this list: companies that registered themselves (attested individually below) and records imported from third-party B2B directory sources. An imported row keeps its source label, is shown to buyers as an imported directory record — never with the source directory’s store URL — and is never presented as a company that signed up. No bulk-import or scraping endpoint exists.',
+  'admin.sources.supplierHint': 'Only suppliers without an attestation are listed. Company details come from the supplier’s own registration, or from the directory record the row was imported from.',
   'admin.sources.supplierRef': 'supplier #{id}',
   'admin.sources.termsBody': 'Alibaba, Made-in-China and IndiaMART all prohibit automated collection of their listings.',
   'admin.sources.termsLead': 'Marketplace terms.',
@@ -3866,6 +3913,28 @@ const tr: Partial<Record<DictKey, string>> = {
   'side.supplierAccount': 'Tedarikçi hesabı',
   'side.buyerAccount': 'Alıcı hesabı',
   'side.fullAccess': 'Tam erişim',
+  /* İçe aktarılmış bir kayıt kökenini, kaynak dizinin adını ve mağaza adresini
+     yayımlamadan belirtir; örnek veri satırı hücrelerinin neden '—' olduğunu açıklar. */
+  'supplierDetail.importedRecord': 'Tedarikçi kaydının kaynağı: üçüncü taraf bir B2B dizin kaydından içe aktarıldı. Şirket bilgileri o dizindeki hâliyle verilmiştir; kaynak dizin ve mağaza adresi bu sayfada yayımlanmaz.',
+  'supplierDetail.demoMetricsNote': 'Bu bir örnek veri satırıdır. Ona ait puan, denetim veya teslim performansı kaydı yoktur; ilgili satırlar “—” gösterir.',
+  'notes.body.newMessage': '{name} size bir mesaj gönderdi.',
+  'notes.body.newEnquiry': '{name} size bir talep açtı.',
+  'notes.body.shipmentDelivered': '#{id} numaralı sipariş teslim edildi.',
+  'notes.body.shipmentAdvanced': '#{id} numaralı siparişin sevkiyatı ilerledi.',
+  'notes.body.paymentRecorded': '#{id} numaralı sipariş için {currency} {amount} ödeme kaydedildi — onay bekliyor.',
+  'notes.body.paymentConfirmed': '#{id} numaralı siparişin ödemesi onaylandı.',
+  'notes.body.paymentRejected': '#{id} numaralı siparişin ödemesi reddedildi.',
+  'notes.body.offerState': 'Teklif #{id} · {state}',
+  'notes.body.newOffer': '“{product}” ilanınıza yeni teklif #{id}.',
+  'notes.body.newOrder': '{product} için yeni sipariş #{id}.',
+  'pd.makeOffer': 'Teklif ver',
+  'pd.offerIntro': 'İstediğiniz birim fiyatı ve miktarı belirtin. Satıcı bilgilendirilir; kabul edebilir, reddedebilir veya kendi fiyatıyla yanıtlayabilir.',
+  'pd.offerSubmit': 'Teklifi gönder',
+  'pd.offerSent': 'Teklif gönderildi',
+  'pd.offerSentBody': 'Satıcı teklifinizi belirttiğiniz fiyat ve miktarla görür; kabul edebilir, reddedebilir veya yanıtlayabilir.',
+  'pd.offerErr': 'Teklifiniz gönderilemedi.',
+  'pd.offerErrPrice': 'Teklif fiyatınız sıfırdan büyük bir sayı olmalı.',
+  'pd.mobileOffer': 'Teklif',
   'topbar.languageAria': 'Arayüz dili',
   'rail.allIndustries': 'Tüm sektörler',
   'rail.howItWorks': 'Nasıl çalışır',
@@ -5232,7 +5301,7 @@ const tr: Partial<Record<DictKey, string>> = {
   'admin.sources.srcPlatformShown': 'Gerçek arz olarak gösterilir ve arkasında tedarikçinin kendi belgeleri vardır',
   'admin.sources.srcScrapedMeaning': 'Bir değer değil. Kazınmış ilanlar bu platformda tutulmaz.',
   'admin.sources.srcScrapedShown': 'Gösterilecek bir şey yok — üçüncü bir kaynak yok',
-  'admin.sources.step1Body': 'Bir tedarikçi satırı yalnızca tedarikçi onu oluşturduğu için vardır — tasarım gereği tedarikçi oluşturma uç noktası yoktur.',
+  'admin.sources.step1Body': 'Tedarikçi satırlarının çoğunu tedarikçinin kendisi oluşturur — tasarım gereği tedarikçi oluşturma uç noktası yoktur. B2B dizin kaynağından içe aktarılan satırlar ise o kaynağı taşır.',
   'admin.sources.step1Lead': 'Şirket kendi hesabını açar.',
   'admin.sources.step2Body': 'kendi doğrulama ekranından: ticari faaliyet belgesi, kayıt, sertifikalar.',
   'admin.sources.step2Lead': 'Tedarikçi kendi belgelerini gönderir',
@@ -5243,8 +5312,8 @@ const tr: Partial<Record<DictKey, string>> = {
   'admin.sources.step5BodyLead': 'Bu ilanlar',
   'admin.sources.step5BodyTail': 'taşır ve alıcılara gerçek arz olarak gösterilir.',
   'admin.sources.step5Lead': 'Tedarikçi kendi stoğunu yayımlar.',
-  'admin.sources.sub': 'Elle tedarikçi kabulü: bir şirket kendi kendine kaydolarak katılır ve bir yönetici onu onaylar. Hiçbir dizin içe aktarılmaz ve hiçbir katalog kazınmaz.',
-  'admin.sources.supplierHint': 'Yalnızca onayı olmayan tedarikçiler listelenir. Şirket bilgileri tedarikçinin kendi kaydından gelir.',
+  'admin.sources.sub': 'Bu listeyi iki yol doldurur: kendi hesabını açan şirketler (aşağıda tek tek onaylanır) ve üçüncü taraf B2B dizin kaynaklarından içe aktarılan kayıtlar. İçe aktarılan satır kaynak etiketini taşır, alıcıya kaynak dizinin mağaza adresiyle değil “içe aktarılmış dizin kaydı” olarak gösterilir ve kendini kaydetmiş bir şirket gibi sunulmaz. Toplu içe aktarma veya kazıma uç noktası yoktur.',
+  'admin.sources.supplierHint': 'Yalnızca onayı olmayan tedarikçiler listelenir. Şirket bilgileri tedarikçinin kendi kaydından veya satırın içe aktarıldığı dizin kaydından gelir.',
   'admin.sources.supplierRef': 'tedarikçi #{id}',
   'admin.sources.termsBody': 'Alibaba, Made-in-China ve IndiaMART ilanlarının otomatik olarak toplanmasını yasaklar.',
   'admin.sources.termsLead': 'Pazar yeri şartları.',
