@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useRoute, Link } from 'wouter';
 import {
   useProduct, useSupplier, useMe, useCreateOrder, useCreateRfq, useProducts, useCreateThread,
-  apiFetch,
+  useCreateOffer, apiFetch,
 } from '@workspace/api-client-react';
 import type { ApiError } from '@workspace/api-client-react';
 import {
@@ -408,6 +408,187 @@ function ContactModal({
 }
 
 /**
+ * Strings this page needs that the dictionary does not carry yet.
+ *
+ * `i18n.tsx` is a single-writer file, so these render as honest English text
+ * rather than as a raw key (a missing key would print `pd.makeOffer` to the
+ * buyer). The key each one wants is noted here for the dictionary's owner:
+ *
+ *   pd.makeOffer     'Make an offer'                        / 'Teklif ver'
+ *   pd.offerIntro    'Name the unit price and the quantity you want. The seller
+ *                    is notified and can accept, reject or answer with their
+ *                    own price.'                            / 'İstediğiniz birim fiyatı ve miktarı belirtin. Satıcı bilgilendirilir; kabul edebilir, reddedebilir veya kendi fiyatıyla yanıtlayabilir.'
+ *   pd.offerSubmit   'Send offer'                           / 'Teklifi gönder'
+ *   pd.offerSent     'Offer sent'                           / 'Teklif gönderildi'
+ *   pd.offerSentBody 'The seller sees it with the price and quantity you named,
+ *                    and can accept, reject or answer it.' / 'Satıcı teklifinizi belirttiğiniz fiyat ve miktarla görür; kabul edebilir, reddedebilir veya yanıtlayabilir.'
+ *   pd.offerErr      'Could not send your offer.'           / 'Teklifiniz gönderilemedi.'
+ *   pd.offerErrPrice 'Your offer price must be a number greater than zero.' / 'Teklif fiyatınız sıfırdan büyük bir sayı olmalı.'
+ *   pd.mobileOffer   'Offer'                                / 'Teklif'
+ */
+const L = {
+  makeOffer: 'Make an offer',
+  offerIntro:
+    'Name the unit price and the quantity you want. The seller is notified and can accept, reject or answer with their own price.',
+  offerSubmit: 'Send offer',
+  offerSent: 'Offer sent',
+  offerSentBody:
+    'The seller sees it with the price and quantity you named, and can accept, reject or answer it.',
+  offerErr: 'Could not send your offer.',
+  offerErrPrice: 'Your offer price must be a number greater than zero.',
+  mobileOffer: 'Offer',
+};
+
+/**
+ * The buyer's offer — the owner's one-tap negotiation, and the only way an
+ * offer enters the platform from a listing. `POST /api/offers` records the price
+ * and quantity against this lot and returns the row it wrote, so the panel
+ * reports that row's id; a failure shows the API's own message verbatim
+ * (`own_listing`, a validation message, …). Nothing here fakes a success.
+ *
+ * The quantity rides the buy box's own clamp, so an offer can name neither less
+ * than the listing's MOQ nor more than the stock the API reports.
+ */
+function OfferModal({
+  product, qty: initialQty, onClose,
+}: { product: ProductData; qty: number; onClose: () => void }) {
+  const { t, locale } = useI18n();
+  const createOffer = useCreateOffer();
+  const stock = product.quantityAvailable;
+  const noStock = stock <= 0;
+  /** The buy box's hard ceiling — real stock, never below the listing's MOQ. */
+  const ceiling = Math.max(stock, product.moq);
+  const [price, setPrice] = useState(String(product.price));
+  const [quantity, setQuantity] = useState(String(initialQty));
+  const [notes, setNotes] = useState('');
+  /** The id the API returned — the only thing that proves the offer landed. */
+  const [done, setDone] = useState<number | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const clamp = (n: number) => Math.min(Math.max(n, product.moq), ceiling);
+  const priceNum = Number(price);
+  const priceOk = Number.isFinite(priceNum) && priceNum > 0;
+  const qty = clamp(Number(quantity) || product.moq);
+
+  const submit = async () => {
+    setErr(null);
+    if (!priceOk) {
+      setErr(L.offerErrPrice);
+      return;
+    }
+    try {
+      const row = await createOffer.mutateAsync({
+        productId: product.id,
+        quantity: qty,
+        unitPrice: priceNum,
+        currency: product.currency,
+        notes: notes.trim() || undefined,
+      });
+      setDone(row.id);
+    } catch (e) {
+      // The API's own words — never a softened or invented message.
+      setErr((e as ApiError).message || L.offerErr);
+    }
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h2>{done != null ? L.offerSent : L.makeOffer}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')}>✕</button>
+        </div>
+        <div className="mb">
+          {done != null ? (
+            <>
+              <p className="strong" style={{ marginTop: 0 }}>
+                {t('offers.offerRef', { id: done })}
+              </p>
+              <p className="muted" style={{ marginTop: 6 }}>{L.offerSentBody}</p>
+              <div className="row" style={{ gap: 8, marginTop: 14 }}>
+                <Link href="/offers" className="btn btn-primary">{t('myoffers.titleBuyer')}</Link>
+                <button className="btn btn-grey" onClick={onClose}>{t('pd.close')}</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="muted" style={{ margin: '0 0 12px' }}>
+                {t('pd.contactTarget')}: {product.supplierName}
+              </p>
+              <p className="muted" style={{ marginTop: 0 }}>{L.offerIntro}</p>
+
+              <div className="f2">
+                <div className="field">
+                  <label htmlFor="of-price">{t('offers.counterPrice')} <i>*</i></label>
+                  <input
+                    id="of-price" className="in" inputMode="decimal"
+                    value={price} onChange={(e) => setPrice(e.target.value)}
+                  />
+                  <div className="hint">
+                    {t('offers.perUnit', { currency: product.currency })} {'·'}{' '}
+                    {t('pd.unitPrice')}: {money(product.price, product.currency)} / {product.unit}
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="of-qty">{t('offers.quantity')} ({product.unit}) <i>*</i></label>
+                  <input
+                    id="of-qty" className="in" inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setQuantity(String(Number.isFinite(n) && n > 0 ? clamp(n) : product.moq));
+                    }}
+                  />
+                  <div className="hint">
+                    {noStock
+                      ? t('product.soldOutBody')
+                      : t('checkout.qtyHint', {
+                          moq: product.moq.toLocaleString(locale),
+                          stock: stock.toLocaleString(locale),
+                          unit: product.unit,
+                        })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="field">
+                <label htmlFor="of-note">{t('pd.contactMessage')}</label>
+                <textarea
+                  id="of-note" className="in" rows={3}
+                  placeholder={t('offers.counterNotesPlaceholder')}
+                  value={notes} onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              <div className="linetotal">
+                <span>
+                  {t('offers.offerValue')} {'·'} {qty.toLocaleString(locale)} {product.unit}
+                </span>
+                <b className="tnum">{priceOk ? money(priceNum * qty, product.currency) : '—'}</b>
+              </div>
+
+              {err ? <p className="errtext">{err}</p> : null}
+            </>
+          )}
+        </div>
+        {done == null && (
+          <div className="mf">
+            <button className="btn btn-grey" onClick={onClose}>{t('action.cancel')}</button>
+            <button
+              className="btn btn-gold"
+              disabled={createOffer.isPending || !priceOk}
+              onClick={submit}
+            >
+              {createOffer.isPending ? t('offers.sending') : L.offerSubmit}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Supplier tab — the company profile. Only what the API returns is presented as
  * fact: a row it cannot fill reads `pd.notProvided`, and a supplier who has
  * published no performance figures gets one honest sentence rather than a wall
@@ -585,6 +766,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
   const [checkout, setCheckout] = useState(false);
   const [rfq, setRfq] = useState(false);
   const [contact, setContact] = useState(false);
+  const [offer, setOffer] = useState(false);
   const [tab, setTab] = useState('overview');
   /** Bumped by the "Ask a question" CTA so the Q&A composer takes focus. */
   const [qaFocus, setQaFocus] = useState(0);
@@ -632,6 +814,17 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
   }
 
   const s = supplier.data;
+  /**
+   * Verification this page can stand behind. `products.verified` is true on rows
+   * whose supplier sits below the platform's own level-2 bar (the bar this file
+   * enforces in SupplierPanel), so it is not evidence of anything on its own —
+   * the product badge therefore rides the supplier's recorded level, the same
+   * value the supplier block shows. The inspection row below follows the same
+   * rule: it claims inspection only when the API reports a count above zero.
+   * A demo tag is never hidden either way, so provenance stays visible.
+   */
+  const supplierVerified = (s?.verifiedLevel ?? 0) >= 2;
+  const inspectionsCount = s?.inspectionsCount ?? 0;
   const outOfStock = p.status === 'sold_out' || p.quantityAvailable <= 0;
   /** The stepper's hard ceiling: real stock, never below the listing's MOQ. */
   const maxQty = Math.max(p.quantityAvailable, p.moq);
@@ -705,7 +898,9 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
         }
         actions={
           <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {p.verified && <Verified />}
+            {supplierVerified && (
+              <span title={t('product.levelN', { n: s?.verifiedLevel ?? 0 })}><Verified /></span>
+            )}
             {p.purityGrade && <span className="pill p-blue">{p.purityGrade}</span>}
             <StatusChip status={p.status} />
             {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
@@ -716,6 +911,7 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
         {checkout && <CheckoutModal product={p} qty={q} onClose={() => setCheckout(false)} />}
         {rfq && <RfqModal product={p} qty={q} onClose={() => setRfq(false)} />}
         {contact && <ContactModal product={p} qty={q} onClose={() => setContact(false)} />}
+        {offer && <OfferModal product={p} qty={q} onClose={() => setOffer(false)} />}
 
         <div className="pdgrid">
           {/* ---------------- left: gallery + key facts ---------------- */}
@@ -724,10 +920,12 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
               {p.imageKey ? (
                 <>
                   <img src={p.imageKey} alt={p.name} />
-                  <span className="tag">
-                    {p.verified && <Verified />}
-                    {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
-                  </span>
+                  {(supplierVerified || (p.listingType && p.listingType !== 'stock')) && (
+                    <span className="tag">
+                      {supplierVerified && <Verified />}
+                      {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
+                    </span>
+                  )}
                   <span className="hintz">{t('pd.zoomHint')}</span>
                 </>
               ) : (
@@ -859,6 +1057,9 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                       ? t('product.outOfStock')
                       : t('product.buyNowPrice', { price: money(p.price, p.currency), unit: p.unit })}
                   </button>
+                  <button className="btn btn-primary" onClick={gated(() => setOffer(true))}>
+                    {L.makeOffer}
+                  </button>
                   <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
                     {t('pd.requestQuotation')}
                   </button>
@@ -881,7 +1082,9 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
                       <Link href={`/suppliers/${p.supplierId}`} className="nm">{p.supplierName}</Link>
-                      {p.verified && <Verified />}
+                      {supplierVerified && (
+                        <span title={t('product.levelN', { n: s?.verifiedLevel ?? 0 })}><Verified /></span>
+                      )}
                       {s?.dataSource === 'demo' && <DemoTag />}
                     </div>
                     <div className="mt">
@@ -899,8 +1102,11 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                 {/* Trust rows: only what this platform actually does. There is no
                     escrow — the payment row says so in plain terms (funds settle
                     between the two parties; the order only records the outcome)
-                    and `pd.trustEscrow` is deliberately never rendered. */}
-                {(p.verified || (s?.verifiedLevel ?? 0) >= 2) ? (
+                    and `pd.trustEscrow` is deliberately never rendered. The
+                    inspection row carries that rule too: it is rendered only when
+                    the API reports a recorded inspection count above zero, and it
+                    shows the count that backs it. */}
+                {supplierVerified ? (
                   <div className="trustrow">
                     <span className="ic">✓</span>
                     <div>
@@ -909,13 +1115,16 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                     </div>
                   </div>
                 ) : null}
-                <div className="trustrow">
-                  <span className="ic">🔍</span>
-                  <div>
-                    <b>{t('pd.trustInspected')}</b>
-                    {t('supplierDetail.service1')}
+                {inspectionsCount > 0 ? (
+                  <div className="trustrow">
+                    <span className="ic">🔍</span>
+                    <div>
+                      <b>{t('pd.trustInspected')}</b>
+                      {t('supplierDetail.service1')} {'·'} {inspectionsCount.toLocaleString(locale)}{' '}
+                      {t('product.inspections')}
+                    </div>
                   </div>
-                </div>
+                ) : null}
                 <div className="trustrow">
                   <span className="ic">💳</span>
                   <div>
@@ -1058,7 +1267,11 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
                     </tr>
                     <tr>
                       <td className="k">{t('pd.trustVerified')}</td>
-                      <td className="v">{p.verified ? '✓' : <span className="na">{t('pd.notProvided')}</span>}</td>
+                      <td className="v">
+                        {s && s.verifiedLevel > 0
+                          ? t('product.levelN', { n: s.verifiedLevel })
+                          : <span className="na">{t('pd.notProvided')}</span>}
+                      </td>
                     </tr>
                     <tr>
                       <td className="k">{t('supplierDetail.trustScore')}</td>
@@ -1140,6 +1353,9 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
         </div>
         <button className="btn btn-gold" disabled={outOfStock} onClick={gated(() => setCheckout(true))}>
           {t('pd.mobileBuy')}
+        </button>
+        <button className="btn btn-primary" onClick={gated(() => setOffer(true))}>
+          {L.mobileOffer}
         </button>
         <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
           {t('pd.mobileQuote')}
