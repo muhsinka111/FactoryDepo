@@ -236,6 +236,15 @@ function makeRateLimiter(windowMs: number, max: number, keyFor?: (req: Request) 
   }, windowMs).unref();
 
   return function rateLimit(req: Request, res: Response, next: NextFunction): void {
+    // Test-mode escape hatch — NEVER set in production. The integration suite is
+    // 40+ tests that share one machine's per-IP buckets (Node's runner executes the
+    // test FILES concurrently), so the tail of the run was drowning in 429s that
+    // looked like regressions. The limiter's own behaviour stays covered by the CI
+    // smoke step, which exercises it with this switch OFF.
+    if (rateLimitsDisabled()) {
+      next();
+      return;
+    }
     const key = keyFor ? keyFor(req) : (req.ip ?? 'unknown');
     const now = Date.now();
     let bucket = buckets.get(key);
@@ -251,6 +260,11 @@ function makeRateLimiter(windowMs: number, max: number, keyFor?: (req: Request) 
     }
     next();
   };
+}
+
+/** `RATE_LIMIT_DISABLED=1` turns every limiter into a pass-through (test runs only). */
+function rateLimitsDisabled(): boolean {
+  return process.env.RATE_LIMIT_DISABLED === '1';
 }
 
 /**
@@ -432,6 +446,9 @@ async function main(): Promise<void> {
   // simply accumulate as 'queued' until the provider is configured.
   startOutboxWorker();
   app.listen(PORT, () => {
+    if (rateLimitsDisabled()) {
+      console.warn('[boot] RATE_LIMIT_DISABLED=1 — every rate limiter is OFF. Test runs only; never set this in production.');
+    }
     console.log(`[api] FactoryDepo API listening on http://localhost:${PORT}`);
   });
 }

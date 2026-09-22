@@ -128,6 +128,11 @@ jobs:
       - name: Integration + unit tests
         env:
           TEST_BASE_URL: http://localhost:9090
+          # 43 tests share one runner's per-IP buckets and Node executes the test
+          # FILES concurrently, so the tail of the run was 429ing on the write
+          # limiter and looked like regressions. The step below proves the limiter
+          # still engages, with this switch off — so the behaviour stays covered.
+          RATE_LIMIT_DISABLED: '1'
         run: pnpm --filter @workspace/api-server run test
 
       - name: Smoke — login rate limiting engages

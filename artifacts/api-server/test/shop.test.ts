@@ -34,6 +34,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { Client } from 'pg';
 
 const BASE = process.env.TEST_BASE_URL;
@@ -198,9 +199,26 @@ async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T | null> {
   }
 }
 
-/** Dev Bearer token, same HMAC scheme as src/auth.ts (no login-bucket cost). */
+/**
+ * Dev Bearer token, same HMAC scheme as src/auth.ts (no login-bucket cost).
+ *
+ * The secret must be the one the SERVER was booted with. Prefer the environment;
+ * fall back to the repo `.env`, because the local server is normally started with
+ * that file loaded while a bare `pnpm test` shell has no APP_SECRET exported — the
+ * mismatch otherwise shows up as a confusing 401 on a freshly minted token.
+ */
+function loadSecret(): string | null {
+  if (process.env.APP_SECRET) return process.env.APP_SECRET;
+  try {
+    const file = readFileSync(new URL('../../../.env', import.meta.url), 'utf8');
+    return (file.match(/^APP_SECRET=(.+)$/m) ?? [])[1]?.trim() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function mintToken(userId: number, tokenVersion: number): string | null {
-  const secret = process.env.APP_SECRET;
+  const secret = loadSecret();
   if (!secret) return null;
   const payload = Buffer.from(
     JSON.stringify({ sub: userId, v: tokenVersion, exp: Date.now() + 60 * 60 * 1000 }),
@@ -489,9 +507,20 @@ test('a pulled listing leaves the public catalogue but stays visible to its owne
       ).rows[0],
     );
     const adminToken = adminRow ? mintToken(adminRow.id, adminRow.tokenVersion ?? 0) : null;
+    // A silent skip here would hide the admin view from the gate entirely, so the
+    // token has to be obtainable: mint it from the server's APP_SECRET (above), or
+    // fall back to a real login when the shell and the server disagree on the secret.
+    assert.ok(adminToken, 'the admin credential must be mintable — APP_SECRET must match the running server');
     if (adminToken) {
-      const me = await call('GET', '/api/me', undefined, adminToken);
-      assert.equal(me.status, 200, 'the minted admin token must be valid before it is used');
+      let me = await call('GET', '/api/me', undefined, adminToken);
+      if (me.status !== 200) {
+        const login = await call('POST', '/api/auth/login', { email: 'demo@factorydepo.com', password: 'factorydepo' });
+        const fallback = login.status === 200 ? (login.body as { token?: string }).token : undefined;
+        assert.ok(fallback, `could not obtain an admin credential (mint 401, login ${login.status})`);
+        adminToken = fallback as string;
+        me = await call('GET', '/api/me', undefined, adminToken);
+      }
+      assert.equal(me.status, 200, 'the admin credential must be valid before it is used');
       const adminView = await call('GET', `/api/products/${listing.id}`, undefined, adminToken);
       assert.equal(adminView.status, 200, 'an admin must still read a pulled listing');
       assert.equal((adminView.body as Listing).moderationStatus, 'pulled');
