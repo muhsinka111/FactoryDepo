@@ -4,13 +4,16 @@ import {
   getToken,
   useMe,
   useAdminSuppliers,
+  useAdminUpdateSupplier,
   useApproveSupplier,
   useRejectSupplier,
+  useSupplier,
 } from '@workspace/api-client-react';
 import type { AdminSupplier } from '@workspace/api-zod';
 import { View, Empty, Spinner, DemoTag } from '../components';
 import { Pager, Toolbar } from '../dash';
-import { useI18n } from '../i18n';
+import { useI18n, type DictKey } from '../i18n';
+import { Flash, apiErrorText } from './AdminKit';
 
 /**
  * AdminSuppliers — the supplier attestation queue.
@@ -20,12 +23,25 @@ import { useI18n } from '../i18n';
  * attestation decision is made against facts, not a badge. Approving or
  * rejecting always goes through a confirming modal that states the consequence.
  *
+ * 022 adds the desk's own record editor on top of that: the verification LEVEL
+ * and the tags are the desk's decision, never the seller's (the seller's own
+ * `PATCH /suppliers/me` strips both), so they are edited here and every change
+ * lands in the audit trail with the values it replaced.
+ *
  * Paging is client-side: GET /api/admin/suppliers returns every row plus a
  * `total` and takes no limit/offset (artifacts/api-server/src/routes/admin.ts),
  * so the whole queue already sits in memory and this screen renders one page of
  * it. The queue is 1,600-odd rows and one document per row is what froze the tab.
  */
 const PAGE_SIZE = 25;
+
+/** What each stored level means — the claim the desk is making, and no more. */
+function levelLabelKey(level: number): DictKey {
+  if (level >= 3) return 'admin.suppliers.level3';
+  if (level === 2) return 'admin.suppliers.level2';
+  if (level === 1) return 'admin.suppliers.level1';
+  return 'admin.suppliers.level0';
+}
 
 interface Decision {
   supplier: AdminSupplier;
@@ -137,6 +153,128 @@ function DecisionModal({
   );
 }
 
+/**
+ * The desk's own record editor: verification level + tags.
+ *
+ * Only the fields that actually differ from the stored record are sent, so the
+ * API writes no audit row for a re-sent value; if nothing differs the modal says
+ * so instead of pretending to save. The tags are read from the public supplier
+ * record (`GET /api/suppliers/:id`), which is the only shape that carries them.
+ */
+function SupplierEditorModal({
+  supplier,
+  onClose,
+  onDone,
+}: {
+  supplier: AdminSupplier;
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  const { t } = useI18n();
+  const detail = useSupplier(supplier.id);
+  const save = useAdminUpdateSupplier();
+  const [level, setLevel] = useState<number>(supplier.verifiedLevel);
+  const [tagsText, setTagsText] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const storedTags = detail.data?.tags ?? [];
+  // `null` means "the admin has not touched the field yet" — the stored value is
+  // then shown, so a late-arriving load cannot overwrite typing.
+  const tags = tagsText ?? storedTags.join(', ');
+  const nextTags = tags
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s !== '')
+    .slice(0, 20);
+
+  const levelChanged = level !== supplier.verifiedLevel;
+  const tagsChanged = detail.data ? JSON.stringify(nextTags) !== JSON.stringify(storedTags) : false;
+  const changed = levelChanged || tagsChanged;
+  const tagsTooLong = nextTags.some((s) => s.length > 40);
+
+  const submit = async () => {
+    if (!changed || tagsTooLong) return;
+    setErr(null);
+    const patch: Record<string, unknown> = {};
+    if (levelChanged) patch.verifiedLevel = level;
+    if (tagsChanged) patch.tags = nextTags;
+    try {
+      await save.mutateAsync({ id: supplier.id, ...patch });
+      onDone(t('admin.suppliers.levelSaved'));
+    } catch (e) {
+      setErr(apiErrorText(e, t) || t('admin.suppliers.editErrFallback'));
+    }
+  };
+
+  return (
+    <div className="overlay" onClick={() => { if (!save.isPending) onClose(); }}>
+      <div className="modal" style={{ width: 'min(560px,100%)' }} onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h2>{t('admin.suppliers.editTitle', { id: supplier.id })}</h2>
+          <button className="x" onClick={onClose} aria-label={t('action.close')} disabled={save.isPending}>✕</button>
+        </div>
+        <div className="mb">
+          <p className="strong" style={{ marginTop: 0 }}>{supplier.companyName}</p>
+          <p className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>{t('admin.suppliers.editSub')}</p>
+
+          <div style={{ marginTop: 10 }}>
+            <label htmlFor="supplier-level" style={{ display: 'block', fontSize: 11.5, color: 'var(--mute)', marginBottom: 4 }}>
+              {t('admin.suppliers.levelLabel')}
+            </label>
+            <select
+              id="supplier-level"
+              className="in"
+              style={{ width: '100%' }}
+              value={String(level)}
+              onChange={(e) => setLevel(Number(e.target.value))}
+            >
+              {[0, 1, 2, 3].map((n) => (
+                <option key={n} value={String(n)}>{t(levelLabelKey(n))}</option>
+              ))}
+            </select>
+            {level === 3 ? <div className="diffnote" style={{ marginTop: 5 }}>{t('admin.suppliers.level3Warn')}</div> : null}
+          </div>
+
+          <div style={{ marginTop: 10 }}>
+            <label htmlFor="supplier-tags" style={{ display: 'block', fontSize: 11.5, color: 'var(--mute)', marginBottom: 4 }}>
+              {t('admin.suppliers.tagsLabel')}
+            </label>
+            <input
+              id="supplier-tags"
+              className="in"
+              style={{ width: '100%' }}
+              placeholder={t('admin.suppliers.tagsPlaceholder')}
+              value={tags}
+              onChange={(e) => setTagsText(e.target.value)}
+              disabled={!detail.data}
+            />
+            <div className="diffnote" style={{ marginTop: 5 }}>
+              {detail.isLoading ? '…' : t('admin.suppliers.tagsHint')}
+            </div>
+            {tagsTooLong ? <div className="errtext" style={{ marginTop: 5 }}>{t('admin.suppliers.tagsHint')}</div> : null}
+          </div>
+
+          {!changed && detail.data ? (
+            <div className="diffnote" style={{ marginTop: 9 }}>{t('admin.suppliers.noChanges')}</div>
+          ) : null}
+          {err ? <div className="errtext" style={{ marginTop: 8 }}>{err}</div> : null}
+        </div>
+        <div className="mf">
+          <button className="btn btn-grey" onClick={onClose} disabled={save.isPending}>{t('action.cancel')}</button>
+          <button
+            id="supplier-save"
+            className="btn btn-primary"
+            onClick={() => void submit()}
+            disabled={!changed || tagsTooLong || save.isPending}
+          >
+            {save.isPending ? t('admin.common.working') : t('action.save')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSuppliers() {
   const { t, locale } = useI18n();
   const me = useMe();
@@ -148,6 +286,8 @@ export default function AdminSuppliers() {
   const reject = useRejectSupplier();
 
   const [decision, setDecision] = useState<Decision | null>(null);
+  const [editing, setEditing] = useState<AdminSupplier | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<'all' | 'unattested' | 'attested' | 'demo'>('all');
@@ -216,6 +356,8 @@ export default function AdminSuppliers() {
         </div>
       }
     >
+      {msg ? <Flash kind="ok">{msg}</Flash> : null}
+
       {res.isLoading ? (
         <Spinner />
       ) : res.isError || !res.data ? (
@@ -315,6 +457,7 @@ export default function AdminSuppliers() {
                       <th>{t('admin.suppliers.colSupplier')}</th>
                       <th className="hidem">{t('admin.suppliers.colContact')}</th>
                       <th>{t('admin.suppliers.colSource')}</th>
+                      <th>{t('admin.suppliers.levelCol')}</th>
                       <th>{t('admin.suppliers.colDocuments')}</th>
                       <th className="hidem">{t('admin.suppliers.colListings')}</th>
                       <th className="hidem">{t('admin.suppliers.colAttested')}</th>
@@ -352,6 +495,13 @@ export default function AdminSuppliers() {
                           )}
                         </td>
                         <td>
+                          <span className={`lvlpill l${s.verifiedLevel}`} title={t(levelLabelKey(s.verifiedLevel))}>
+                            {s.verifiedLevel > 0
+                              ? t('admin.suppliers.levelSavedShort', { n: s.verifiedLevel })
+                              : t('admin.suppliers.levelNotSet')}
+                          </span>
+                        </td>
+                        <td>
                           <span className="row" style={{ gap: 4, flexWrap: 'wrap' }}>
                             <span className={`pill ${s.docsApproved > 0 ? 'p-green' : 'p-grey'}`} title={t('admin.suppliers.docsApprovedTitle')}>
                               {s.docsApproved} {t('admin.common.docsApproved')}
@@ -383,11 +533,21 @@ export default function AdminSuppliers() {
                         <td>
                           <span className="row" style={{ gap: 5, justifyContent: 'flex-end' }}>
                             <button
+                              id={`supplier-edit-${s.id}`}
+                              className="btn btn-sm btn-grey"
+                              onClick={() => setEditing(s)}
+                            >
+                              {t('admin.suppliers.editAction')}
+                            </button>
+                            <button
                               className="btn btn-sm btn-primary"
                               onClick={() => { setModalError(null); setDecision({ supplier: s, action: 'approve' }); }}
                             >
                               {t('admin.suppliers.attest')}
                             </button>
+                            <Link href={`/admin/audit?entity=supplier&entityId=${s.id}`} className="btn btn-sm btn-ghost">
+                              {t('admin.suppliers.trailLink')}
+                            </Link>
                             <button
                               className="btn btn-sm btn-red"
                               onClick={() => { setModalError(null); setDecision({ supplier: s, action: 'reject' }); }}
@@ -424,6 +584,14 @@ export default function AdminSuppliers() {
             </span>
           </div>
         </>
+      )}
+
+      {editing && (
+        <SupplierEditorModal
+          supplier={editing}
+          onClose={() => setEditing(null)}
+          onDone={(text) => { setEditing(null); setMsg(text); }}
+        />
       )}
 
       {decision && (

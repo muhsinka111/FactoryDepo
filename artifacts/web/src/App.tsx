@@ -43,6 +43,8 @@ const AdminOverview = lazy(() => import('./pages/AdminOverview'));
 const AdminSuppliers = lazy(() => import('./pages/AdminSuppliers'));
 const AdminVerification = lazy(() => import('./pages/AdminVerification'));
 const AdminListings = lazy(() => import('./pages/AdminListings'));
+const AdminListingEditor = lazy(() => import('./pages/AdminListingEditor'));
+const AdminAudit = lazy(() => import('./pages/AdminAudit'));
 const AdminRfqs = lazy(() => import('./pages/AdminRfqs'));
 const AdminPayments = lazy(() => import('./pages/AdminPayments'));
 const AdminSources = lazy(() => import('./pages/AdminSources'));
@@ -142,6 +144,8 @@ function Shell() {
             <Route path="/admin/suppliers" component={AdminSuppliers} />
             <Route path="/admin/verification" component={AdminVerification} />
             <Route path="/admin/listings" component={AdminListings} />
+            <Route path="/admin/listings/:id" component={AdminListingEditor} />
+            <Route path="/admin/audit" component={AdminAudit} />
             <Route path="/admin/rfqs" component={AdminRfqs} />
             <Route path="/admin/payments" component={AdminPayments} />
             <Route path="/admin/sources" component={AdminSources} />

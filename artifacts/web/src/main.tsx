@@ -9,6 +9,8 @@ import './styles.css';
 import './styles/enterprise.css';
 // Seller shop tools (shop editor, photo galleries, pulled-listing marking).
 import './styles/shop.css';
+// Admin control plane (any-listing editor, moderation queue, audit feed).
+import './styles/admin.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,0 +1,90 @@
+/**
+ * admin.css — the admin control plane (T17): the any-listing editor, the
+ * moderation queue and the audit feed.
+ *
+ * ADDITIVE ONLY, same contract as styles/shop.css: it composes the tokens
+ * declared in styles.css (--navy, --gold, --line, --r …) and the class layer in
+ * styles/enterprise.css (.card, .kpirow, .tblwrap, .pager, .emptystate, .tabs).
+ * No existing class is restyled and nothing here is a second KPI tile, pager or
+ * empty state — those stay in dash.tsx where every dashboard gets them from.
+ */
+
+/* ============================ audit diff table =========================== */
+
+/* One entry's before → after pairs. Kept as a real sub-table so a long value
+   (a description, a spec list) wraps instead of pushing the row wide. */
+.diffbox{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;
+  max-width:640px}
+table.difftbl{border:0;width:100%;margin:0}
+table.difftbl th{width:auto;padding:4px 8px;font-size:10.5px;text-transform:none;letter-spacing:0;
+  background:var(--line-2);color:var(--mute);font-weight:600}
+table.difftbl td{padding:4px 8px;border-top:1px solid var(--line);font-size:12px;vertical-align:top}
+table.difftbl tr:first-child td{border-top:0}
+.diffk{color:var(--mute);white-space:nowrap;font-size:11.5px}
+.diffold{color:var(--mute);text-decoration:line-through;text-decoration-color:rgba(179,38,30,.4);
+  overflow-wrap:anywhere}
+.diffnew{color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.diffarrow{color:var(--faint);padding:0 4px}
+.diffval{overflow-wrap:anywhere;max-width:280px;display:inline-block}
+.diffnull{color:var(--faint);font-style:italic}
+.diffnote{font-size:11.5px;color:var(--mute);line-height:1.5;max-width:64ch}
+
+/* ============================ audit feed bits ============================ */
+
+.actchip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  padding:2px 7px;border-radius:4px;background:var(--line-2);color:var(--ink);white-space:nowrap}
+.actchip.edit{background:var(--blue-l);color:var(--blue)}
+.actchip.pull{background:var(--red-l);color:var(--red)}
+.actchip.restore{background:var(--green-l);color:var(--green)}
+.actchip.delete{background:#f6e7e5;color:var(--red)}
+.actchip.sup{background:#fdf1dc;color:var(--amber)}
+.actchip code{font-size:10.5px;color:inherit;opacity:.75}
+
+.entcell{display:flex;flex-direction:column;gap:2px;min-width:0}
+.entline{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.stalechip{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;
+  background:var(--red-l);color:var(--red);white-space:nowrap;cursor:help}
+.entityid{font-variant-numeric:tabular-nums;font-size:12px;color:var(--mute)}
+
+.admgrid{display:grid;gap:12px;grid-template-columns:minmax(0,1.7fr) minmax(300px,.9fr);align-items:start}
+@media (max-width:1000px){.admgrid{grid-template-columns:1fr}}
+
+/* ======================== editor: admin-of-others bar =================== */
+
+.ownerprice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ownerprice .amt{font-size:20px;font-weight:700;letter-spacing:-.4px}
+.ownerprice .per{font-size:12px;color:var(--mute)}
+.ownerseller{font-size:12px;color:var(--mute);margin-top:2px}
+.ownerseller b{color:var(--ink)}
+
+.edform{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.edform .wide{grid-column:1/-1}
+.edform label{display:block;font-size:11.5px;color:var(--mute);margin-bottom:4px}
+.edform input,.edform select,.edform textarea{width:100%}
+.edform textarea{min-height:88px;resize:vertical;font:inherit;font-size:12.5px;padding:7px 9px;
+  border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink)}
+
+.dirtybar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border:1px solid var(--line);
+  border-radius:var(--r);background:#fff;padding:8px 11px;font-size:12px;margin-bottom:10px}
+.dirtybar.dirty{border-color:#f0dfb8;background:#fdf8ee}
+.dirtybar .grow{flex:1}
+
+.modstate{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.modstate .warn{font-size:11.5px;color:var(--red)}
+
+/* ============================== small helpers =========================== */
+
+.stack{display:flex;flex-direction:column;gap:10px}
+.stack.tight{gap:6px}
+.kvline{display:flex;gap:8px;font-size:12.5px;line-height:1.55}
+.kvline .k{color:var(--mute);min-width:112px;flex:none}
+.kvline .v{min-width:0;overflow-wrap:anywhere}
+.taglist{display:flex;gap:5px;flex-wrap:wrap}
+.tagchip{font-size:11px;padding:2px 7px;border-radius:999px;background:var(--line-2);
+  border:1px solid var(--line);color:var(--ink)}
+.lvlpill{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.lvlpill.l0{background:var(--line-2);color:var(--mute)}
+.lvlpill.l1{background:#eef4fe;color:var(--blue)}
+.lvlpill.l2{background:var(--green-l);color:var(--green)}
+.lvlpill.l3{background:#fdf1dc;color:var(--amber)}
+.filterednote{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}

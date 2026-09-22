@@ -18,7 +18,7 @@ export type NavKey =
   | 'feed' | 'explore' | 'categories' | 'sell' | 'offers-buyer' | 'rfqs' | 'orders' | 'shipments'
   | 'messages' | 'saved' | 'notifications' | 'help' | 'profile'
   | 'listings' | 'post' | 'shop' | 'offers-sup' | 'rfq-opps' | 'verification'
-  | 'overview' | 'admin-suppliers' | 'admin-verify' | 'admin-listings'
+  | 'overview' | 'admin-suppliers' | 'admin-verify' | 'admin-listings' | 'admin-audit'
   | 'admin-rfqs' | 'admin-payments' | 'sources' | 'growth' | 'features' | 'suppliers';
 
 interface NavItem {
@@ -70,6 +70,7 @@ export const NAV_ADMIN: NavItem[] = [
   { key: 'admin-suppliers', icon: '🚚', label: 'nav.adminSuppliers', path: '/admin/suppliers' },
   { key: 'admin-verify', icon: '🛡️', label: 'nav.adminVerify', path: '/admin/verification' },
   { key: 'admin-listings', icon: '📦', label: 'nav.adminListings', path: '/admin/listings' },
+  { key: 'admin-audit', icon: '🧾', label: 'nav.adminAudit', path: '/admin/audit' },
   { key: 'admin-rfqs', icon: '📄', label: 'nav.adminRfqs', path: '/admin/rfqs' },
   { key: 'admin-payments', icon: '💳', label: 'nav.adminPayments', path: '/admin/payments' },
   { key: 'sources', icon: '🔌', label: 'nav.sources', path: '/admin/sources' },

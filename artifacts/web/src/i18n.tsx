@@ -2076,6 +2076,165 @@ export interface Dict {
   'listings.pulledAt': string;
   'listings.pulledCount': string;
   'listings.noLocation': string;
+  'nav.adminAudit': string;
+  'admin.audit.adminOnlySub': string;
+  'admin.audit.signedInBody': string;
+  'admin.audit.signedOutBody': string;
+  'admin.audit.title': string;
+  'admin.audit.sub': string;
+  'admin.audit.statTotal': string;
+  'admin.audit.statTotalTitle': string;
+  'admin.audit.statLoaded': string;
+  'admin.audit.statLoadedTitle': string;
+  'admin.audit.statAdmins': string;
+  'admin.audit.statAdminsTitle': string;
+  'admin.audit.statVisible': string;
+  'admin.audit.filterEntity': string;
+  'admin.audit.entityAll': string;
+  'admin.audit.entityProduct': string;
+  'admin.audit.entitySupplier': string;
+  'admin.audit.entityIdAria': string;
+  'admin.audit.entityIdPlaceholder': string;
+  'admin.audit.applyFilter': string;
+  'admin.audit.limitAria': string;
+  'admin.audit.limitOption': string;
+  'admin.audit.colWhen': string;
+  'admin.audit.colActor': string;
+  'admin.audit.colAction': string;
+  'admin.audit.colEntity': string;
+  'admin.audit.colChange': string;
+  'admin.audit.fieldName': string;
+  'admin.audit.fieldBefore': string;
+  'admin.audit.fieldAfter': string;
+  'admin.audit.actorUnknown': string;
+  'admin.audit.actionOther': string;
+  'admin.audit.action.listingUpdate': string;
+  'admin.audit.action.listingPull': string;
+  'admin.audit.action.listingRestore': string;
+  'admin.audit.action.listingDelete': string;
+  'admin.audit.action.supplierUpdate': string;
+  'admin.audit.noFields': string;
+  'admin.audit.noneValue': string;
+  'admin.audit.cleared': string;
+  'admin.audit.gone': string;
+  'admin.audit.goneTitle': string;
+  'admin.audit.deletedBy': string;
+  'admin.audit.deleteNote': string;
+  'admin.audit.openListing': string;
+  'admin.audit.openSupplier': string;
+  'admin.audit.appendOnly': string;
+  'admin.audit.emptyTitle': string;
+  'admin.audit.emptyBody': string;
+  'admin.audit.noMatchTitle': string;
+  'admin.audit.noMatchBody': string;
+  'admin.audit.loadErrorTitle': string;
+  'admin.audit.loadErrorBody': string;
+  'admin.audit.windowNote': string;
+  'admin.audit.rowsOnPage': string;
+  'admin.audit.forEntity': string;
+  'admin.audit.viewFull': string;
+  'admin.mod.queue': string;
+  'admin.mod.queueSub': string;
+  'admin.mod.viewAll': string;
+  'admin.mod.viewVisible': string;
+  'admin.mod.viewPulled': string;
+  'admin.mod.colModeration': string;
+  'admin.mod.live': string;
+  'admin.mod.pulled': string;
+  'admin.mod.pulledReason': string;
+  'admin.mod.pulledBy': string;
+  'admin.mod.publicHidden': string;
+  'admin.mod.pull': string;
+  'admin.mod.pullTitle': string;
+  'admin.mod.pullBody': string;
+  'admin.mod.reasonLabel': string;
+  'admin.mod.reasonPlaceholder': string;
+  'admin.mod.reasonTooShort': string;
+  'admin.mod.confirmPull': string;
+  'admin.mod.pullDone': string;
+  'admin.mod.restore': string;
+  'admin.mod.restoreTitle': string;
+  'admin.mod.restoreBody': string;
+  'admin.mod.confirmRestore': string;
+  'admin.mod.restoreDone': string;
+  'admin.mod.errAlreadyPulled': string;
+  'admin.mod.errNotPulled': string;
+  'admin.mod.errGeneric': string;
+  'admin.mod.emptyTitle': string;
+  'admin.mod.emptyBody': string;
+  'admin.mod.countTitle': string;
+  'admin.edit.adminOnlySub': string;
+  'admin.edit.signedInBody': string;
+  'admin.edit.signedOutBody': string;
+  'admin.edit.crumbListings': string;
+  'admin.edit.title': string;
+  'admin.edit.sub': string;
+  'admin.edit.adminNoticeHead': string;
+  'admin.edit.adminNotice': string;
+  'admin.edit.owner': string;
+  'admin.edit.sectionFields': string;
+  'admin.edit.name': string;
+  'admin.edit.category': string;
+  'admin.edit.price': string;
+  'admin.edit.currency': string;
+  'admin.edit.unit': string;
+  'admin.edit.moq': string;
+  'admin.edit.qty': string;
+  'admin.edit.status': string;
+  'admin.edit.listingType': string;
+  'admin.edit.country': string;
+  'admin.edit.location': string;
+  'admin.edit.lead': string;
+  'admin.edit.desc': string;
+  'admin.edit.dirty': string;
+  'admin.edit.clean': string;
+  'admin.edit.revert': string;
+  'admin.edit.saved': string;
+  'admin.edit.noChangeNote': string;
+  'admin.edit.errFallback': string;
+  'admin.edit.notFoundTitle': string;
+  'admin.edit.notFoundBody': string;
+  'admin.edit.loadErrorTitle': string;
+  'admin.edit.loadErrorBody': string;
+  'admin.edit.trailTitle': string;
+  'admin.edit.trailEmpty': string;
+  'admin.edit.viewPublic': string;
+  'admin.edit.delete': string;
+  'admin.edit.deleteTitle': string;
+  'admin.edit.deleteBody': string;
+  'admin.edit.confirmDelete': string;
+  'admin.edit.deleteDone': string;
+  'admin.edit.inUse': string;
+  'admin.edit.deleteErrFallback': string;
+  'admin.edit.notSet': string;
+  'admin.edit.priceOwnerTitle': string;
+  'admin.edit.supplierRef': string;
+  'admin.suppliers.editAction': string;
+  'admin.suppliers.editTitle': string;
+  'admin.suppliers.editSub': string;
+  'admin.suppliers.levelLabel': string;
+  'admin.suppliers.level0': string;
+  'admin.suppliers.level1': string;
+  'admin.suppliers.level2': string;
+  'admin.suppliers.level3': string;
+  'admin.suppliers.level3Warn': string;
+  'admin.suppliers.tagsLabel': string;
+  'admin.suppliers.tagsHint': string;
+  'admin.suppliers.tagsPlaceholder': string;
+  'admin.suppliers.levelCol': string;
+  'admin.suppliers.levelNotSet': string;
+  'admin.suppliers.levelSaved': string;
+  'admin.suppliers.editErrFallback': string;
+  'admin.suppliers.noChanges': string;
+  'admin.suppliers.trailLink': string;
+  'admin.suppliers.levelSavedShort': string;
+  'admin.edit.leadKeep': string;
+  'admin.edit.backToList': string;
+  'admin.listings.manage': string;
+  'admin.audit.actorTitle': string;
+  'admin.audit.colChangeTitle': string;
+  'admin.mod.pullNote': string;
+  'admin.audit.filterActive': string;
   'dash.submitAnswer': string;
 }
 
@@ -3981,6 +4140,165 @@ const en: Dict = {
   'listings.pulledAt': "Pulled on {date}",
   'listings.pulledCount': "Pulled listings",
   'listings.noLocation': "no location",
+  'nav.adminAudit': 'Audit trail',
+  'admin.audit.adminOnlySub': 'The audit trail is readable by administrators only.',
+  'admin.audit.signedInBody': "Your account role is {role}. The trail names other people's listings and suppliers, so it is restricted to the administrator role.",
+  'admin.audit.signedOutBody': 'Sign in with an administrator account to read the audit trail.',
+  'admin.audit.title': 'Audit trail',
+  'admin.audit.sub': 'Every administrator action against a listing or a supplier, newest first. Each entry is written in the same transaction as the change it describes and is never edited or deleted.',
+  'admin.audit.statTotal': 'Trail entries',
+  'admin.audit.statTotalTitle': 'How many audit rows the API holds for the current filter — a real COUNT, independent of the window below.',
+  'admin.audit.statLoaded': 'Loaded now',
+  'admin.audit.statLoadedTitle': 'Rows returned by the newest {n} request — this is the whole trail only when it is shorter than the window.',
+  'admin.audit.statAdmins': 'Admins in view',
+  'admin.audit.statAdminsTitle': 'Distinct administrator accounts among the loaded rows.',
+  'admin.audit.statVisible': 'Rows on this page',
+  'admin.audit.filterEntity': 'Entity',
+  'admin.audit.entityAll': 'All entities',
+  'admin.audit.entityProduct': 'Listing',
+  'admin.audit.entitySupplier': 'Supplier',
+  'admin.audit.entityIdAria': 'Entity id',
+  'admin.audit.entityIdPlaceholder': 'e.g. 42',
+  'admin.audit.applyFilter': 'Apply filter',
+  'admin.audit.limitAria': 'Rows requested',
+  'admin.audit.limitOption': 'newest {n}',
+  'admin.audit.colWhen': 'When',
+  'admin.audit.colActor': 'Admin',
+  'admin.audit.colAction': 'Action',
+  'admin.audit.colEntity': 'Entity',
+  'admin.audit.colChange': 'Before → after',
+  'admin.audit.fieldName': 'Field',
+  'admin.audit.fieldBefore': 'Before',
+  'admin.audit.fieldAfter': 'After',
+  'admin.audit.actorUnknown': 'Admin #{id} — account removed',
+  'admin.audit.actionOther': 'Action: {action}',
+  'admin.audit.action.listingUpdate': 'Listing edited',
+  'admin.audit.action.listingPull': 'Listing pulled',
+  'admin.audit.action.listingRestore': 'Listing restored',
+  'admin.audit.action.listingDelete': 'Listing deleted',
+  'admin.audit.action.supplierUpdate': 'Supplier edited',
+  'admin.audit.noFields': 'No field change was recorded for this entry.',
+  'admin.audit.noneValue': '—',
+  'admin.audit.cleared': '(cleared)',
+  'admin.audit.gone': 'No longer exists',
+  'admin.audit.goneTitle': 'This trail contains a later entry that removed this id, so the row it names is gone. The entry itself is kept.',
+  'admin.audit.deletedBy': 'Deleted by entry #{id}',
+  'admin.audit.deleteNote': 'Deleted — there is no after-value, because the row no longer exists. The stored fields below are the last values it held.',
+  'admin.audit.openListing': 'Manage listing',
+  'admin.audit.openSupplier': 'Open supplier',
+  'admin.audit.appendOnly': 'The trail is append-only. An entry outlives the row it describes, and nothing in it is rewritten — a pull, a restore and a delete each keep their own line.',
+  'admin.audit.emptyTitle': 'No administrator actions yet',
+  'admin.audit.emptyBody': 'Every admin edit, pull, restore or delete lands here the moment it happens.',
+  'admin.audit.noMatchTitle': 'No entry matches this filter',
+  'admin.audit.noMatchBody': 'Check the entity id, or clear the filter to see the whole trail.',
+  'admin.audit.loadErrorTitle': 'The audit trail could not be loaded',
+  'admin.audit.loadErrorBody': 'The API did not return the trail. The screen stays empty rather than showing an incomplete list.',
+  'admin.audit.windowNote': 'Showing the newest {shown} matching entries of {total} in the trail.',
+  'admin.audit.rowsOnPage': '{n} entries on this page',
+  'admin.audit.forEntity': 'Trail for #{id}',
+  'admin.audit.viewFull': 'Full trail',
+  'admin.mod.queue': 'Moderation queue',
+  'admin.mod.queueSub': "Pulled listings stay in the database and in the seller's account — only the public catalogue hides them.",
+  'admin.mod.viewAll': 'All listings',
+  'admin.mod.viewVisible': 'Visible only',
+  'admin.mod.viewPulled': 'Pulled',
+  'admin.mod.colModeration': 'Moderation',
+  'admin.mod.live': 'Live',
+  'admin.mod.pulled': 'Pulled',
+  'admin.mod.pulledReason': 'Pull reason',
+  'admin.mod.pulledBy': 'Pulled on {date} by {who}',
+  'admin.mod.publicHidden': 'A pulled listing is out of the public catalogue: buyers get 404 on its detail page and it is left out of the category and country counts. The seller and the desk still see it.',
+  'admin.mod.pull': 'Pull from catalogue',
+  'admin.mod.pullTitle': 'Pull listing #{id} from the catalogue',
+  'admin.mod.pullBody': 'A pulled listing is hidden from the public catalogue without being destroyed: the row, its photos and its history stay. A typed reason is required and is stored with the action and your account.',
+  'admin.mod.reasonLabel': 'Reason (required)',
+  'admin.mod.reasonPlaceholder': 'e.g. the price or the stock cannot be confirmed with the seller',
+  'admin.mod.reasonTooShort': 'Write at least 3 characters — the trail has to say why.',
+  'admin.mod.confirmPull': 'Pull listing',
+  'admin.mod.pullDone': 'Listing #{id} was pulled from the catalogue.',
+  'admin.mod.restore': 'Restore',
+  'admin.mod.restoreTitle': 'Restore listing #{id} to the catalogue',
+  'admin.mod.restoreBody': 'Restoring puts the listing straight back into the public catalogue. No reason is needed; the trail records who did it and when.',
+  'admin.mod.confirmRestore': 'Restore listing',
+  'admin.mod.restoreDone': 'Listing #{id} is back in the public catalogue.',
+  'admin.mod.errAlreadyPulled': 'This listing is already pulled — restore it first to change the reason.',
+  'admin.mod.errNotPulled': 'This listing is not pulled, so there is nothing to restore.',
+  'admin.mod.errGeneric': 'The action did not go through and nothing was changed.',
+  'admin.mod.emptyTitle': 'Nothing is pulled',
+  'admin.mod.emptyBody': 'No listing is off the catalogue right now.',
+  'admin.mod.countTitle': 'Listings currently off the public catalogue (a real count from the API).',
+  'admin.edit.adminOnlySub': "Editing another seller's listing is an administrator action.",
+  'admin.edit.signedInBody': 'Your account role is {role}. Listing edits on the desk side are restricted to administrators.',
+  'admin.edit.signedOutBody': 'Sign in with an administrator account to manage a listing.',
+  'admin.edit.crumbListings': 'Listings',
+  'admin.edit.title': 'Listing #{id}',
+  'admin.edit.sub': 'Edit any field of this listing — including the price — and pull, restore or delete it. Every change is written to the audit trail with your account.',
+  'admin.edit.adminNoticeHead': 'Admin edit',
+  'admin.edit.adminNotice': "This row belongs to another seller. You are editing it as the FactoryDepo desk; the seller's company name sits beside the price.",
+  'admin.edit.owner': 'Seller',
+  'admin.edit.sectionFields': 'Listing fields',
+  'admin.edit.name': 'Title',
+  'admin.edit.category': 'Category',
+  'admin.edit.price': 'Price',
+  'admin.edit.currency': 'Currency',
+  'admin.edit.unit': 'Unit',
+  'admin.edit.moq': 'Minimum order (MOQ)',
+  'admin.edit.qty': 'Available quantity',
+  'admin.edit.status': 'Status',
+  'admin.edit.listingType': 'Stock type',
+  'admin.edit.country': 'Origin country',
+  'admin.edit.location': 'Location',
+  'admin.edit.lead': 'Lead time (days)',
+  'admin.edit.desc': 'Description',
+  'admin.edit.dirty': '{n} field(s) will change',
+  'admin.edit.clean': 'No change since the listing was loaded.',
+  'admin.edit.revert': 'Revert my edits',
+  'admin.edit.saved': 'Saved. The audit trail now carries this change.',
+  'admin.edit.noChangeNote': 'Nothing changed, so no audit entry was written.',
+  'admin.edit.errFallback': 'The listing was not saved.',
+  'admin.edit.notFoundTitle': 'That listing does not exist',
+  'admin.edit.notFoundBody': 'The API answered 404 for this id — it may have been deleted. The trail keeps its history.',
+  'admin.edit.loadErrorTitle': 'The listing could not be loaded',
+  'admin.edit.loadErrorBody': 'The API did not return this listing. Nothing is shown rather than a blank form.',
+  'admin.edit.trailTitle': "This listing's trail",
+  'admin.edit.trailEmpty': 'Nothing has been done to this listing yet.',
+  'admin.edit.viewPublic': 'Public page',
+  'admin.edit.delete': 'Delete',
+  'admin.edit.deleteTitle': 'Delete listing #{id} permanently',
+  'admin.edit.deleteBody': 'Deleting removes the row for good. The API refuses it with 409 when orders or message threads reference the listing — pull it instead in that case.',
+  'admin.edit.confirmDelete': 'Delete permanently',
+  'admin.edit.deleteDone': 'Listing #{id} was deleted. The trail keeps an entry with the last stored fields.',
+  'admin.edit.inUse': 'The API refused the delete: orders or message threads reference this listing (listing_in_use). Pull it from the catalogue instead.',
+  'admin.edit.deleteErrFallback': 'The listing was not deleted.',
+  'admin.edit.notSet': 'not stated',
+  'admin.edit.priceOwnerTitle': 'Whose row this is',
+  'admin.edit.supplierRef': 'supplier #{id}',
+  'admin.suppliers.editAction': 'Edit record',
+  'admin.suppliers.editTitle': 'Supplier record #{id}',
+  'admin.suppliers.editSub': "The verification level and the tags are the desk's decision, never the seller's. Both are written to the audit trail.",
+  'admin.suppliers.levelLabel': 'Verification level',
+  'admin.suppliers.level0': '0 — nothing verified',
+  'admin.suppliers.level1': '1 — registered',
+  'admin.suppliers.level2': '2 — identity and documents reviewed',
+  'admin.suppliers.level3': '3 — on-site inspection',
+  'admin.suppliers.level3Warn': 'Level 3 states that an on-site inspection took place. The app records no inspection, so set it only when one really happened.',
+  'admin.suppliers.tagsLabel': 'Tags',
+  'admin.suppliers.tagsHint': 'Comma-separated, at most 20 tags of 40 characters each.',
+  'admin.suppliers.tagsPlaceholder': 'CNC, injection moulding, stainless steel',
+  'admin.suppliers.levelCol': 'Level',
+  'admin.suppliers.levelNotSet': 'Not verified',
+  'admin.suppliers.levelSaved': 'Saved. The trail records the level it had before.',
+  'admin.suppliers.editErrFallback': 'The supplier record was not saved.',
+  'admin.suppliers.noChanges': 'Nothing changed, so no audit entry was written.',
+  'admin.suppliers.trailLink': 'Trail',
+  'admin.suppliers.levelSavedShort': 'level {n}',
+  'admin.edit.leadKeep': 'Leave empty to keep the stored value — this contract cannot clear a lead time.',
+  'admin.edit.backToList': 'Back to listings',
+  'admin.listings.manage': 'Manage',
+  'admin.audit.actorTitle': 'The administrator who made the change, from the token — never a body field.',
+  'admin.audit.colChangeTitle': 'Only the fields that actually changed, exactly as the API stored them in before/after.',
+  'admin.mod.pullNote': "The seller's own edit is refused on a pulled listing (409 listing_pulled); an administrator's edit is not, and it does not restore the listing.",
+  'admin.audit.filterActive': 'Filtered to {what}',
   'dash.submitAnswer': 'Submit answer',
 };
 
@@ -5884,6 +6202,165 @@ const tr: Partial<Record<DictKey, string>> = {
   'listings.pulledAt': "{date} tarihinde kaldırıldı",
   'listings.pulledCount': "Kaldırılan ilanlar",
   'listings.noLocation': "konum yok",
+  'nav.adminAudit': 'Denetim kaydı',
+  'admin.audit.adminOnlySub': 'Denetim kaydını yalnızca yöneticiler okuyabilir.',
+  'admin.audit.signedInBody': 'Hesabınızın rolü {role}. Kayıt başkalarının ilanlarını ve tedarikçilerini gösterdiği için yönetici rolüyle sınırlıdır.',
+  'admin.audit.signedOutBody': 'Denetim kaydını okumak için yönetici hesabıyla giriş yapın.',
+  'admin.audit.title': 'Denetim kaydı',
+  'admin.audit.sub': 'İlan veya tedarikçi üzerinde yapılan her yönetici işlemi, en yeniden eskiye. Her kayıt, tanımladığı değişiklikle aynı işlemde yazılır ve hiçbir zaman düzenlenmez ya da silinmez.',
+  'admin.audit.statTotal': 'Kayıt sayısı',
+  'admin.audit.statTotalTitle': "API'nin mevcut filtre için tuttuğu denetim kaydı sayısı — aşağıdaki pencereden bağımsız gerçek bir COUNT.",
+  'admin.audit.statLoaded': 'Yüklenen',
+  'admin.audit.statLoadedTitle': 'En yeni {n} kayıt isteğinin döndürdüğü satırlar — tüm kayıt ancak pencereden kısaysa budur.',
+  'admin.audit.statAdmins': 'Görünen yönetici',
+  'admin.audit.statAdminsTitle': 'Yüklenen satırlar arasındaki farklı yönetici hesapları.',
+  'admin.audit.statVisible': 'Bu sayfadaki kayıt',
+  'admin.audit.filterEntity': 'Varlık',
+  'admin.audit.entityAll': 'Tüm varlıklar',
+  'admin.audit.entityProduct': 'İlan',
+  'admin.audit.entitySupplier': 'Tedarikçi',
+  'admin.audit.entityIdAria': 'Varlık kimliği',
+  'admin.audit.entityIdPlaceholder': 'örn. 42',
+  'admin.audit.applyFilter': 'Filtreyi uygula',
+  'admin.audit.limitAria': 'İstenen kayıt',
+  'admin.audit.limitOption': 'en yeni {n}',
+  'admin.audit.colWhen': 'Zaman',
+  'admin.audit.colActor': 'Yönetici',
+  'admin.audit.colAction': 'İşlem',
+  'admin.audit.colEntity': 'Varlık',
+  'admin.audit.colChange': 'Önce → sonra',
+  'admin.audit.fieldName': 'Alan',
+  'admin.audit.fieldBefore': 'Önce',
+  'admin.audit.fieldAfter': 'Sonra',
+  'admin.audit.actorUnknown': 'Yönetici #{id} — hesap silinmiş',
+  'admin.audit.actionOther': 'İşlem: {action}',
+  'admin.audit.action.listingUpdate': 'İlan düzenlendi',
+  'admin.audit.action.listingPull': 'İlan katalogdan kaldırıldı',
+  'admin.audit.action.listingRestore': 'İlan geri alındı',
+  'admin.audit.action.listingDelete': 'İlan silindi',
+  'admin.audit.action.supplierUpdate': 'Tedarikçi düzenlendi',
+  'admin.audit.noFields': 'Bu kayıt için alan değişikliği kaydedilmedi.',
+  'admin.audit.noneValue': '—',
+  'admin.audit.cleared': '(boşaltıldı)',
+  'admin.audit.gone': 'Artık mevcut değil',
+  'admin.audit.goneTitle': 'Bu kayıtta aynı kimliği silen daha yeni bir giriş var; yani adı geçen satır artık yok. Kaydın kendisi saklanır.',
+  'admin.audit.deletedBy': '#{id} numaralı kayıtla silindi',
+  'admin.audit.deleteNote': 'Silindi — satır artık var olmadığı için sonra değeri yok. Aşağıdaki alanlar satırın tuttuğu son değerlerdir.',
+  'admin.audit.openListing': 'İlanı yönet',
+  'admin.audit.openSupplier': 'Tedarikçiyi aç',
+  'admin.audit.appendOnly': 'Kayıt yalnızca eklemeli. Bir giriş, tanımladığı satır silinse bile kalır ve içindeki hiçbir şey değiştirilmez — kaldırma, geri alma ve silme işlemlerinin her biri kendi satırında durur.',
+  'admin.audit.emptyTitle': 'Henüz yönetici işlemi yok',
+  'admin.audit.emptyBody': 'Her yönetici düzenlemesi, kaldırma, geri alma veya silme işlemi olduğu anda buraya düşer.',
+  'admin.audit.noMatchTitle': 'Bu filtreye uyan kayıt yok',
+  'admin.audit.noMatchBody': 'Varlık kimliğini kontrol edin ya da tüm kaydı görmek için filtreyi temizleyin.',
+  'admin.audit.loadErrorTitle': 'Denetim kaydı yüklenemedi',
+  'admin.audit.loadErrorBody': 'API kaydı döndürmedi. Ekran, eksik bir liste göstermek yerine boş kalıyor.',
+  'admin.audit.windowNote': 'Kayıttaki {total} girişten en yeni {shown} tanesi gösteriliyor.',
+  'admin.audit.rowsOnPage': 'Bu sayfada {n} kayıt',
+  'admin.audit.forEntity': '#{id} için kayıt',
+  'admin.audit.viewFull': 'Tüm kayıt',
+  'admin.mod.queue': 'Moderasyon kuyruğu',
+  'admin.mod.queueSub': 'Kaldırılan ilanlar veritabanında ve satıcının hesabında kalır — yalnızca kamuya açık katalog onları gizler.',
+  'admin.mod.viewAll': 'Tüm ilanlar',
+  'admin.mod.viewVisible': 'Yalnızca yayında',
+  'admin.mod.viewPulled': 'Kaldırılanlar',
+  'admin.mod.colModeration': 'Moderasyon',
+  'admin.mod.live': 'Yayında',
+  'admin.mod.pulled': 'Kaldırıldı',
+  'admin.mod.pulledReason': 'Kaldırma gerekçesi',
+  'admin.mod.pulledBy': '{date} tarihinde {who} tarafından kaldırıldı',
+  'admin.mod.publicHidden': 'Kaldırılan ilan kamuya açık katalogdan çıkar: alıcılar detay sayfasında 404 alır, kategori ve ülke sayımlarına dahil edilmez. Satıcı ve masa ilanı görmeye devam eder.',
+  'admin.mod.pull': 'Katalogdan kaldır',
+  'admin.mod.pullTitle': '#{id} numaralı ilanı katalogdan kaldır',
+  'admin.mod.pullBody': 'Kaldırılan ilan yok edilmeden kamuya açık katalogdan gizlenir: satır, fotoğraflar ve geçmiş yerinde kalır. Yazılı gerekçe zorunludur; işlemle ve hesabınızla birlikte saklanır.',
+  'admin.mod.reasonLabel': 'Gerekçe (zorunlu)',
+  'admin.mod.reasonPlaceholder': 'örn. fiyat veya stok satıcıyla teyit edilemiyor',
+  'admin.mod.reasonTooShort': 'En az 3 karakter yazın — kayıt nedenini söylemek zorunda.',
+  'admin.mod.confirmPull': 'İlanı kaldır',
+  'admin.mod.pullDone': '#{id} numaralı ilan katalogdan kaldırıldı.',
+  'admin.mod.restore': 'Geri al',
+  'admin.mod.restoreTitle': '#{id} numaralı ilanı kataloğa geri al',
+  'admin.mod.restoreBody': 'Geri alma, ilanı hemen kamuya açık kataloğa döndürür. Gerekçe gerekmez; kayıt kimin, ne zaman yaptığını yazar.',
+  'admin.mod.confirmRestore': 'İlanı geri al',
+  'admin.mod.restoreDone': '#{id} numaralı ilan yeniden kamuya açık katalogda.',
+  'admin.mod.errAlreadyPulled': 'Bu ilan zaten kaldırılmış — gerekçeyi değiştirmek için önce geri alın.',
+  'admin.mod.errNotPulled': 'Bu ilan kaldırılmamış; geri alınacak bir şey yok.',
+  'admin.mod.errGeneric': 'İşlem gerçekleşmedi ve hiçbir şey değişmedi.',
+  'admin.mod.emptyTitle': 'Kaldırılmış ilan yok',
+  'admin.mod.emptyBody': 'Şu anda katalogdan çıkarılmış ilan yok.',
+  'admin.mod.countTitle': "Şu anda kamuya açık katalogdan çıkarılmış ilanlar (API'den gerçek sayım).",
+  'admin.edit.adminOnlySub': 'Başka bir satıcının ilanını düzenlemek yönetici işlemidir.',
+  'admin.edit.signedInBody': 'Hesabınızın rolü {role}. Masa tarafındaki ilan düzenlemeleri yöneticilerle sınırlıdır.',
+  'admin.edit.signedOutBody': 'Bir ilanı yönetmek için yönetici hesabıyla giriş yapın.',
+  'admin.edit.crumbListings': 'İlanlar',
+  'admin.edit.title': '#{id} numaralı ilan',
+  'admin.edit.sub': 'Bu ilanın her alanını (fiyat dahil) düzenleyin; kaldırın, geri alın veya silin. Her değişiklik hesabınızla birlikte denetim kaydına yazılır.',
+  'admin.edit.adminNoticeHead': 'Yönetici düzenlemesi',
+  'admin.edit.adminNotice': 'Bu satır başka bir satıcıya ait. FactoryDepo masası olarak düzenliyorsunuz; satıcının firma adı fiyatın yanında yer alır.',
+  'admin.edit.owner': 'Satıcı',
+  'admin.edit.sectionFields': 'İlan alanları',
+  'admin.edit.name': 'Başlık',
+  'admin.edit.category': 'Kategori',
+  'admin.edit.price': 'Fiyat',
+  'admin.edit.currency': 'Para birimi',
+  'admin.edit.unit': 'Birim',
+  'admin.edit.moq': 'Minimum sipariş (MOQ)',
+  'admin.edit.qty': 'Mevcut stok',
+  'admin.edit.status': 'Durum',
+  'admin.edit.listingType': 'Stok tipi',
+  'admin.edit.country': 'Menşe ülke',
+  'admin.edit.location': 'Konum',
+  'admin.edit.lead': 'Tedarik süresi (gün)',
+  'admin.edit.desc': 'Açıklama',
+  'admin.edit.dirty': '{n} alan değişecek',
+  'admin.edit.clean': 'İlan yüklendiğinden beri değişiklik yok.',
+  'admin.edit.revert': 'Düzenlemelerimi geri al',
+  'admin.edit.saved': 'Kaydedildi. Denetim kaydı artık bu değişikliği taşıyor.',
+  'admin.edit.noChangeNote': 'Hiçbir şey değişmediği için denetim kaydı yazılmadı.',
+  'admin.edit.errFallback': 'İlan kaydedilemedi.',
+  'admin.edit.notFoundTitle': 'Bu ilan mevcut değil',
+  'admin.edit.notFoundBody': 'API bu kimlik için 404 döndü — silinmiş olabilir. Kayıt geçmişini saklar.',
+  'admin.edit.loadErrorTitle': 'İlan yüklenemedi',
+  'admin.edit.loadErrorBody': 'API bu ilanı döndürmedi. Boş bir form göstermek yerine hiçbir şey gösterilmiyor.',
+  'admin.edit.trailTitle': 'Bu ilanın kaydı',
+  'admin.edit.trailEmpty': 'Bu ilana henüz bir işlem yapılmadı.',
+  'admin.edit.viewPublic': 'Kamuya açık sayfa',
+  'admin.edit.delete': 'Sil',
+  'admin.edit.deleteTitle': '#{id} numaralı ilanı kalıcı olarak sil',
+  'admin.edit.deleteBody': 'Silme, satırı kalıcı olarak kaldırır. Sipariş veya mesaj konusu ilana bağlıysa API 409 ile reddeder — bu durumda ilanı kaldırın.',
+  'admin.edit.confirmDelete': 'Kalıcı olarak sil',
+  'admin.edit.deleteDone': '#{id} numaralı ilan silindi. Kayıt, son tutulan alanlarla birlikte duruyor.',
+  'admin.edit.inUse': 'API silmeyi reddetti: bu ilana bağlı siparişler veya mesaj konuları var (listing_in_use). Bunun yerine ilanı katalogdan kaldırın.',
+  'admin.edit.deleteErrFallback': 'İlan silinemedi.',
+  'admin.edit.notSet': 'belirtilmemiş',
+  'admin.edit.priceOwnerTitle': 'Bu satırın kime ait olduğu',
+  'admin.edit.supplierRef': 'tedarikçi #{id}',
+  'admin.suppliers.editAction': 'Kaydı düzenle',
+  'admin.suppliers.editTitle': '#{id} numaralı tedarikçi kaydı',
+  'admin.suppliers.editSub': 'Doğrulama seviyesi ve etiketler masanın kararıdır, satıcının değil. İkisi de denetim kaydına yazılır.',
+  'admin.suppliers.levelLabel': 'Doğrulama seviyesi',
+  'admin.suppliers.level0': '0 — hiçbir şey doğrulanmadı',
+  'admin.suppliers.level1': '1 — kayıtlı',
+  'admin.suppliers.level2': '2 — kimlik ve belgeler incelendi',
+  'admin.suppliers.level3': '3 — yerinde denetim',
+  'admin.suppliers.level3Warn': 'Seviye 3, yerinde bir denetimin yapıldığını söyler. Uygulama hiçbir denetim kaydetmez; bu yüzden yalnızca gerçekten yapıldıysa seçin.',
+  'admin.suppliers.tagsLabel': 'Etiketler',
+  'admin.suppliers.tagsHint': 'Virgülle ayırın; her biri 40 karakterlik en fazla 20 etiket.',
+  'admin.suppliers.tagsPlaceholder': 'CNC, enjeksiyon kalıplama, paslanmaz çelik',
+  'admin.suppliers.levelCol': 'Seviye',
+  'admin.suppliers.levelNotSet': 'Doğrulanmamış',
+  'admin.suppliers.levelSaved': 'Kaydedildi. Kayıt, önceki seviyeyi yazdı.',
+  'admin.suppliers.editErrFallback': 'Tedarikçi kaydı kaydedilemedi.',
+  'admin.suppliers.noChanges': 'Hiçbir şey değişmediği için denetim kaydı yazılmadı.',
+  'admin.suppliers.trailLink': 'Kayıt',
+  'admin.suppliers.levelSavedShort': 'seviye {n}',
+  'admin.edit.leadKeep': 'Kayıtlı değeri korumak için boş bırakın — bu sözleşme tedarik süresini boşaltamaz.',
+  'admin.edit.backToList': 'İlanlara dön',
+  'admin.listings.manage': 'Yönet',
+  'admin.audit.actorTitle': 'Değişikliği yapan yönetici, jetonun sahibi — istek gövdesinden değil.',
+  'admin.audit.colChangeTitle': "Yalnızca gerçekten değişen alanlar; API'nin before/after olarak kaydettiği haliyle.",
+  'admin.mod.pullNote': 'Kaldırılmış bir ilanda satıcının düzenlemesi reddedilir (409 listing_pulled); yöneticinin düzenlemesi reddedilmez ve ilanı geri almaz.',
+  'admin.audit.filterActive': '{what} ile sınırlı',
   'dash.submitAnswer': 'Cevabı gönder',
 };
 
