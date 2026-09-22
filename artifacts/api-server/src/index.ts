@@ -32,6 +32,7 @@ import { notificationsRouter } from './routes/notifications.js';
 import { verificationRouter } from './routes/verification.js';
 import { adminPaymentsRouter, paymentsRouter, proformaRouter } from './routes/payments.js';
 import { adminRouter } from './routes/admin.js';
+import { mediaRouter } from './routes/media.js';
 
 /* ---------- path resolution ---------- */
 
@@ -297,7 +298,17 @@ app.use((req, res, next) => {
 });
 
 app.use(compression());
-app.use(express.json({ limit: '2mb' }));
+// JSON body parsing. The media upload route carries base64 image bytes: a 2 MB
+// image is ~2.7 MB of base64, so that ONE route gets a larger parser or its own
+// decoded-size cap would be unreachable behind the global 2 MB limit. Every other
+// route keeps the 2 MB default. An over-limit body still surfaces as
+// `413 payload_too_large` (the error handler's entity.too.large branch), the same
+// shape the upload route returns for an over-size decoded image.
+const jsonDefault = express.json({ limit: '2mb' });
+const jsonMedia = express.json({ limit: '4mb' });
+app.use((req, res, next) =>
+  (req.method === 'POST' && req.path === '/api/media' ? jsonMedia : jsonDefault)(req, res, next),
+);
 
 app.use('/api', apiLimiter);
 app.use('/api', (req, res, next) => (isWriteMethod(req) ? writeLimiter(req, res, next) : next()));
@@ -320,6 +331,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/me', meRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/suppliers', suppliersRouter);
+app.use('/api/media', mediaRouter);
 app.use('/api/rfqs', rfqsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/offers', offersRouter);

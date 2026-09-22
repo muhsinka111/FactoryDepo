@@ -12,7 +12,9 @@
  *  - PATCH  /api/products/:id   : supplier only AND the row's supplierId must be
  *                                 the caller's own supplierId → 403 otherwise.
  *                                 A supplier can never edit another supplier's
- *                                 listing.
+ *                                 listing. An admin may edit any listing; a
+ *                                 PULLED listing (022) is refused with 409
+ *                                 `listing_pulled` for everyone except an admin.
  *  - DELETE /api/products/:id   : same ownership rule as PATCH.
  *  - GET    /api/products/:id/questions           : public; visibility depends
  *                                 on who is asking (see the route).
@@ -20,15 +22,30 @@
  *  - POST   /api/products/:id/questions/:qid/answer : ONLY the supplier who owns
  *                                 the listing, or an admin → 403 otherwise
  *                                 (including the asker answering themselves).
+ *  - POST   /api/products/:id/media               : attach an uploaded photo
+ *                                 (022) to a listing the caller owns, or any
+ *                                 listing as an admin → 403 otherwise.
+ *  - DELETE /api/products/:id/media/:mediaId      : detach, same ownership rule.
+ *
+ * Moderation plane (022): a listing whose `moderationStatus` is 'pulled' leaves
+ * the public catalogue — it is filtered out of the list, its detail 404s, and it
+ * cannot be edited by its seller — while the owning supplier and any admin keep
+ * seeing it (with `moderationStatus`, and the reason if one was recorded), so a
+ * seller can find out why their lot vanished instead of assuming a bug.
  */
 import { Router } from 'express';
 import type { Request } from 'express';
 import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import * as c from '@workspace/api-zod';
+// `media` / `product_media` (022) are re-exported by the schema package;
+// src/db.ts is not one of this task's files, so they are imported here.
+import { media, productMedia } from '@workspace/db';
 import { db, products, productQuestions, productViews, suppliers, users } from '../db.js';
 import { requireAuth, requireRole, verifyToken } from '../auth.js';
 import { HttpError, mapProduct, mapProductQuestion, parseId, parseParamId, respond, toNum } from '../http.js';
 import { callerContext, productColumns, type CallerContext } from '../helpers.js';
+import { mediaColumnsNoBytes, mediaRef } from './media.js';
 
 export const productsRouter = Router();
 
@@ -46,8 +63,85 @@ async function optionalCaller(req: Request): Promise<CallerContext | null> {
   return callerContext(payload.sub);
 }
 
-/** Columns for list + detail (supplierName via suppliers, trustScore via users). */
-const productCols = productColumns;
+/**
+ * Columns for list + detail (supplierName via suppliers, trustScore via users),
+ * plus the 022 listing extras. `productColumns` (helpers.ts) carries the
+ * pre-022 projection, so the new columns are spread on here.
+ */
+const productCols = {
+  ...productColumns,
+  location: products.location,
+  leadTimeDays: products.leadTimeDays,
+  moderationStatus: products.moderationStatus,
+  pulledReason: products.pulledReason,
+};
+
+/**
+ * The owner/admin view of a listing: `zProduct` plus the moderation reason.
+ * `zProduct` deliberately has no `pulledReason` (it is moderation state, not
+ * catalogue copy), so it is declared here and used only for a caller who is the
+ * owning supplier or an admin. The public shape stays exactly `c.zProduct`.
+ */
+const zProductModerated = c.zProduct.extend({ pulledReason: z.string().nullable().optional() });
+
+/** `moderationStatus` is NOT NULL with a 'visible' default — tolerate an old row. */
+function moderationOf(row: Record<string, unknown>): string {
+  const v = row.moderationStatus;
+  return v == null ? 'visible' : String(v);
+}
+
+/** True when this listing has been pulled from the public catalogue (022). */
+function isPulled(row: Record<string, unknown>): boolean {
+  return moderationOf(row) === 'pulled';
+}
+
+/**
+ * Map a product row to the API shape, adding the 022 extras. `mapProduct`
+ * (http.ts) owns the pre-022 projection; the gallery and moderation fields are
+ * layered on here because both the list and the detail response need them.
+ *
+ * `mediaRefs` is only passed by the DETAIL route — a list of 50 rows must not
+ * fire 50 gallery queries (the list omits the gallery by design).
+ */
+function mapListing(
+  row: Record<string, unknown>,
+  opts: { mediaRefs?: c.MediaRef[]; includePulledReason?: boolean } = {},
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    ...mapProduct(row),
+    location: row.location == null ? null : String(row.location),
+    leadTimeDays: row.leadTimeDays == null ? null : toNum(row.leadTimeDays),
+    moderationStatus: moderationOf(row),
+  };
+  if (opts.mediaRefs) out.media = opts.mediaRefs;
+  if (opts.includePulledReason) {
+    out.pulledReason = row.pulledReason == null ? null : String(row.pulledReason);
+  }
+  return out;
+}
+
+/**
+ * Ordered gallery for a set of listings, keyed by product id. One query for the
+ * whole page instead of one per row; rows come back in `position` order, which
+ * is the order the seller attached them (the first is the cover).
+ */
+async function fetchGallery(productIds: number[]): Promise<Map<number, c.MediaRef[]>> {
+  const byProduct = new Map<number, c.MediaRef[]>();
+  if (productIds.length === 0) return byProduct;
+  const rows = await db
+    .select({ productId: productMedia.productId, ...mediaColumnsNoBytes })
+    .from(productMedia)
+    .innerJoin(media, eq(productMedia.mediaId, media.id))
+    .where(inArray(productMedia.productId, productIds))
+    .orderBy(productMedia.productId, productMedia.position, productMedia.id);
+  for (const r of rows) {
+    const pid = toNum(r.productId);
+    const list = byProduct.get(pid) ?? [];
+    list.push(mediaRef(r));
+    byProduct.set(pid, list);
+  }
+  return byProduct;
+}
 
 /**
  * Resolve the caller's own supplier row for a listing mutation. Returns null
@@ -81,18 +175,17 @@ productsRouter.get('/', async (req, res) => {
   const { q, category, listingType, country, minPrice, maxPrice, supplierId, hasImage, mine, page, limit } =
     parsed.data;
 
+  // The caller (if any) drives two things: `mine=1` scoping and whether pulled
+  // listings are visible. `optionalCaller` never turns a public read into a 401
+  // — an absent/expired/forged token is simply the anonymous caller.
+  const ctx = await optionalCaller(req);
+
   // `mine` is validated by the same schema as everything else; it arrives in
   // parsed.data, not as a raw string.
   const ownOnly = mine === 1 || String((req.query as Record<string, unknown>)['mine'] ?? '') === '1';
 
   let scopedSupplierId: number | null = null;
   if (ownOnly) {
-    const auth = req.headers.authorization;
-    const token = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-    const uid = req.userId ?? (token ? verifyToken(token)?.sub : undefined);
-    if (uid == null) throw new HttpError(401, { error: 'auth_required' });
-
-    const ctx = await callerContext(uid);
     if (!ctx) throw new HttpError(401, { error: 'auth_required' });
     if (ctx.supplierId == null) {
       respond(res, c.zProductList, { items: [], total: 0, page, pages: 0 });
@@ -101,7 +194,19 @@ productsRouter.get('/', async (req, res) => {
     scopedSupplierId = ctx.supplierId;
   }
 
+  /**
+   * Pulled listings (022) leave the PUBLIC catalogue: a listing that 404s on its
+   * own detail URL must not still be browsable in the list. The owning supplier
+   * (a list scoped to their own row) and any admin keep seeing them, so a seller
+   * can find out why a lot vanished instead of assuming a bug.
+   */
+  const seesPulled =
+    ctx != null &&
+    (ctx.isAdmin ||
+      (ctx.supplierId != null && (scopedSupplierId === ctx.supplierId || supplierId === ctx.supplierId)));
+
   const conds: ReturnType<typeof and>[] = [];
+  if (!seesPulled) conds.push(sql`coalesce(${products.moderationStatus}, 'visible') <> 'pulled'`);
   if (scopedSupplierId != null) conds.push(eq(products.supplierId, scopedSupplierId));
   if (q) {
     conds.push(
@@ -152,7 +257,9 @@ productsRouter.get('/', async (req, res) => {
 
   const total = toNum(totalRow[0]?.total);
   respond(res, c.zProductList, {
-    items: rows.map(mapProduct),
+    // The list omits the gallery on purpose (one query per row for a 50-row
+    // page); location / lead time / moderation state ride along.
+    items: rows.map((r) => mapListing(r)),
     total,
     page,
     pages: Math.ceil(total / limit),
@@ -170,6 +277,10 @@ productsRouter.get('/categories', async (_req, res) => {
   const rows = await db
     .select({ category: products.category, n: sql<number>`count(*)` })
     .from(products)
+    // Pulled rows are out of the public catalogue, so they must be out of the
+    // counts too — otherwise a chip promises rows its own filter no longer
+    // returns (the exact mismatch the market strip was fixed for).
+    .where(sql`coalesce(${products.moderationStatus}, 'visible') <> 'pulled'`)
     .groupBy(products.category)
     .orderBy(desc(sql`count(*)`));
   const items = rows
@@ -250,6 +361,9 @@ productsRouter.get('/countries', async (_req, res) => {
   const rows = await db
     .select({ country: products.originCountry, n: sql<number>`count(*)` })
     .from(products)
+    // Same rule as /categories: a pulled listing is not in the catalogue this
+    // count describes (Σ /countries must equal Σ ?country=<each item>).
+    .where(sql`coalesce(${products.moderationStatus}, 'visible') <> 'pulled'`)
     .groupBy(products.originCountry);
   const merged = new Map<string, number>();
   for (const r of rows) {
@@ -295,6 +409,8 @@ productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) 
     quantityAvailable,
     status,
     listingType,
+    location,
+    leadTimeDays,
   } = input.data;
 
   // Origin defaults to the supplier's own registered country — never invented.
@@ -325,6 +441,10 @@ productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) 
       quantityAvailable: String(quantityAvailable),
       status,
       listingType,
+      // 022: seller-declared stock location and lead time. Both optional — a
+      // listing without them says "not stated" instead of a guessed value.
+      location: location ?? null,
+      leadTimeDays: leadTimeDays ?? null,
       // Real user-created supply. Only seed/import code writes 'demo'.
       dataSource: 'platform',
     })
@@ -339,10 +459,20 @@ productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) 
     .limit(1);
 
   res.status(201);
-  respond(res, c.zProduct, mapProduct(row));
+  // A brand-new listing has no uploaded photos yet — an empty array, not an
+  // absent field, so the client can render the gallery slot without guessing.
+  respond(res, c.zProduct, mapListing(row, { mediaRefs: [] }));
 });
 
-/** GET /api/products/:id — public detail; view tracking is best-effort. */
+/**
+ * GET /api/products/:id — public detail; view tracking is best-effort.
+ *
+ * Visibility (022): a pulled listing 404s for the public — the same shape an
+ * unknown id gets — while the supplier who owns it and any admin still read it,
+ * with `moderationStatus` (and the recorded reason) attached. The owner/admin
+ * response also carries the ordered gallery; the public one carries it too, since
+ * the photos are the listing's published content.
+ */
 productsRouter.get('/:id', async (req, res) => {
   const id = parseId(req);
   const [row] = await db
@@ -353,6 +483,11 @@ productsRouter.get('/:id', async (req, res) => {
     .where(eq(products.id, id))
     .limit(1);
   if (!row) throw new HttpError(404, { error: 'not_found' });
+
+  const ctx = await optionalCaller(req);
+  const ownsListing = ctx?.supplierId != null && ctx.supplierId === toNum(row.supplierId);
+  const privileged = ctx != null && (ctx.isAdmin || ownsListing);
+  if (isPulled(row) && !privileged) throw new HttpError(404, { error: 'not_found' });
 
   // Honest `totalViews` needs real rows to count. Anonymous browsing stores a
   // NULL userId. Recording a view must NEVER fail the read.
@@ -365,7 +500,12 @@ productsRouter.get('/:id', async (req, res) => {
     console.error('[products] view tracking failed (ignored):', err instanceof Error ? err.message : String(err));
   }
 
-  respond(res, c.zProduct, mapProduct(row));
+  const gallery = await fetchGallery([id]);
+  respond(
+    res,
+    privileged ? zProductModerated : c.zProduct,
+    mapListing(row, { mediaRefs: gallery.get(id) ?? [], includePulledReason: privileged }),
+  );
 });
 
 /* ---------------------------------------------------------------------------
@@ -544,12 +684,161 @@ productsRouter.post('/:id/questions/:qid/answer', requireAuth, async (req, res) 
   respond(res, c.zProductQuestion, mapProductQuestion(row));
 });
 
+/* ---------------------------------------------------------------------------
+ * Listing gallery (022) — attach / detach an uploaded photo.
+ *
+ * Ownership, not role, on both sides:
+ *   - the listing must belong to the caller's OWN supplier row (an admin may act
+ *     on any listing; a plain buyer has no supplier row and gets 403);
+ *   - the media row must be the caller's OWN upload (an admin may attach any
+ *     upload).
+ * A photo is never copied: `product_media` links the one `media` row, so the
+ * same upload can serve several listings and detaching one listing does not
+ * destroy the file for the others.
+ * ------------------------------------------------------------------------ */
+
+/** Next gallery slot: max(position) + 1, so the array keeps attach order. */
+async function nextGalleryPosition(productId: number): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`coalesce(max(${productMedia.position}), -1)` })
+    .from(productMedia)
+    .where(eq(productMedia.productId, productId));
+  return toNum(row?.n) + 1;
+}
+
+/**
+ * POST /api/products/:id/media — attach one of the caller's uploaded photos.
+ * Idempotent: attaching the same photo twice returns the existing gallery entry
+ * instead of putting the same photo in the list twice.
+ */
+productsRouter.post('/:id/media', requireAuth, async (req, res) => {
+  const id = parseId(req);
+  const input = c.zAttachProductMediaInput.safeParse(req.body ?? {});
+  if (!input.success) {
+    throw new HttpError(400, { error: 'validation_error', details: input.error.message });
+  }
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const ctx = await callerContext(uid);
+  if (!ctx) throw new HttpError(401, { error: 'auth_required' });
+
+  const [product] = await db
+    .select({ id: products.id, supplierId: products.supplierId })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!product) throw new HttpError(404, { error: 'not_found' });
+
+  const ownsListing = ctx.supplierId != null && ctx.supplierId === toNum(product.supplierId);
+  if (!ownsListing && !ctx.isAdmin) {
+    throw new HttpError(403, {
+      error: 'forbidden',
+      details: 'Only the supplier who owns this listing (or an admin) can attach photos to it.',
+    });
+  }
+
+  const [upload] = await db
+    .select(mediaColumnsNoBytes)
+    .from(media)
+    .where(eq(media.id, input.data.mediaId))
+    .limit(1);
+  // An unknown upload is a 404 — the order of checks means a caller who does not
+  // own the listing learns nothing about which media ids exist.
+  if (!upload) throw new HttpError(404, { error: 'not_found' });
+  if (toNum(upload.ownerUserId) !== ctx.userId && !ctx.isAdmin) {
+    throw new HttpError(403, { error: 'forbidden', details: 'That upload belongs to another account.' });
+  }
+
+  const [already] = await db
+    .select({ id: productMedia.id })
+    .from(productMedia)
+    .where(and(eq(productMedia.productId, id), eq(productMedia.mediaId, input.data.mediaId)))
+    .limit(1);
+  if (!already) {
+    await db.insert(productMedia).values({
+      productId: id,
+      mediaId: input.data.mediaId,
+      position: await nextGalleryPosition(id),
+    });
+  }
+
+  respond(res, c.zMediaRef, mediaRef(upload));
+});
+
+/**
+ * DELETE /api/products/:id/media/:mediaId — detach a photo from a listing.
+ *
+ * The gallery row is the link; the upload itself is only deleted when nothing
+ * else points at it (no other listing, no shop logo) — and only by the account
+ * that uploaded it, so an admin detaching someone else's photo does not destroy
+ * that seller's file. A media id that is not attached to this listing is a 404.
+ */
+productsRouter.delete('/:id/media/:mediaId', requireAuth, async (req, res) => {
+  const id = parseId(req);
+  const mediaId = parseParamId(req, 'mediaId');
+  const uid = req.userId;
+  if (uid == null) throw new HttpError(401, { error: 'auth_required' });
+
+  const ctx = await callerContext(uid);
+  if (!ctx) throw new HttpError(401, { error: 'auth_required' });
+
+  const [product] = await db
+    .select({ id: products.id, supplierId: products.supplierId })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!product) throw new HttpError(404, { error: 'not_found' });
+
+  const ownsListing = ctx.supplierId != null && ctx.supplierId === toNum(product.supplierId);
+  if (!ownsListing && !ctx.isAdmin) {
+    throw new HttpError(403, {
+      error: 'forbidden',
+      details: 'Only the supplier who owns this listing (or an admin) can detach its photos.',
+    });
+  }
+
+  const [link] = await db
+    .select({ id: productMedia.id })
+    .from(productMedia)
+    .where(and(eq(productMedia.productId, id), eq(productMedia.mediaId, mediaId)))
+    .limit(1);
+  if (!link) throw new HttpError(404, { error: 'not_found' });
+
+  await db.delete(productMedia).where(eq(productMedia.id, toNum(link.id)));
+
+  const [stillLinked] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(productMedia)
+    .where(eq(productMedia.mediaId, mediaId));
+  const [asLogo] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(suppliers)
+    .where(eq(suppliers.logoMediaId, mediaId));
+  if (toNum(stillLinked?.n) === 0 && toNum(asLogo?.n) === 0) {
+    const [upload] = await db
+      .select({ ownerUserId: media.ownerUserId })
+      .from(media)
+      .where(eq(media.id, mediaId))
+      .limit(1);
+    if (upload && toNum(upload.ownerUserId) === ctx.userId) {
+      await db.delete(media).where(eq(media.id, mediaId));
+    }
+  }
+
+  res.status(204).end();
+});
+
 /**
  * PATCH /api/products/:id — supplier edits their OWN listing.
  * Ownership, not role: a supplier whose row id differs from the listing's
- * supplierId gets 403 even though they hold a valid supplier token.
+ * supplierId gets 403 even though they hold a valid supplier token. An admin may
+ * edit any listing (that is how the admin console corrects a wrong price), and
+ * only an admin may edit a listing that has been PULLED — for its seller a pulled
+ * listing is locked with 409 `listing_pulled`, because a moderation decision is
+ * not something the moderated party silently overrides.
  */
-productsRouter.patch('/:id', requireAuth, requireRole('supplier'), async (req, res) => {
+productsRouter.patch('/:id', requireAuth, async (req, res) => {
   const id = parseId(req);
   const input = c.zUpdateProductInput.safeParse(req.body ?? {});
   if (!input.success) {
@@ -558,17 +847,33 @@ productsRouter.patch('/:id', requireAuth, requireRole('supplier'), async (req, r
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
 
+  const ctx = await callerContext(uid);
+  if (!ctx) throw new HttpError(401, { error: 'auth_required' });
+
+  // A buyer (no supplier profile, not an admin) is not an editor: 403.
   const mine = await ownSupplier(uid);
-  if (!mine) throw new HttpError(403, { error: 'forbidden', details: 'No supplier profile for this account.' });
+  if (!mine && !ctx.isAdmin) {
+    throw new HttpError(403, { error: 'forbidden', details: 'No supplier profile for this account.' });
+  }
 
   const [existing] = await db
-    .select({ id: products.id, supplierId: products.supplierId })
+    .select({ id: products.id, supplierId: products.supplierId, moderationStatus: products.moderationStatus })
     .from(products)
     .where(eq(products.id, id))
     .limit(1);
   if (!existing) throw new HttpError(404, { error: 'not_found' });
-  if (toNum(existing.supplierId) !== mine.id) {
+  const ownsListing = mine != null && toNum(existing.supplierId) === mine.id;
+  if (!ownsListing && !ctx.isAdmin) {
     throw new HttpError(403, { error: 'forbidden', details: 'This listing belongs to another supplier.' });
+  }
+  // A pulled listing is frozen for its seller: the fix is a conversation with the
+  // desk, not an edit that erases the moderation state. An admin may still edit
+  // (and unpull) it.
+  if (isPulled(existing) && !ctx.isAdmin) {
+    throw new HttpError(409, {
+      error: 'listing_pulled',
+      details: 'This listing was pulled from the catalogue and cannot be edited. Contact the FactoryDepo desk.',
+    });
   }
 
   const patch: Record<string, unknown> = {};
@@ -587,10 +892,19 @@ productsRouter.patch('/:id', requireAuth, requireRole('supplier'), async (req, r
   if (d.quantityAvailable !== undefined) patch.quantityAvailable = String(d.quantityAvailable);
   if (d.status !== undefined) patch.status = d.status;
   if (d.listingType !== undefined) patch.listingType = d.listingType;
-  // Never patchable here: supplierId, dataSource, verified (admin/seed only).
+  // 022: where the stock sits and how fast it ships — seller-editable.
+  if (d.location !== undefined) patch.location = d.location;
+  if (d.leadTimeDays !== undefined) patch.leadTimeDays = d.leadTimeDays;
+  // Never patchable here: supplierId, dataSource, verified, moderationStatus /
+  // pulledReason / pulledBy / pulledAt (the moderation plane is an admin act).
 
   if (Object.keys(patch).length > 0) {
-    await db.update(products).set(patch).where(and(eq(products.id, id), eq(products.supplierId, mine.id)));
+    patch.updatedAt = new Date();
+    const scope =
+      ctx.isAdmin || mine == null
+        ? eq(products.id, id)
+        : and(eq(products.id, id), eq(products.supplierId, mine.id));
+    await db.update(products).set(patch).where(scope);
   }
 
   const [row] = await db
@@ -601,7 +915,15 @@ productsRouter.patch('/:id', requireAuth, requireRole('supplier'), async (req, r
     .where(eq(products.id, id))
     .limit(1);
 
-  respond(res, c.zProduct, mapProduct(row));
+  const gallery = await fetchGallery([id]);
+  respond(
+    res,
+    ctx.isAdmin || ownsListing ? zProductModerated : c.zProduct,
+    mapListing(row, {
+      mediaRefs: gallery.get(id) ?? [],
+      includePulledReason: ctx.isAdmin || ownsListing,
+    }),
+  );
 });
 
 /**
@@ -628,10 +950,21 @@ productsRouter.delete('/:id', requireAuth, requireRole('supplier'), async (req, 
   }
 
   try {
+    // The listing's own telemetry goes with it. `product_views` is a counter
+    // ABOUT this listing (not a record belonging to someone else) and its FK has
+    // no ON DELETE CASCADE, so without this a listing that was ever opened could
+    // never be deleted by its owner.
+    await db.delete(productViews).where(eq(productViews.productId, id));
     await db.delete(products).where(and(eq(products.id, id), eq(products.supplierId, mine.id)));
   } catch (err) {
-    // Referenced by an order/offer/RFQ-flow row — deleting would break history.
-    if (err && typeof err === 'object' && 'code' in err && (err as { code?: string }).code === '23503') {
+    // Referenced by an order/offer/thread/saved-lot — deleting would break a
+    // record that belongs to another party. Drizzle wraps the driver error
+    // (DrizzleQueryError), so the pg code has to be read from `cause` too;
+    // reading only the wrapper turned this into a 500.
+    const code =
+      (err as { code?: string } | null)?.code ??
+      (err as { cause?: { code?: string } } | null)?.cause?.code;
+    if (code === '23503') {
       throw new HttpError(409, { error: 'listing_in_use', details: 'This listing is referenced by existing orders or offers.' });
     }
     throw err;
