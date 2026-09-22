@@ -1780,6 +1780,141 @@ export interface Dict {
   'product.noneElse': string;
   'product.spec.origin': string;
   'help.goTitle': string;
+
+  /* --- product detail (enterprise pass) --- */
+  'pd.home': string;
+  'pd.browse': string;
+  'pd.allCategories': string;
+  'pd.gallery': string;
+  'pd.photoCount': string;
+  'pd.zoomHint': string;
+  'pd.noPhotoYet': string;
+  'pd.keyFacts': string;
+  'pd.listedOn': string;
+  'pd.daysOnSite': string;
+  'pd.refresh': string;
+  'pd.share': string;
+  'pd.copiedLink': string;
+  'pd.reportListing': string;
+  'pd.buyBox': string;
+  'pd.unitPrice': string;
+  'pd.qty': string;
+  'pd.lineTotal': string;
+  'pd.inStock': string;
+  'pd.lowStock': string;
+  'pd.outOfStockNow': string;
+  'pd.requestQuotation': string;
+  'pd.contactSeller': string;
+  'pd.askQuestion': string;
+  'pd.sampleRequest': string;
+  'pd.tradeTerms': string;
+  'pd.leadTime': string;
+  'pd.packaging': string;
+  'pd.paymentTerms': string;
+  'pd.supplyAbilityT': string;
+  'pd.portOfLoading': string;
+  'pd.notProvided': string;
+  'pd.tabsOverview': string;
+  'pd.tabsSpecs': string;
+  'pd.tabsFaq': string;
+  'pd.tabsSupplier': string;
+  'pd.descriptionH': string;
+  'pd.specsH': string;
+  'pd.faqH': string;
+  'pd.faqIntro': string;
+  'pd.faqEmpty': string;
+  'pd.faqAskCta': string;
+  'pd.sellerAnswer': string;
+  'pd.awaitingAnswer': string;
+  'pd.yourQuestion': string;
+  'pd.questionPlaceholder': string;
+  'pd.submitQuestion': string;
+  'pd.questionSent': string;
+  'pd.signInToAsk': string;
+  'pd.companyProfile': string;
+  'pd.businessType': string;
+  'pd.yearFounded': string;
+  'pd.employees': string;
+  'pd.factoryArea': string;
+  'pd.mainMarkets': string;
+  'pd.certificates': string;
+  'pd.responseTime': string;
+  'pd.annualOutput': string;
+  'pd.moreFromSupplier': string;
+  'pd.similarProducts': string;
+  'pd.viewStore': string;
+  'pd.allFromSupplier': string;
+  'pd.trustVerified': string;
+  'pd.trustInspected': string;
+  'pd.trustEscrow': string;
+  'pd.trustLogistics': string;
+  'pd.statsTitle': string;
+  'pd.viewsCount': string;
+  'pd.offersCount': string;
+  'pd.ordersCount': string;
+  'pd.savedCount': string;
+  'pd.contactTitle': string;
+  'pd.contactIntro': string;
+  'pd.contactTarget': string;
+  'pd.contactQty': string;
+  'pd.contactMessage': string;
+  'pd.contactSend': string;
+  'pd.contactSent': string;
+  'pd.contactSentBody': string;
+  'pd.cancel': string;
+  'pd.close': string;
+  'pd.specEmpty': string;
+  'pd.supplierNoStats': string;
+  'pd.buyNowHeading': string;
+  'pd.shipsFromNote': string;
+  'pd.mobileBuy': string;
+  'pd.mobileQuote': string;
+
+  /* --- dashboards (enterprise pass) --- */
+  'dash.overview': string;
+  'dash.kpis': string;
+  'dash.toolbar': string;
+  'dash.searchPlaceholder': string;
+  'dash.sortBy': string;
+  'dash.sortNewest': string;
+  'dash.sortOldest': string;
+  'dash.sortPriceHigh': string;
+  'dash.sortPriceLow': string;
+  'dash.page': string;
+  'dash.prev': string;
+  'dash.next': string;
+  'dash.showing': string;
+  'dash.rowsTotal': string;
+  'dash.clearFilters': string;
+  'dash.filters': string;
+  'dash.noResults': string;
+  'dash.noResultsBody': string;
+  'dash.resetView': string;
+  'dash.exportCsv': string;
+  'dash.selected': string;
+  'dash.bulkActions': string;
+  'dash.markDone': string;
+  'dash.lastUpdated': string;
+  'dash.quickActions': string;
+  'dash.needsAttention': string;
+  'dash.allClear': string;
+  'dash.recentActivity': string;
+  'dash.noActivity': string;
+  'dash.completionPct': string;
+  'dash.openDetail': string;
+  'dash.timeToRespond': string;
+  'dash.avgOrderValue': string;
+  'dash.viewAll': string;
+  'dash.counts': string;
+  'dash.perListing': string;
+  'dash.stockValue': string;
+  'dash.daysLive': string;
+  'dash.answered': string;
+  'dash.pending': string;
+  'dash.hidden': string;
+  'dash.answer': string;
+  'dash.answerPlaceholder': string;
+  'dash.submitAnswer': string;
 }
 
 /**
@@ -3420,6 +3555,141 @@ const en: Dict = {
   'admin.verification.submittedNote': 'Submitted date is the row timestamp the API returns',
   'admin.verification.supplierFallback': 'Supplier #{id}',
   'admin.overview.tickets.openOnly': '{open} open',
+
+  /* --- product detail (enterprise pass) --- */
+  'pd.home': 'Home',
+  'pd.browse': 'Browse',
+  'pd.allCategories': 'All categories',
+  'pd.gallery': 'Product images',
+  'pd.photoCount': '{n} photos',
+  'pd.zoomHint': 'Hover to zoom',
+  'pd.noPhotoYet': 'No photo supplied for this listing',
+  'pd.keyFacts': 'Key facts',
+  'pd.listedOn': 'Listed on',
+  'pd.daysOnSite': 'Listed {n} days ago',
+  'pd.refresh': 'Refresh',
+  'pd.share': 'Share',
+  'pd.copiedLink': 'Link copied',
+  'pd.reportListing': 'Report this listing',
+  'pd.buyBox': 'Order this stock',
+  'pd.unitPrice': 'Unit price',
+  'pd.qty': 'Quantity',
+  'pd.lineTotal': 'Line total',
+  'pd.inStock': 'In stock',
+  'pd.lowStock': 'Low stock',
+  'pd.outOfStockNow': 'Out of stock',
+  'pd.requestQuotation': 'Request a quotation',
+  'pd.contactSeller': 'Contact seller',
+  'pd.askQuestion': 'Ask a question',
+  'pd.sampleRequest': 'Request a sample',
+  'pd.tradeTerms': 'Trade terms',
+  'pd.leadTime': 'Lead time',
+  'pd.packaging': 'Packaging',
+  'pd.paymentTerms': 'Payment terms',
+  'pd.supplyAbilityT': 'Supply ability',
+  'pd.portOfLoading': 'Port of loading',
+  'pd.notProvided': 'Not provided',
+  'pd.tabsOverview': 'Overview',
+  'pd.tabsSpecs': 'Specifications',
+  'pd.tabsFaq': 'Questions & answers',
+  'pd.tabsSupplier': 'Supplier',
+  'pd.descriptionH': 'Product description',
+  'pd.specsH': 'Specifications',
+  'pd.faqH': 'Questions & answers',
+  'pd.faqIntro': 'Questions buyers asked about this listing, with the seller\'s answers.',
+  'pd.faqEmpty': 'No questions on this listing yet.',
+  'pd.faqAskCta': 'Ask a question',
+  'pd.sellerAnswer': 'Seller\'s answer',
+  'pd.awaitingAnswer': 'Awaiting the seller\'s answer',
+  'pd.yourQuestion': 'Your question',
+  'pd.questionPlaceholder': 'Ask about minimum order, lead time, samples or packaging…',
+  'pd.submitQuestion': 'Submit question',
+  'pd.questionSent': 'Question submitted',
+  'pd.signInToAsk': 'Sign in to ask the seller a question',
+  'pd.companyProfile': 'Company profile',
+  'pd.businessType': 'Business type',
+  'pd.yearFounded': 'Year founded',
+  'pd.employees': 'Employees',
+  'pd.factoryArea': 'Factory area',
+  'pd.mainMarkets': 'Main markets',
+  'pd.certificates': 'Certificates',
+  'pd.responseTime': 'Response time',
+  'pd.annualOutput': 'Annual output',
+  'pd.moreFromSupplier': 'More from this supplier',
+  'pd.similarProducts': 'Similar products',
+  'pd.viewStore': 'Visit store',
+  'pd.allFromSupplier': 'All products from this supplier',
+  'pd.trustVerified': 'Verified supplier',
+  'pd.trustInspected': 'Inspected stock',
+  'pd.trustEscrow': 'Escrow payment',
+  'pd.trustLogistics': 'Container logistics',
+  'pd.statsTitle': 'Listing statistics',
+  'pd.viewsCount': '{n} views',
+  'pd.offersCount': '{n} offers',
+  'pd.ordersCount': '{n} orders',
+  'pd.savedCount': 'Saved {n} times',
+  'pd.contactTitle': 'Contact the seller',
+  'pd.contactIntro': 'Your message opens a thread with this listing as its subject.',
+  'pd.contactTarget': 'Seller',
+  'pd.contactQty': 'Quantity needed',
+  'pd.contactMessage': 'Message',
+  'pd.contactSend': 'Send message',
+  'pd.contactSent': 'Message sent',
+  'pd.contactSentBody': 'The seller sees this in their messages inbox and can reply there.',
+  'pd.cancel': 'Cancel',
+  'pd.close': 'Close',
+  'pd.specEmpty': 'The supplier has not published any specification for this listing.',
+  'pd.supplierNoStats': 'This supplier has not published performance figures yet.',
+  'pd.buyNowHeading': 'Buy now',
+  'pd.shipsFromNote': 'Ships from the supplier\'s location; freight is quoted separately.',
+  'pd.mobileBuy': 'Buy now',
+  'pd.mobileQuote': 'Request quotation',
+
+  /* --- dashboards (enterprise pass) --- */
+  'dash.overview': 'Overview',
+  'dash.kpis': 'Key figures',
+  'dash.toolbar': 'Table controls',
+  'dash.searchPlaceholder': 'Search this list…',
+  'dash.sortBy': 'Sort by',
+  'dash.sortNewest': 'Newest first',
+  'dash.sortOldest': 'Oldest first',
+  'dash.sortPriceHigh': 'Price: high to low',
+  'dash.sortPriceLow': 'Price: low to high',
+  'dash.page': 'Page',
+  'dash.prev': 'Previous',
+  'dash.next': 'Next',
+  'dash.showing': 'Showing {from}–{to} of {total}',
+  'dash.rowsTotal': '{n} rows',
+  'dash.clearFilters': 'Clear filters',
+  'dash.filters': 'Filters',
+  'dash.noResults': 'No results',
+  'dash.noResultsBody': 'No row matches the current filters. Clear them to see the full list.',
+  'dash.resetView': 'Reset view',
+  'dash.exportCsv': 'Export CSV',
+  'dash.selected': '{n} selected',
+  'dash.bulkActions': 'Bulk actions',
+  'dash.markDone': 'Mark as done',
+  'dash.lastUpdated': 'Last update',
+  'dash.quickActions': 'Quick actions',
+  'dash.needsAttention': 'Needs attention',
+  'dash.allClear': 'Nothing needs attention',
+  'dash.recentActivity': 'Recent activity',
+  'dash.noActivity': 'No activity recorded yet',
+  'dash.completionPct': '{n}% complete',
+  'dash.openDetail': 'Open',
+  'dash.timeToRespond': 'Time to respond',
+  'dash.avgOrderValue': 'Average order value',
+  'dash.viewAll': 'View all',
+  'dash.counts': 'Counts',
+  'dash.perListing': '{n} views',
+  'dash.stockValue': 'Stock value',
+  'dash.daysLive': 'Days live',
+  'dash.answered': 'Answered',
+  'dash.pending': 'Pending',
+  'dash.hidden': 'Hidden',
+  'dash.answer': 'Answer',
+  'dash.answerPlaceholder': 'Write the answer the buyer will see…',
+  'dash.submitAnswer': 'Submit answer',
 };
 
 /** Every valid translation key. */
@@ -5058,6 +5328,141 @@ const tr: Partial<Record<DictKey, string>> = {
   'admin.verification.submittedNote': 'Gönderilme tarihi, API\'nin döndürdüğü satır zaman damgasıdır',
   'admin.verification.supplierFallback': 'Tedarikçi #{id}',
   'admin.overview.tickets.openOnly': '{open} açık',
+
+  /* --- product detail (enterprise pass) --- */
+  'pd.home': 'Ana sayfa',
+  'pd.browse': 'Göz at',
+  'pd.allCategories': 'Tüm kategoriler',
+  'pd.gallery': 'Ürün görselleri',
+  'pd.photoCount': '{n} fotoğraf',
+  'pd.zoomHint': 'Yakınlaştırmak için üzerine gelin',
+  'pd.noPhotoYet': 'Bu ilan için fotoğraf yüklenmemiş',
+  'pd.keyFacts': 'Önemli bilgiler',
+  'pd.listedOn': 'Yayınlanma tarihi',
+  'pd.daysOnSite': '{n} gün önce yayınlandı',
+  'pd.refresh': 'Yenile',
+  'pd.share': 'Paylaş',
+  'pd.copiedLink': 'Bağlantı kopyalandı',
+  'pd.reportListing': 'Bu ilanı bildir',
+  'pd.buyBox': 'Bu stoğu sipariş edin',
+  'pd.unitPrice': 'Birim fiyat',
+  'pd.qty': 'Miktar',
+  'pd.lineTotal': 'Satır toplamı',
+  'pd.inStock': 'Stokta',
+  'pd.lowStock': 'Az stok',
+  'pd.outOfStockNow': 'Stokta yok',
+  'pd.requestQuotation': 'Teklif isteyin',
+  'pd.contactSeller': 'Satıcıyla iletişime geç',
+  'pd.askQuestion': 'Satıcıya soru sorun',
+  'pd.sampleRequest': 'Numune isteyin',
+  'pd.tradeTerms': 'Ticaret koşulları',
+  'pd.leadTime': 'Tedarik süresi',
+  'pd.packaging': 'Ambalaj',
+  'pd.paymentTerms': 'Ödeme koşulları',
+  'pd.supplyAbilityT': 'Tedarik kapasitesi',
+  'pd.portOfLoading': 'Yükleme limanı',
+  'pd.notProvided': 'Belirtilmemiş',
+  'pd.tabsOverview': 'Genel bakış',
+  'pd.tabsSpecs': 'Teknik özellikler',
+  'pd.tabsFaq': 'Soru ve cevaplar',
+  'pd.tabsSupplier': 'Tedarikçi',
+  'pd.descriptionH': 'Ürün açıklaması',
+  'pd.specsH': 'Teknik özellikler',
+  'pd.faqH': 'Soru ve cevaplar',
+  'pd.faqIntro': 'Alıcıların bu ilan için sorduğu sorular ve satıcının cevapları.',
+  'pd.faqEmpty': 'Bu ilan için henüz soru yok.',
+  'pd.faqAskCta': 'Soru sorun',
+  'pd.sellerAnswer': 'Satıcının cevabı',
+  'pd.awaitingAnswer': 'Satıcının cevabı bekleniyor',
+  'pd.yourQuestion': 'Sorunuz',
+  'pd.questionPlaceholder': 'Minimum sipariş, tedarik süresi, numune veya ambalaj hakkında sorun…',
+  'pd.submitQuestion': 'Soruyu gönder',
+  'pd.questionSent': 'Soru gönderildi',
+  'pd.signInToAsk': 'Satıcıya soru sormak için oturum açın',
+  'pd.companyProfile': 'Şirket profili',
+  'pd.businessType': 'Şirket türü',
+  'pd.yearFounded': 'Kuruluş yılı',
+  'pd.employees': 'Çalışan sayısı',
+  'pd.factoryArea': 'Fabrika alanı',
+  'pd.mainMarkets': 'Ana pazarlar',
+  'pd.certificates': 'Sertifikalar',
+  'pd.responseTime': 'Yanıt süresi',
+  'pd.annualOutput': 'Yıllık üretim',
+  'pd.moreFromSupplier': 'Bu tedarikçiden daha fazlası',
+  'pd.similarProducts': 'Benzer ürünler',
+  'pd.viewStore': 'Mağazayı ziyaret et',
+  'pd.allFromSupplier': 'Bu tedarikçinin tüm ürünleri',
+  'pd.trustVerified': 'Doğrulanmış tedarikçi',
+  'pd.trustInspected': 'Denetlenmiş stok',
+  'pd.trustEscrow': 'Emanet ödeme',
+  'pd.trustLogistics': 'Konteyner lojistiği',
+  'pd.statsTitle': 'İlan istatistikleri',
+  'pd.viewsCount': '{n} görüntülenme',
+  'pd.offersCount': '{n} teklif',
+  'pd.ordersCount': '{n} sipariş',
+  'pd.savedCount': '{n} kez kaydedildi',
+  'pd.contactTitle': 'Satıcıyla iletişime geçin',
+  'pd.contactIntro': 'Mesajınız bu ilanı konu alan bir yazışma başlatır.',
+  'pd.contactTarget': 'Satıcı',
+  'pd.contactQty': 'İhtiyaç duyulan miktar',
+  'pd.contactMessage': 'Mesaj',
+  'pd.contactSend': 'Mesajı gönder',
+  'pd.contactSent': 'Mesaj gönderildi',
+  'pd.contactSentBody': 'Satıcı bunu mesaj kutusunda görür ve oradan cevaplayabilir.',
+  'pd.cancel': 'Vazgeç',
+  'pd.close': 'Kapat',
+  'pd.specEmpty': 'Tedarikçi bu ilan için teknik özellik yayınlamamış.',
+  'pd.supplierNoStats': 'Bu tedarikçi henüz performans verisi yayınlamamış.',
+  'pd.buyNowHeading': 'Hemen satın al',
+  'pd.shipsFromNote': 'Sevkiyat tedarikçinin bulunduğu yerden yapılır; navlun ayrıca fiyatlanır.',
+  'pd.mobileBuy': 'Hemen satın al',
+  'pd.mobileQuote': 'Teklif isteyin',
+
+  /* --- dashboards (enterprise pass) --- */
+  'dash.overview': 'Genel bakış',
+  'dash.kpis': 'Temel göstergeler',
+  'dash.toolbar': 'Tablo denetimleri',
+  'dash.searchPlaceholder': 'Bu listede ara…',
+  'dash.sortBy': 'Sırala',
+  'dash.sortNewest': 'En yeni önce',
+  'dash.sortOldest': 'En eski önce',
+  'dash.sortPriceHigh': 'Fiyat: yüksekten düşüğe',
+  'dash.sortPriceLow': 'Fiyat: düşükten yükseğe',
+  'dash.page': 'Sayfa',
+  'dash.prev': 'Önceki',
+  'dash.next': 'Sonraki',
+  'dash.showing': '{total} kayıttan {from}–{to} arası gösteriliyor',
+  'dash.rowsTotal': '{n} kayıt',
+  'dash.clearFilters': 'Filtreleri temizle',
+  'dash.filters': 'Filtreler',
+  'dash.noResults': 'Sonuç yok',
+  'dash.noResultsBody': 'Geçerli filtrelerle eşleşen kayıt yok. Tam listeyi görmek için filtreleri temizleyin.',
+  'dash.resetView': 'Görünümü sıfırla',
+  'dash.exportCsv': 'CSV indir',
+  'dash.selected': '{n} seçildi',
+  'dash.bulkActions': 'Toplu işlemler',
+  'dash.markDone': 'Tamamlandı olarak işaretle',
+  'dash.lastUpdated': 'Son güncelleme',
+  'dash.quickActions': 'Hızlı işlemler',
+  'dash.needsAttention': 'İlgi gerektiriyor',
+  'dash.allClear': 'İlgi gerektiren bir şey yok',
+  'dash.recentActivity': 'Son hareketler',
+  'dash.noActivity': 'Henüz kayıtlı bir hareket yok',
+  'dash.completionPct': '%{n} tamamlandı',
+  'dash.openDetail': 'Aç',
+  'dash.timeToRespond': 'Yanıt süresi',
+  'dash.avgOrderValue': 'Ortalama sipariş değeri',
+  'dash.viewAll': 'Tümünü gör',
+  'dash.counts': 'Sayımlar',
+  'dash.perListing': '{n} görüntülenme',
+  'dash.stockValue': 'Stok değeri',
+  'dash.daysLive': 'Yayındaki gün sayısı',
+  'dash.answered': 'Cevaplanan',
+  'dash.pending': 'Bekleyen',
+  'dash.hidden': 'Gizli',
+  'dash.answer': 'Cevap',
+  'dash.answerPlaceholder': 'Alıcının göreceği cevabı yazın…',
+  'dash.submitAnswer': 'Cevabı gönder',
 };
 
 const ar: Partial<Record<DictKey, string>> = {
