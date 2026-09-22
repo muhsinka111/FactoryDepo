@@ -1,14 +1,18 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRoute, Link } from 'wouter';
 import {
-  useProduct, useSupplier, useMe, useCreateOrder, useCreateRfq, useProducts,
+  useProduct, useSupplier, useMe, useCreateOrder, useCreateRfq, useProducts, useCreateThread,
+  apiFetch,
 } from '@workspace/api-client-react';
 import type { ApiError } from '@workspace/api-client-react';
 import {
   View, Empty, StatusChip, DemoTag, Verified, Stars, requireAuthGate,
   ProductCard, StockTypeBadge,
 } from '../components';
+import { TabStrip } from '../dash';
 import { useI18n, type DictKey } from '../i18n';
+import ProductQa from './ProductQa';
 
 /** Price with its currency symbol, keeping the raw currency for anything non-USD. */
 function money(amount: number, currency: string): string {
@@ -21,18 +25,28 @@ function metric(value: number | null | undefined): string {
   return value === null || value === undefined || value <= 0 ? '—' : String(value);
 }
 
+/** Whole days since an ISO timestamp; `null` when the timestamp is unusable. */
+function daysSince(iso: string): number | null {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  return Math.max(0, Math.floor((Date.now() - then) / 86_400_000));
+}
+
 type ProductData = NonNullable<ReturnType<typeof useProduct>['data']>;
+type SupplierData = NonNullable<ReturnType<typeof useSupplier>['data']>;
 
 /**
  * Buy-now checkout. The quantity is clamped to the stock the API reports, so a
  * buyer can never order more than `quantityAvailable`.
  */
-function CheckoutModal({ product, onClose }: { product: ProductData; onClose: () => void }) {
+function CheckoutModal({
+  product, qty: initialQty, onClose,
+}: { product: ProductData; qty: number; onClose: () => void }) {
   const { t, locale } = useI18n();
   const { data: user } = useMe();
   const createOrder = useCreateOrder();
   const stock = product.quantityAvailable;
-  const [qty, setQty] = useState<number>(Math.max(product.moq, 1));
+  const [qty, setQty] = useState<number>(initialQty);
   const [form, setForm] = useState({
     shippingName: user?.name ?? '',
     shippingAddress: '',
@@ -190,10 +204,12 @@ function CheckoutModal({ product, onClose }: { product: ProductData; onClose: ()
  * RFQ instead of an instant purchase. A request needs a title, quantity and
  * unit, so the buyer states them here rather than us guessing on their behalf.
  */
-function RfqModal({ product, onClose }: { product: ProductData; onClose: () => void }) {
+function RfqModal({
+  product, qty: initialQty, onClose,
+}: { product: ProductData; qty: number; onClose: () => void }) {
   const { t, locale } = useI18n();
   const createRfq = useCreateRfq();
-  const [quantity, setQuantity] = useState(String(Math.max(product.moq, 1)));
+  const [quantity, setQuantity] = useState(String(initialQty));
   const [unit, setUnit] = useState(product.unit);
   const [notes, setNotes] = useState('');
   const [done, setDone] = useState(false);
@@ -288,9 +304,274 @@ function RfqModal({ product, onClose }: { product: ProductData; onClose: () => v
 }
 
 /**
- * Product detail — gallery, honest stock line, supplier panel and the buy /
- * request actions. Every figure on this page comes from the API; when a value
- * is missing we print an em dash instead of a plausible-looking number.
+ * Contact the seller: opens (or reuses) a message thread with this listing as its
+ * subject and posts the buyer's first message. The thread de-duplicates on the
+ * server, so reaching out twice continues the same conversation — it then shows
+ * up in the seller's own `/supplier/messages` inbox.
+ */
+function ContactModal({
+  product, qty: initialQty, onClose,
+}: { product: ProductData; qty: number; onClose: () => void }) {
+  const { t, locale } = useI18n();
+  const createThread = useCreateThread();
+  const [qty, setQty] = useState('');
+  const [message, setMessage] = useState('');
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => { setQty(initialQty > 0 ? String(initialQty) : ''); }, [initialQty]);
+
+  const send = async () => {
+    setErr(null);
+    try {
+      const thread = await createThread.mutateAsync({
+        supplierId: product.supplierId,
+        productId: product.id,
+        subject: product.name.slice(0, 200),
+      });
+      // The quantity is the buyer's own input, so it travels as the first line
+      // of their message instead of as a field the API does not have.
+      const body = qty.trim() ? `${qty.trim()} ${product.unit}\n${message.trim()}` : message.trim();
+      await apiFetch(`/threads/${thread.id}/messages`, { method: 'POST', body: { body } });
+      setDone(true);
+    } catch (e) {
+      // The API's own message — e.g. `own_supplier` when a supplier tries to
+      // message their own profile. Nothing is invented to soften it.
+      setErr((e as ApiError).message || '—');
+    }
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h2>{t('pd.contactTitle')}</h2>
+          <button className="x" onClick={onClose} aria-label={t('pd.close')}>✕</button>
+        </div>
+        <div className="mb">
+          {done ? (
+            <>
+              <p className="strong" style={{ marginTop: 0 }}>{t('pd.contactSent')}</p>
+              <p className="muted" style={{ marginTop: 6 }}>{t('pd.contactSentBody')}</p>
+              <div className="row" style={{ gap: 8, marginTop: 14 }}>
+                <Link href="/messages" className="btn btn-primary">{t('nav.messages')}</Link>
+                <button className="btn btn-grey" onClick={onClose}>{t('pd.close')}</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="muted" style={{ margin: '0 0 12px' }}>{t('pd.contactIntro')}</p>
+              <div className="field">
+                <label htmlFor="ct-seller">{t('pd.contactTarget')}</label>
+                <input
+                  id="ct-seller" className="in" readOnly
+                  value={`${product.supplierName} · ${product.name}`}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="ct-qty">{t('pd.contactQty')} ({product.unit})</label>
+                <input
+                  id="ct-qty" className="in" inputMode="numeric" placeholder={String(product.moq)}
+                  value={qty} onChange={(e) => setQty(e.target.value)}
+                />
+                <div className="hint">
+                  {t('rfqModal.moqHint', { moq: product.moq.toLocaleString(locale), unit: product.unit })}
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="ct-msg">{t('pd.contactMessage')} <i>*</i></label>
+                <textarea
+                  id="ct-msg" className="in" rows={4}
+                  placeholder={t('pd.questionPlaceholder')}
+                  value={message} onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+              {err ? <p className="errtext">{err}</p> : null}
+            </>
+          )}
+        </div>
+        {!done && (
+          <div className="mf">
+            <button className="btn btn-grey" onClick={onClose}>{t('pd.cancel')}</button>
+            <button
+              className="btn btn-primary"
+              disabled={createThread.isPending || message.trim().length === 0}
+              onClick={send}
+            >
+              {t('pd.contactSend')}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Supplier tab — the company profile. Only what the API returns is presented as
+ * fact: a row it cannot fill reads `pd.notProvided`, and a supplier who has
+ * published no performance figures gets one honest sentence rather than a wall
+ * of dashes. Employees, factory area and certificates are NOT in the API
+ * contract, so they are not shown at all.
+ */
+function SupplierPanel({
+  supplier, loading, product,
+}: { supplier: SupplierData | undefined; loading: boolean; product: ProductData }) {
+  const { t, locale } = useI18n();
+
+  if (loading) {
+    return (
+      <div className="card"><div className="bd"><span className="muted">{t('product.loadingSupplier')}</span></div></div>
+    );
+  }
+  if (!supplier) {
+    return (
+      <div className="card"><div className="bd"><span className="muted">{t('product.supplierUnavailable')}</span></div></div>
+    );
+  }
+
+  const s = supplier;
+  const na = <span className="na">{t('pd.notProvided')}</span>;
+  const hasPerformance =
+    s.rating > 0 || s.inspectionsCount > 0 || s.fulfillmentRate > 0 || s.trustScore > 0;
+
+  const rows: [string, ReactNode][] = [
+    [t('checkout.country'), s.country || na],
+    [t('checkout.city'), s.city ? s.city : na],
+    [t('product.verifiedLevel'), s.verifiedLevel > 0 ? t('product.levelN', { n: s.verifiedLevel }) : na],
+    [t('admin.suppliers.colListings'), s.productCount > 0 ? s.productCount.toLocaleString(locale) : na],
+    [t('product.tradingSince'), s.since ? s.since : na],
+  ];
+
+  return (
+    <div className="card">
+      <div className="hd">
+        <h2>{t('pd.companyProfile')}</h2>
+        <Link href={`/suppliers/${s.id}`} className="link">{t('pd.viewStore')}</Link>
+      </div>
+      <div className="bd">
+        <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+          <span className="av" style={{ width: 34, height: 34, fontSize: 13 }}>
+            {s.companyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+              <b style={{ fontSize: 13 }}>{s.companyName}</b>
+              {s.verifiedLevel >= 2 && <Verified />}
+              {s.dataSource === 'demo' && <DemoTag />}
+            </div>
+            <div className="muted">
+              {s.country}
+              {s.city ? ` · ${s.city}` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div className="cap mt14">
+          {rows.map(([k, v]) => (
+            <Fragment key={k}>
+              <span className="k">{k}</span>
+              <span className="v">{v}</span>
+            </Fragment>
+          ))}
+        </div>
+
+        {s.tags.length > 0 && (
+          <>
+            <div className="muted mt10">{t('supplierDetail.capabilities')}</div>
+            <div className="row" style={{ gap: 5, flexWrap: 'wrap', marginTop: 5 }}>
+              {s.tags.map((tag) => <span key={tag} className="pill p-grey">{tag}</span>)}
+            </div>
+          </>
+        )}
+
+        {s.description ? (
+          <div className="descblock mt14">
+            <p className="raw" style={{ margin: 0 }}>{s.description}</p>
+          </div>
+        ) : null}
+
+        <div className="sechead mt14"><h2>{t('pd.statsTitle')}</h2></div>
+        {hasPerformance ? (
+          <div className="cap">
+            <span className="k">{t('product.rating')}</span>
+            <span className="v">
+              {s.rating > 0 ? <><Stars rating={s.rating} /> <span className="muted tnum">{s.rating.toFixed(1)}</span></> : na}
+            </span>
+            <span className="k">{t('product.inspections')}</span>
+            <span className="v tnum">{metric(s.inspectionsCount)}</span>
+            <span className="k">{t('product.fulfilment')}</span>
+            <span className="v tnum">{s.fulfillmentRate > 0 ? `${s.fulfillmentRate.toFixed(1)}%` : na}</span>
+            <span className="k">{t('supplierDetail.trustScore')}</span>
+            <span className="v tnum">{metric(s.trustScore)}</span>
+          </div>
+        ) : (
+          <p className="muted" style={{ margin: 0 }}>{t('pd.supplierNoStats')}</p>
+        )}
+        <p className="hint">{t('product.supplierFiguresHint')}</p>
+        <div className="row" style={{ gap: 7, marginTop: 10, flexWrap: 'wrap' }}>
+          <Link href={`/suppliers/${s.id}`} className="btn btn-sm btn-grey">{t('pd.viewStore')}</Link>
+          <Link href={`/explore?category=${encodeURIComponent(product.category)}`} className="btn btn-sm btn-grey">
+            {t('pd.similarProducts')}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Mobile action bar geometry, measured from the live DOM rather than assumed.
+ *
+ * Below 820px the app shell already owns the bottom edge with its own
+ * `.bottomnav` (styles.css: `position:fixed;bottom:0;z-index:70`). The product
+ * bar is fixed to that same edge, so it is lifted by the nav's real height and
+ * the page reserves exactly the height the bar occupies — otherwise the two
+ * bars would stack on top of each other and the last rail would end up behind
+ * them. Nothing here is a magic number: both values come from `getComputedStyle`
+ * / `offsetHeight` at runtime and are re-measured on resize.
+ */
+function useMobileBar() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ lift: 0, h: 0 });
+  useEffect(() => {
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const bar = ref.current;
+      const nav = document.querySelector<HTMLElement>('.bottomnav');
+      const navShown = !!nav && getComputedStyle(nav).display !== 'none';
+      const barShown = !!bar && getComputedStyle(bar).display !== 'none';
+      const lift = navShown && nav ? nav.offsetHeight : 0;
+      const h = barShown && bar ? bar.offsetHeight : 0;
+      // Only a genuine change re-renders, so the observer can never loop.
+      setBox((prev) => (prev.lift === lift && prev.h === h ? prev : { lift, h }));
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(measure); };
+    schedule();
+    window.addEventListener('resize', schedule);
+    // The shell mounts its own bottom nav (and swaps it per role) *after* this
+    // page's first paint, so watch the DOM rather than assuming it is there yet.
+    const mo = new MutationObserver(schedule);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      window.removeEventListener('resize', schedule);
+      mo.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return { ...box, ref };
+}
+
+/**
+ * Product detail — an Alibaba-style B2B listing page: breadcrumb, gallery and key
+ * facts on the left, a sticky buy box with the seller on the right, then the
+ * tabbed detail (overview / specifications / questions & answers / supplier),
+ * the catalogue rails and a mobile action bar.
+ *
+ * Every figure on this page comes from the API. A value it does not supply reads
+ * an em dash or `pd.notProvided`; nothing here invents a number, a certification,
+ * a lead time or a trade term.
  */
 export default function ProductDetail({ params }: { params?: { id?: string } }) {
   const { t, locale } = useI18n();
@@ -303,12 +584,34 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
   const { data: me } = useMe();
   const [checkout, setCheckout] = useState(false);
   const [rfq, setRfq] = useState(false);
-  /**
-   * Same-category stock for the rail at the foot of the page. Fetched from the
-   * public endpoint (never invented), with images only, and the current listing
-   * filtered out.
-   */
+  const [contact, setContact] = useState(false);
+  const [tab, setTab] = useState('overview');
+  /** Bumped by the "Ask a question" CTA so the Q&A composer takes focus. */
+  const [qaFocus, setQaFocus] = useState(0);
+  const [qty, setQty] = useState(1);
+  const bar = useMobileBar();
+
+  /** Same-category stock for the rail at the foot of the page (public, real). */
   const same = useProducts({ category: p?.category, hasImage: 1, limit: 9 }, { enabled: !!p?.category });
+  /** Other lots from this supplier — the new public `supplierId` catalogue filter. */
+  const more = useProducts(
+    { supplierId: p?.supplierId, hasImage: 1, limit: 8 },
+    { enabled: !!p?.supplierId },
+  );
+  /**
+   * Ownership is the server's answer, never our inference: `mine=1` returns the
+   * caller's own listings and an empty list for an account without a supplier
+   * profile, so a listing whose supplierId appears there belongs to this viewer.
+   */
+  const mine = useProducts(
+    { mine: 1, limit: 1 },
+    { enabled: !!me && (me.role === 'supplier' || me.role === 'admin') },
+  );
+
+  // A new listing starts its stepper at that listing's own MOQ.
+  const pid = p?.id;
+  const moq = p?.moq ?? 1;
+  useEffect(() => { setQty(moq); }, [pid, moq]);
 
   if (isLoading) {
     const what = t('product.loadingThis');
@@ -328,262 +631,520 @@ export default function ProductDetail({ params }: { params?: { id?: string } }) 
     );
   }
 
-  const outOfStock = p.status === 'sold_out' || p.quantityAvailable <= 0;
   const s = supplier.data;
+  const outOfStock = p.status === 'sold_out' || p.quantityAvailable <= 0;
+  /** The stepper's hard ceiling: real stock, never below the listing's MOQ. */
+  const maxQty = Math.max(p.quantityAvailable, p.moq);
+  const q = Math.min(Math.max(qty, p.moq), maxQty);
+  const lineTotal = p.price * q;
+  const lowStock = !outOfStock && p.quantityAvailable <= p.moq * 2;
+  const days = daysSince(p.createdAt);
+  const listedOn = new Date(p.createdAt);
+  const listedOnText = Number.isNaN(listedOn.getTime()) ? '—' : listedOn.toLocaleDateString(locale);
+
+  const canAnswer = me?.role === 'admin' || !!mine.data?.items.some((x) => x.supplierId === p.supplierId);
+
   const others = (same.data?.items ?? []).filter((x) => x.id !== p.id).slice(0, 8);
+  const moreItems = (more.data?.items ?? []).filter((x) => x.id !== p.id).slice(0, 8);
+  const moreIds = new Set(moreItems.map((x) => x.id));
+  /** Same category, minus whatever the supplier rail already shows above it. */
+  const similar = others.filter((x) => !moreIds.has(x.id));
+
+  const step = (d: number) => setQty((v) => Math.min(Math.max(v + d, p.moq), maxQty));
+
+  const askQuestion = () => {
+    setTab('faq');
+    setQaFocus((n) => n + 1);
+  };
+
+  /** Every write action on this page needs an account; the gate owns that flow. */
+  const gated = (open: () => void) => () => {
+    if (!me) requireAuthGate();
+    else open();
+  };
+
+  /** Supplier-authored spec lines: only the structural labels are translated. */
+  const specLines = p.spec
+    .map((line) => {
+      const at = line.indexOf(':');
+      return at > 0
+        ? { k: line.slice(0, at).trim(), v: line.slice(at + 1).trim() || '—' }
+        : { k: t('product.col.attribute'), v: line };
+    })
+    .filter((row, i, all) => all.findIndex((x) => x.k === row.k && x.v === row.v) === i);
+
+  const keySpecs: [string, ReactNode][] = [
+    [t('product.spec.category'), <Link key="c" href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>],
+    [t('product.spec.unit'), p.unit],
+    [t('product.minOrder'), `${p.moq.toLocaleString(locale)} ${p.unit}`],
+    [t('product.availableNow'), `${p.quantityAvailable.toLocaleString(locale)} ${p.unit}`],
+    [t('product.origin'), p.originCountry],
+    [t('pd.listedOn'), listedOnText],
+  ];
 
   return (
-    <View
-      title={p.name}
-      sub={
-        <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
-          <span>·</span>
-          <Link href={`/explore?country=${encodeURIComponent(p.originCountry)}`}>{p.originCountry}</Link>
-          <Link href="/explore" style={{ fontSize: 12.5 }}>← {t('product.backToExplore')}</Link>
-        </span>
-      }
-      actions={
-        <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          {p.verified && <Verified />}
-          {p.purityGrade && <span className="pill p-blue">{p.purityGrade}</span>}
-          <StatusChip status={p.status} />
-          {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
-          {p.dataSource === 'demo' && <DemoTag />}
-        </span>
-      }
-    >
-      {checkout && <CheckoutModal product={p} onClose={() => setCheckout(false)} />}
-      {rfq && <RfqModal product={p} onClose={() => setRfq(false)} />}
+    <>
+      <nav className="crumb" aria-label="Breadcrumb">
+        <Link href="/explore">{t('pd.home')}</Link>
+        <span className="sep">›</span>
+        <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
+        <span className="sep">›</span>
+        <span className="now" title={p.name}>{p.name}</span>
+      </nav>
 
-      <div className="cols">
-        {/* ---------- gallery ---------- */}
-        <div>
-          <div className="galmain">
-            {p.imageKey ? (
-              <img src={p.imageKey} alt={p.name} />
-            ) : (
-              <div className="empty" style={{ paddingTop: 90 }}>{t('product.noPhoto')}</div>
-            )}
-          </div>
+      <View
+        title={p.name}
+        sub={
+          <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+            <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
+            <span>·</span>
+            <Link href={`/explore?country=${encodeURIComponent(p.originCountry)}`}>{p.originCountry}</Link>
+            <span>·</span>
+            <Link href={`/suppliers/${p.supplierId}`}>{p.supplierName}</Link>
+          </span>
+        }
+        actions={
+          <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+            {p.verified && <Verified />}
+            {p.purityGrade && <span className="pill p-blue">{p.purityGrade}</span>}
+            <StatusChip status={p.status} />
+            {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
+            {p.dataSource === 'demo' && <DemoTag />}
+          </span>
+        }
+      >
+        {checkout && <CheckoutModal product={p} qty={q} onClose={() => setCheckout(false)} />}
+        {rfq && <RfqModal product={p} qty={q} onClose={() => setRfq(false)} />}
+        {contact && <ContactModal product={p} qty={q} onClose={() => setContact(false)} />}
 
-          <div className="stats grid" style={{ marginTop: 12 }}>
-            <div className="card stat">
-              <div>
-                <div className="v">{money(p.price, p.currency)}</div>
-                <div className="l">{t('product.pricePer', { unit: p.unit })}</div>
-              </div>
-            </div>
-            <div className="card stat">
-              <div>
-                <div className="v">{p.moq.toLocaleString(locale)} {p.unit}</div>
-                <div className="l">{t('product.minOrder')}</div>
-              </div>
-            </div>
-            <div className="card stat">
-              <div>
-                <div className="v">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</div>
-                <div className="l">{t('product.availableNow')}</div>
-              </div>
-            </div>
-            <div className="card stat">
-              <div>
-                <div className="v">{t(`type.${p.listingType}` as DictKey)}</div>
-                <div className="l">{t('product.factStockType')}</div>
-              </div>
-            </div>
-            <div className="card stat">
-              <div>
-                <div className="v">{p.originCountry}</div>
-                <div className="l">{t('product.origin')}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ---------- buy / quote panel ---------- */}
-        <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
-          <div className="card">
-            <div className="hd">
-              <h2>{outOfStock ? t('product.unavailable') : t('product.buyNowHeading')}</h2>
-            </div>
-            <div className="bd">
-              <p className="muted" style={{ margin: '0 0 10px' }}>
-                {outOfStock
-                  ? p.status === 'sold_out'
-                    ? t('product.soldOutBody')
-                    : t('product.noUnitsBody')
-                  : t('product.purchaseTerms', {
-                      price: money(p.price, p.currency),
-                      unit: p.unit,
-                      moq: p.moq.toLocaleString(locale),
-                    })}
-              </p>
-
-              {!outOfStock && (
+        <div className="pdgrid">
+          {/* ---------------- left: gallery + key facts ---------------- */}
+          <div className="pdleft">
+            <div className={`pdimg${p.imageKey ? ' zoom' : ''}`}>
+              {p.imageKey ? (
                 <>
-                  <div className="between" style={{ marginBottom: 10 }}>
-                    <span className="muted">{t('product.stockOnHand')}</span>
-                    <span className="strong">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</span>
-                  </div>
-                  <button
-                    className="btn btn-gold"
-                    style={{ width: '100%' }}
-                    onClick={() => { if (!me) requireAuthGate(); else setCheckout(true); }}
-                  >
-                    {t('product.buyNowPrice', { price: money(p.price, p.currency), unit: p.unit })}
-                  </button>
-                </>
-              )}
-              {outOfStock && (
-                <button className="btn btn-grey" style={{ width: '100%' }} disabled>
-                  {t('product.outOfStock')}
-                </button>
-              )}
-
-              <button
-                className="btn btn-ghost"
-                style={{ width: '100%', marginTop: 7 }}
-                onClick={() => { if (!me) requireAuthGate(); else setRfq(true); }}
-              >
-                {t('product.requestQuote')}
-              </button>
-              <p className="hint" style={{ textAlign: 'center' }}>
-                {me ? t('product.shipsFrom', { country: p.originCountry }) : t('product.signInToOrder')}
-              </p>
-            </div>
-          </div>
-
-          {/* ---------- supplier ---------- */}
-          <div className="card">
-            <div className="hd">
-              <h2>{t('product.supplier')}</h2>
-              {s && <Link href={`/suppliers/${s.id}`} className="link">{t('product.viewProfile')}</Link>}
-            </div>
-            <div className="bd">
-              {supplier.isLoading ? (
-                <span className="muted">{t('product.loadingSupplier')}</span>
-              ) : s ? (
-                <>
-                  <div className="row" style={{ alignItems: 'flex-start', gap: 10 }}>
-                    <span className="av" style={{ width: 34, height: 34, fontSize: 13 }}>
-                      {s.companyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                        <b style={{ fontSize: 13 }}>{s.companyName}</b>
-                        {s.verifiedLevel >= 2 && <Verified />}
-                        {s.dataSource === 'demo' && <DemoTag />}
-                      </div>
-                      <div className="muted">{s.country}{s.city ? ` · ${s.city}` : ''}</div>
-                    </div>
-                  </div>
-                  <table style={{ marginTop: 10 }}>
-                    <tbody>
-                      <tr>
-                        <td className="muted">{t('product.rating')}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          {s.rating > 0 ? <><Stars rating={s.rating} /> <span className="muted">{s.rating.toFixed(1)}</span></> : '—'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="muted">{t('product.inspections')}</td>
-                        <td style={{ textAlign: 'right' }}>{metric(s.inspectionsCount)}</td>
-                      </tr>
-                      <tr>
-                        <td className="muted">{t('product.fulfilment')}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          {s.fulfillmentRate > 0 ? `${s.fulfillmentRate.toFixed(1)}%` : '—'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="muted">{t('product.verifiedLevel')}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          {s.verifiedLevel > 0 ? t('product.levelN', { n: s.verifiedLevel }) : '—'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="muted">{t('product.tradingSince')}</td>
-                        <td style={{ textAlign: 'right' }}>{s.since ?? '—'}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <p className="hint">{t('product.supplierFiguresHint')}</p>
+                  <img src={p.imageKey} alt={p.name} />
+                  <span className="tag">
+                    {p.verified && <Verified />}
+                    {p.listingType && p.listingType !== 'stock' && <StockTypeBadge type={p.listingType} />}
+                  </span>
+                  <span className="hintz">{t('pd.zoomHint')}</span>
                 </>
               ) : (
-                <span className="muted">{t('product.supplierUnavailable')}</span>
+                // No image key on the listing: say so instead of showing a photo
+                // of some other lot. The API supplies one image or none.
+                <div className="ph-empty">
+                  <span className="ph-glyph">📦</span>
+                  <span className="ph-cat">{p.category}</span>
+                  <span className="ph-note">{t('pd.noPhotoYet')}</span>
+                </div>
               )}
             </div>
+            {p.imageKey ? (
+              <p className="pdmeta">{t('pd.gallery')} · {t('pd.photoCount', { n: 1 })}</p>
+            ) : null}
+
+            <div className="sechead mt14"><h2>{t('pd.keyFacts')}</h2></div>
+            <div className="factstrip" style={{ marginTop: 0 }}>
+              <div className="fact">
+                <div className="k">{t('pd.unitPrice')}</div>
+                <div className="v tnum">{money(p.price, p.currency)}</div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.spec.unit')}</div>
+                <div className="v">{p.unit}</div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.minOrder')}</div>
+                <div className="v tnum">{p.moq.toLocaleString(locale)} {p.unit}</div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.availableNow')}</div>
+                <div className="v tnum">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.factStockType')}</div>
+                <div className="v">
+                  {p.listingType
+                    ? t(`type.${p.listingType}` as DictKey)
+                    : <span className="na">{t('pd.notProvided')}</span>}
+                </div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.origin')}</div>
+                <div className="v">{p.originCountry}</div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.spec.category')}</div>
+                <div className="v">
+                  <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
+                </div>
+              </div>
+              <div className="fact">
+                <div className="k">{t('pd.listedOn')}</div>
+                <div className="v">{listedOnText}</div>
+                {days !== null ? <div className="hint">{t('pd.daysOnSite', { n: days })}</div> : null}
+              </div>
+              <div className="fact">
+                <div className="k">{t('product.spec.purity')}</div>
+                <div className="v">
+                  {p.purityGrade ?? <span className="na">{t('pd.notProvided')}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ---------------- right: sticky buy box ---------------- */}
+          <div className="pdside">
+            <div className="card">
+              <div className="hd">
+                <h2>{outOfStock ? t('product.unavailable') : t('pd.buyBox')}</h2>
+              </div>
+              <div className="pbox">
+                <div className="muted" style={{ fontSize: 11.5 }}>{t('pd.unitPrice')}</div>
+                <div className="row" style={{ gap: 6, alignItems: 'baseline' }}>
+                  <span className="price">{money(p.price, p.currency)}</span>
+                  <span className="per">/ {p.unit}</span>
+                </div>
+
+                <div className="stockline">
+                  <span className={outOfStock ? 'muted' : 'strong'}>
+                    {outOfStock ? t('pd.outOfStockNow') : lowStock ? t('pd.lowStock') : t('pd.inStock')}
+                  </span>
+                  <span className="strong tnum">
+                    {p.quantityAvailable.toLocaleString(locale)} {p.unit}
+                  </span>
+                </div>
+
+                {!outOfStock ? (
+                  <>
+                    <div className="row between" style={{ marginTop: 10 }}>
+                      <span className="muted" style={{ fontSize: 12 }}>{t('pd.qty')}</span>
+                      <span className="muted" style={{ fontSize: 11.5 }}>
+                        {t('product.minOrder')} {p.moq.toLocaleString(locale)} {p.unit}
+                      </span>
+                    </div>
+                    <div className="qtyrow">
+                      <button type="button" aria-label="−" disabled={q <= p.moq} onClick={() => step(-1)}>−</button>
+                      <input
+                        type="number" inputMode="numeric" min={p.moq} max={maxQty} step={1}
+                        value={q} aria-label={t('pd.qty')}
+                        onChange={(e) => {
+                          const n = Number(e.target.value);
+                          setQty(Number.isFinite(n) ? Math.min(Math.max(n, p.moq), maxQty) : p.moq);
+                        }}
+                      />
+                      <button type="button" aria-label="+" disabled={q >= maxQty} onClick={() => step(1)}>+</button>
+                    </div>
+                    <div className="linetotal">
+                      <span>
+                        {t('pd.lineTotal')} · {q.toLocaleString(locale)} {p.unit}
+                      </span>
+                      <b className="tnum">{money(lineTotal, p.currency)}</b>
+                    </div>
+                  </>
+                ) : (
+                  <p className="muted mt10" style={{ marginBottom: 0 }}>
+                    {p.status === 'sold_out' ? t('product.soldOutBody') : t('product.noUnitsBody')}
+                  </p>
+                )}
+
+                <div className="ctastack mt14">
+                  <button
+                    className="btn btn-gold btn-lg"
+                    disabled={outOfStock}
+                    onClick={gated(() => setCheckout(true))}
+                  >
+                    {outOfStock
+                      ? t('product.outOfStock')
+                      : t('product.buyNowPrice', { price: money(p.price, p.currency), unit: p.unit })}
+                  </button>
+                  <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
+                    {t('pd.requestQuotation')}
+                  </button>
+                  <button className="btn btn-ghost" onClick={gated(() => setContact(true))}>
+                    {t('pd.contactSeller')}
+                  </button>
+                  <button className="btn btn-grey" onClick={askQuestion}>
+                    {t('pd.askQuestion')}
+                  </button>
+                </div>
+                <p className="hint" style={{ textAlign: 'center' }}>{t('pd.shipsFromNote')}</p>
+              </div>
+
+              {/* ---------------- seller strip + trust rows ---------------- */}
+              <div className="bd" style={{ paddingTop: 0 }}>
+                <div className="sellerline">
+                  <span className="av">
+                    {p.supplierName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                  </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                      <Link href={`/suppliers/${p.supplierId}`} className="nm">{p.supplierName}</Link>
+                      {p.verified && <Verified />}
+                      {s?.dataSource === 'demo' && <DemoTag />}
+                    </div>
+                    <div className="mt">
+                      {s ? (
+                        <>
+                          {s.country}
+                          {s.city ? ` · ${s.city}` : ''}
+                          {s.verifiedLevel > 0 ? ` · ${t('product.levelN', { n: s.verifiedLevel })}` : ''}
+                        </>
+                      ) : p.originCountry}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trust rows: only what this platform actually does. There is no
+                    escrow — the payment row says so in plain terms (funds settle
+                    between the two parties; the order only records the outcome)
+                    and `pd.trustEscrow` is deliberately never rendered. */}
+                {(p.verified || (s?.verifiedLevel ?? 0) >= 2) ? (
+                  <div className="trustrow">
+                    <span className="ic">✓</span>
+                    <div>
+                      <b>{t('pd.trustVerified')}</b>
+                      {t('suppliers.sub')}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="trustrow">
+                  <span className="ic">🔍</span>
+                  <div>
+                    <b>{t('pd.trustInspected')}</b>
+                    {t('supplierDetail.service1')}
+                  </div>
+                </div>
+                <div className="trustrow">
+                  <span className="ic">💳</span>
+                  <div>
+                    <b>{t('pd.paymentTerms')}</b>
+                    {t('help.buying4')}
+                  </div>
+                </div>
+                <div className="trustrow">
+                  <span className="ic">🚢</span>
+                  <div>
+                    <b>{t('pd.trustLogistics')}</b>
+                    {t('ship.advanceRecorded')}
+                  </div>
+                </div>
+
+                <div className="row" style={{ gap: 7, marginTop: 10, flexWrap: 'wrap' }}>
+                  <Link href={`/suppliers/${p.supplierId}`} className="btn btn-sm btn-grey">{t('pd.viewStore')}</Link>
+                  <Link href={`/suppliers/${p.supplierId}`} className="btn btn-sm btn-grey">{t('pd.allFromSupplier')}</Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ---------- description & specification ---------- */}
-      <div className="cols" style={{ marginTop: 12 }}>
-        <div className="card">
-          <div className="hd"><h2>{t('product.description')}</h2></div>
-          <div className="bd">
-            <p style={{ margin: 0 }}>
-              {p.description ?? t('product.noDescription')}
-            </p>
-          </div>
-        </div>
+        {/* ---------------- tabs ---------------- */}
+        <div className="mt14">
+          <TabStrip
+            tabs={[
+              { key: 'overview', label: t('pd.tabsOverview') },
+              { key: 'specs', label: t('pd.tabsSpecs') },
+              { key: 'faq', label: t('pd.tabsFaq') },
+              { key: 'supplier', label: t('pd.tabsSupplier') },
+            ]}
+            active={tab}
+            onChange={setTab}
+          />
 
-        <div className="card">
-          <div className="hd"><h2>{t('product.specification')}</h2></div>
-          {p.spec.length === 0 ? (
-            <div className="empty">{t('product.noSpec')}</div>
-          ) : (
-            <table>
-              <thead>
-                <tr><th>{t('product.col.attribute')}</th><th>{t('product.col.value')}</th></tr>
-              </thead>
-              <tbody>
-                {p.spec.map((line) => {
-                  const at = line.indexOf(':');
-                  // Specification lines are supplier-authored data: only the
-                  // structural labels below are translated, never the values.
-                  const label = at > 0 ? line.slice(0, at).trim() : line;
-                  const value = at > 0 ? line.slice(at + 1).trim() : '—';
-                  return (
-                    <tr key={line}>
-                      <td>{label}</td>
-                      <td className="strong">{value}</td>
-                    </tr>
-                  );
-                })}
-                <tr>
-                  <td>{t('product.spec.category')}</td>
-                  <td className="strong">
-                    <Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link>
-                  </td>
-                </tr>
-                <tr><td>{t('product.spec.unit')}</td><td className="strong">{p.unit}</td></tr>
-                <tr><td>{t('product.spec.purity')}</td><td className="strong">{p.purityGrade ?? '—'}</td></tr>
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+          {tab === 'overview' && (
+            <div className="grid2">
+              <div className="card">
+                <div className="hd"><h2>{t('pd.descriptionH')}</h2></div>
+                <div className="bd">
+                  <div className="descblock">
+                    {p.description ? (
+                      // Supplier-authored copy, kept verbatim — never translated.
+                      <p className="raw" style={{ margin: 0 }}>{p.description}</p>
+                    ) : (
+                      <span className="na">{t('product.noDescription')}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-      {/* ---------- more stock in this category ---------- */}
-      <div className="card" style={{ marginTop: 12 }}>
-        <div className="hd">
-          <h2>{t('product.moreInCategory', { category: p.category })}</h2>
-          <Link href={`/explore?category=${encodeURIComponent(p.category)}`} className="link">
-            {t('categories.all')}
-          </Link>
-        </div>
-        <div className="bd">
-          {others.length === 0 ? (
-            <span className="muted">{t('product.noneElse')}</span>
-          ) : (
-            <div className="feedgrid">
-              {others.map((x) => <ProductCard key={x.id} p={x} />)}
+              <div className="card">
+                <div className="hd"><h2>{t('pd.specsH')}</h2></div>
+                <div className="bd" style={{ paddingBottom: 0 }}>
+                  {specLines.length === 0 ? (
+                    <p className="na" style={{ marginTop: 0 }}>{t('pd.specEmpty')}</p>
+                  ) : (
+                    <table className="spectbl">
+                      <tbody>
+                        {specLines.map((r) => (
+                          <tr key={`${r.k}-${r.v}`}>
+                            <td className="k">{r.k}</td>
+                            <td className="v">{r.v}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+                <table className="spectbl">
+                  <tbody>
+                    {keySpecs.map(([k, v]) => (
+                      <tr key={k}>
+                        <td className="k">{k}</td>
+                        <td className="v">{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
+
+          {tab === 'specs' && (
+            <div className="card">
+              <div className="hd">
+                <h2>{t('pd.specsH')}</h2>
+                {p.spec.length === 0 ? (
+                  <span className="muted" style={{ fontSize: 11.5 }}>{t('pd.specEmpty')}</span>
+                ) : null}
+              </div>
+              <div className="bd" style={{ paddingBottom: 0 }}>
+                <table className="spectbl">
+                  <tbody>
+                    <tr>
+                      <td className="k">{t('orders.col.product')}</td>
+                      <td className="v">{p.name}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.supplier')}</td>
+                      <td className="v"><Link href={`/suppliers/${p.supplierId}`}>{p.supplierName}</Link></td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.spec.category')}</td>
+                      <td className="v"><Link href={`/explore?category=${encodeURIComponent(p.category)}`}>{p.category}</Link></td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('pd.unitPrice')}</td>
+                      <td className="v tnum">{money(p.price, p.currency)}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.spec.unit')}</td>
+                      <td className="v">{p.unit}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.minOrder')}</td>
+                      <td className="v tnum">{p.moq.toLocaleString(locale)} {p.unit}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.availableNow')}</td>
+                      <td className="v tnum">{p.quantityAvailable.toLocaleString(locale)} {p.unit}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.factStockType')}</td>
+                      <td className="v">
+                        {p.listingType
+                          ? t(`type.${p.listingType}` as DictKey)
+                          : <span className="na">{t('pd.notProvided')}</span>}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.origin')}</td>
+                      <td className="v">{p.originCountry}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('product.spec.purity')}</td>
+                      <td className="v">{p.purityGrade ?? <span className="na">{t('pd.notProvided')}</span>}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('pd.trustVerified')}</td>
+                      <td className="v">{p.verified ? '✓' : <span className="na">{t('pd.notProvided')}</span>}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('supplierDetail.trustScore')}</td>
+                      <td className="v tnum">{metric(p.trustScore)}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('admin.listings.colListing')}</td>
+                      <td className="v tnum">{p.id}</td>
+                    </tr>
+                    <tr>
+                      <td className="k">{t('pd.listedOn')}</td>
+                      <td className="v">
+                        {listedOnText}
+                        {days !== null ? ` · ${t('pd.daysOnSite', { n: days })}` : ''}
+                      </td>
+                    </tr>
+                    {specLines.map((r) => (
+                      <tr key={`spec-${r.k}-${r.v}`}>
+                        <td className="k">{r.k}</td>
+                        <td className="v">{r.v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {tab === 'faq' && <ProductQa productId={p.id} canAnswer={canAnswer} focusKey={qaFocus} />}
+
+          {tab === 'supplier' && (
+            <SupplierPanel supplier={s} loading={supplier.isLoading} product={p} />
+          )}
         </div>
+
+        {/* ---------------- rails ---------------- */}
+        {moreItems.length > 0 && (
+          <div className="card mt14">
+            <div className="hd">
+              <h2>{t('pd.moreFromSupplier')}</h2>
+              <Link href={`/suppliers/${p.supplierId}`} className="link">{t('pd.allFromSupplier')}</Link>
+            </div>
+            <div className="bd">
+              <div className="railgrid">
+                {moreItems.map((x) => <ProductCard key={x.id} p={x} />)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="card mt14">
+          <div className="hd">
+            <h2>{t('pd.similarProducts')}</h2>
+            <Link href={`/explore?category=${encodeURIComponent(p.category)}`} className="link">
+              {t('categories.all')}
+            </Link>
+          </div>
+          <div className="bd">
+            {similar.length === 0 ? (
+              <span className="muted">{t('product.noneElse')}</span>
+            ) : (
+              <div className="railgrid">
+                {similar.map((x) => <ProductCard key={x.id} p={x} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </View>
+
+      {/* Reserve the height the fixed action bar occupies so the last rail is
+          never hidden behind it (0 on desktop, where the bar is display:none). */}
+      {bar.h > 0 ? <div aria-hidden="true" style={{ height: bar.h }} /> : null}
+
+      {/* ---------------- mobile action bar (shown ≤900px by enterprise.css) ---------------- */}
+      <div className="mobar" ref={bar.ref} style={{ bottom: bar.lift }}>
+        <div style={{ minWidth: 0 }}>
+          <span className="p">{money(p.price, p.currency)}</span>
+          <span className="u">/ {p.unit}</span>
+        </div>
+        <button className="btn btn-gold" disabled={outOfStock} onClick={gated(() => setCheckout(true))}>
+          {t('pd.mobileBuy')}
+        </button>
+        <button className="btn btn-ghost" onClick={gated(() => setRfq(true))}>
+          {t('pd.mobileQuote')}
+        </button>
       </div>
-    </View>
+    </>
   );
 }
