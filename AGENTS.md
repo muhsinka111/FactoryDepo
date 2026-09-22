@@ -48,6 +48,29 @@ The marketing landing is served as static HTML at `/`; the SPA owns every other 
 paths `/products`, `/rfq`, `/rfq/:id`, `/dashboard`, `/landing` must keep redirecting for the
 landing page's inbound links.
 
+## Roles & the control plane (owner directive — design every feature against this)
+Three powers, deliberately unequal:
+
+**Seller — owns and runs their own shop.** A supplier creates listings AND keeps every
+field editable afterwards: price, currency, MOQ, available quantity, unit, stock type,
+origin/location, description, specs, images and files. Creation is not the end of the
+flow — an edit path (`PATCH /api/products/:id`, ownership-scoped) is part of the feature,
+and so is the seller's own storefront (their company profile, their listings, their
+incoming orders/offers/questions). A seller can never touch another supplier's rows; the
+integration suite asserts this.
+
+**Admin — controls and checks everything.** Admin is the oversight plane: see any listing
+or shop, edit/pull/remove it, approve or reject suppliers and their documents, moderate
+questions, offers and RFQs, and look at the money. Admin routes live under
+`/api/admin/*` and a non-admin must get 403 (asserted by the suite). Any admin state
+change should be auditable rather than silent.
+
+**The platform is itself a supplier.** Catalogue rows that enter by import/scrape are
+published under FactoryDepo's OWN supplier account, carrying our real company
+information — we are the seller of record for them, not a proxy for someone else. An
+importer must therefore resolve to that account; never create unattributed rows. Buyer
+visibility of anything upstream (source company, source price, rights) stays admin-only.
+
 ## Honesty rules (enforced in review)
 - Never render an invented number. If the API does not supply a value, render `—` or omit it.
   `totalViews` IS real: it is a `COUNT` over `product_views` (recorded on
