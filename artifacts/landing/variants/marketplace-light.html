@@ -76,7 +76,7 @@ h3{font-size:13.5px;font-weight:500}
 .wrap{max-width:1240px;margin:0 auto;padding:0 16px}
 /* Grid/flex children must be allowed to shrink below their content width or a
    long product name pushes the whole document wider than the viewport. */
-.hero-in>div,.sidecard,.cols>*,.steps>*,.flowsteps>*,.svcs>*,.cats>*,.sups>*,.trustband>*,.trust>div,.statstrip>*,.faq details,.foot-grid>*,.card,.section-head>div{min-width:0}
+.hero-in>div,.sidecard,.cols>*,.steps>*,.flowsteps>*,.svcs>*,.cats>*,.sups>*,.trustband>*,.trust>div,.statstrip>*,.faq details,.foot-grid>*,.card,.section-head>div,.sellgrid>*,.sellfigs>*,.browseline>*,.catrail>*,.mkstrip>*{min-width:0}
 .row{display:flex;align-items:center;gap:9px}
 .between{display:flex;align-items:center;justify-content:space-between;gap:9px}
 .muted{color:var(--mute);font-size:12px}
@@ -321,6 +321,53 @@ a.skip:focus{left:0}
 /* ---------- enterprise: listing-type tag on a product card ---------- */
 .lcard .lt{font-size:10.5px;color:var(--mute);background:var(--line-2);border-radius:3px;padding:1px 5px;white-space:nowrap}
 
+/* ---------- marketplace browsing strip (live catalogue counts) ---------- */
+.browsebar{display:flex;flex-direction:column;gap:7px;margin:0 0 11px}
+.browseline{display:flex;align-items:center;gap:9px;min-width:0}
+.browselab{flex:none;font-size:11px;color:var(--mute);white-space:nowrap}
+/* the rail is the horizontal scroll container, so its overflow can never widen
+   the document on a narrow viewport (same rule the section nav uses) */
+.catrail{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:1px 0 3px}
+.ctag{flex:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:3px 10px;font-size:11.5px;color:var(--ink)}
+.ctag:hover{border-color:#c3ccd8;background:var(--line-2);color:var(--ink)}
+.ctag .c{font-family:var(--font-mono);font-size:10.5px;color:var(--faint)}
+.ctag.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:500}
+.mkstrip{flex:1;min-width:0;display:flex;gap:6px;flex-wrap:wrap}
+.mkt{flex:none;display:inline-flex;align-items:baseline;gap:5px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--r);padding:3px 9px;font-size:11.5px}
+.mkt:hover{border-color:#c3ccd8;color:var(--ink)}
+.mkt .cd{font-family:var(--font-mono);font-size:10.5px;color:var(--faint)}
+.mkt .cn{font-weight:600;color:var(--navy)}
+.mkt .cv{font-family:var(--font-mono);font-size:10.5px;color:var(--mute)}
+.browsenote{margin:0;font-size:11px;color:var(--faint)}
+.skelchip{height:24px;min-width:76px;border-radius:999px;background:#eef0f3;border:1px solid var(--line-2)}
+
+/* ---------- seller acquisition (#sell) ---------- */
+.sellgrid{display:grid;grid-template-columns:1.08fr .92fr;gap:12px;align-items:stretch}
+.sellgrid> .card{display:flex;flex-direction:column}
+.sellh2{font-size:18px;font-weight:600;letter-spacing:-.25px;margin:7px 0 5px}
+.selllead{margin:0 0 13px;font-size:12.5px;color:var(--mute);max-width:70ch}
+.sellctas{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.tbadges{display:flex;gap:6px;flex-wrap:wrap}
+/* stock-type chips copied from the app's own .tbadge (styles.css): the landing
+   and the marketplace name the same six types the same way, same colours */
+.tbadge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;padding:2px 7px;
+  border-radius:999px;letter-spacing:.02em;text-transform:uppercase}
+.tbadge.t-stock{background:#eef4fe;color:#1f6feb}
+.tbadge.t-surplus{background:var(--green-l);color:#157347}
+.tbadge.t-overstock{background:#fdf3e0;color:#b57200}
+.tbadge.t-liquidation{background:var(--red-l);color:#b3261e}
+.tbadge.t-seconds{background:#f1ecfd;color:#6b4fbb}
+.tbadge.t-container{background:#e6f6fa;color:#0e7490}
+.sellfigs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.sfig{background:#fff;padding:10px 11px;min-width:0}
+.sfig .v{display:block;font-size:18px;font-weight:600;letter-spacing:-.4px;color:var(--navy);line-height:1.3}
+.sfig .l{display:block;font-size:10.5px;color:var(--mute);line-height:1.35;margin-top:2px}
+.sellnote{margin:8px 0 0;font-size:11px;color:var(--faint)}
+.stepshead{margin:14px 0 8px}
+
 /* ---------- responsive ---------- */
 @media (max-width:1000px){
   .hero-in{grid-template-columns:1fr;gap:18px}
@@ -332,6 +379,9 @@ a.skip:focus{left:0}
   .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sups{grid-template-columns:1fr 1fr}
   .foot-grid{grid-template-columns:1fr 1fr}
+  .sellgrid{grid-template-columns:1fr}
+  .browseline{flex-wrap:wrap}
+  .catrail,.mkstrip{flex:1 1 100%}
 }
 @media (max-width:820px){
   .topbar .markets{display:none}
@@ -347,6 +397,7 @@ a.skip:focus{left:0}
   .svcs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sups{grid-template-columns:1fr}
   .section{padding:20px 0}
+  .catrail,.mkstrip{flex:1 1 100%}
 }
 @media (max-width:560px){
   .trustband{grid-template-columns:1fr}
@@ -450,6 +501,7 @@ a.skip:focus{left:0}
 <nav class="rail" aria-label="Sections">
   <div class="rail-in">
     <a href="#surplus"><b data-t="rail.stock">Ready stock</b></a>
+    <a href="#sell" data-t="panel.sellTitle">Selling</a>
     <a href="#trust" data-t="rail.trust">Why us</a>
     <a href="#categories" data-t="rail.categories">Categories</a>
     <a href="#suppliers" data-t="rail.suppliers">Suppliers</a>
@@ -553,10 +605,83 @@ a.skip:focus{left:0}
       </div>
       <a class="btn btn-ghost" href="/explore" data-t="surplus.cta">Browse the full catalogue →</a>
     </div>
+    <!-- Browsing strip: chips carry the catalogue's own per-category and
+         per-country counts, read once from the API on load. A count that could
+         not be read stays an em dash — no chip ever shows a guessed figure. -->
+    <div class="browsebar">
+      <div class="browseline">
+        <span class="browselab" data-t="rail.categories">Categories</span>
+        <div class="catrail" id="catRail" aria-live="polite">
+          <span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span>
+          <span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span>
+        </div>
+      </div>
+      <div class="browseline">
+        <span class="browselab" data-t="browse.mkLabel">Listings by origin country:</span>
+        <div class="mkstrip" id="mkStrip" aria-live="polite">
+          <span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span><span class="skelchip"></span>
+        </div>
+      </div>
+      <p class="browsenote" data-t="browse.note">Chip counts are read live from GET /api/products/categories and GET /api/products/countries; a dash means a count could not be read.</p>
+    </div>
     <div class="feedgrid" id="featuredGrid" aria-live="polite">
-      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
     <p class="muted" style="margin:8px 0 0" data-t="surplus.typeNote">The type tag on each card is the row’s own listing type — surplus, overstock, seconds, liquidation, container lot or regular stock.</p>
+  </div>
+</section>
+
+<!-- ======================= sell your own products ======================= -->
+<section class="section" id="sell">
+  <div class="wrap">
+    <div class="sellgrid">
+      <div class="card">
+        <div class="card-bd">
+          <span class="eyebrow" data-t="sell.eyebrow">Sell on FactoryDepo</span>
+          <h2 class="sellh2" data-t="sell.h2">Sell your own products</h2>
+          <p class="selllead" data-t="sell.lead">Factories and distributors bring their surplus, overstock, liquidation stock, factory seconds and container lots here. Buyers reach them from the markets this platform covers: Türkiye, China, the USA and Europe.</p>
+          <div class="sellctas">
+            <a class="btn btn-lg btn-gold" href="/sign-up" data-t="sell.cta1">Start selling</a>
+            <a class="btn btn-lg btn-ghost" href="/supplier/post" data-t="sell.cta2">Post a listing</a>
+          </div>
+        </div>
+        <div class="card-hd">
+          <span class="muted" data-t="sell.listNote">Every listing carries one of the stock types the marketplace itself uses:</span>
+        </div>
+        <div class="card-bd tbadges">
+          <span class="tbadge t-stock" data-t="sell.type.stock">Ready stock</span>
+          <span class="tbadge t-surplus" data-t="sell.type.surplus">Surplus</span>
+          <span class="tbadge t-overstock" data-t="sell.type.overstock">Overstock</span>
+          <span class="tbadge t-liquidation" data-t="sell.type.liquidation">Liquidation</span>
+          <span class="tbadge t-seconds" data-t="sell.type.seconds">Factory seconds</span>
+          <span class="tbadge t-container" data-t="sell.type.container">Container-ready</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="pill p-navy" data-t="sell.figTitle">Marketplace activity, read live</span>
+        </div>
+        <div class="card-bd">
+          <!-- figures are written by the data layer from the API responses; each
+               one is either the API's own value or an em dash -->
+          <div class="sellfigs" id="sellFigs" aria-live="polite">
+            <div class="sfig"><span class="v">—</span><span class="l" data-t="sell.fig.lots">Listings in the catalogue</span></div>
+            <div class="sfig"><span class="v">—</span><span class="l" data-t="sell.fig.suppliers">Supplier accounts</span></div>
+            <div class="sfig"><span class="v">—</span><span class="l" data-t="sell.fig.rfqs">Requests posted by buyers</span></div>
+            <div class="sfig"><span class="v">—</span><span class="l" data-t="sell.fig.open">Requests still open</span></div>
+          </div>
+          <p class="sellnote" data-t="sell.figNote">Read from GET /api/products/countries, /api/suppliers and /api/rfqs when this page loads. A dash means the figure could not be read.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stepshead"><span class="eyebrow" data-t="sell.stepsTitle">How selling works</span></div>
+    <div class="steps">
+      <div class="step"><span class="n">01</span><b data-t="sell.s1t">Open a supplier account</b><p data-t="sell.s1b">Register and pick the supplier role in the sign-up form — the account opens the supplier dashboard.</p></div>
+      <div class="step"><span class="n">02</span><b data-t="sell.s2t">Submit documents and get verified</b><p data-t="sell.s2b">File your business licence, tax certificate or factory audit report. A reviewer checks each document by hand, and the badge appears on your profile once it is approved.</p></div>
+      <div class="step"><span class="n">03</span><b data-t="sell.s3t">Publish your stock</b><p data-t="sell.s3b">The stepped form takes the listing details, then price, currency, MOQ, available quantity, unit and stock type, then the description and photo. Listing does not wait for verification.</p></div>
+      <div class="step"><span class="n">04</span><b data-t="sell.s4t">Take orders and answer buyers</b><p data-t="sell.s4b">Orders, quotation requests, offers and listing questions arrive in your supplier dashboard, and you answer them from there.</p></div>
+    </div>
   </div>
 </section>
 
@@ -623,6 +748,7 @@ a.skip:focus{left:0}
       <a class="btn btn-ghost" href="/explore" data-t="more.cta">Refine with filters →</a>
     </div>
     <div class="feedgrid" id="trendingGrid" aria-live="polite">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
       <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
     </div>
   </div>
@@ -772,6 +898,7 @@ a.skip:focus{left:0}
       <div class="foot-col">
         <h4 data-t="foot.col.suppliers">For suppliers</h4>
         <ul>
+          <li><a href="/#sell" data-t="sell.h2">Sell your own products</a></li>
           <li><a href="/supplier/post" data-t="foot.l.post">Post a listing</a></li>
           <li><a href="/supplier/listings" data-t="foot.l.mylistings">My listings</a></li>
           <li><a href="/help" data-t="foot.howVerification">How verification works</a></li>
@@ -920,7 +1047,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': 'are seed data and carry a Demo badge — they are not live offers.',
       'list.cta': 'Browse all listings →',
-      'list.showA': 'Showing 8 of',
+      'list.showA': 'Showing {n} of',
       'list.showB': 'that have photography, newest first, read live from',
       'list.emptyTitle': 'No listings yet',
       'list.emptyBody': 'The catalogue returned an empty page.',
@@ -1137,7 +1264,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': 'ise tohum verisidir ve Demo etiketi taşır — canlı teklif değildir.',
       'list.cta': 'Tüm ilanlara göz at →',
-      'list.showA': 'Gösterilen 8 /',
+      'list.showA': 'Gösterilen {n} /',
       'list.showB': 'görselli lot, en yeniden eskiye, sayfa yüklemesinde şu uçtan canlı okunur:',
       'list.emptyTitle': 'Henüz ilan yok',
       'list.emptyBody': 'Katalog boş bir sayfa döndürdü.',
@@ -1354,7 +1481,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': 'هي بيانات أولية وتحمل شارة «تجريبي» — وليست عروضًا حيّة.',
       'list.cta': 'تصفّح كل الإعلانات ←',
-      'list.showA': 'يُعرض 8 من',
+      'list.showA': 'يُعرض {n} من',
       'list.showB': 'مصوّرة، الأحدث أولًا، تُقرأ حيًّا من',
       'list.emptyTitle': 'لا توجد إعلانات بعد',
       'list.emptyBody': 'أعاد الكتالوج صفحة فارغة.',
@@ -1571,7 +1698,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': '— это данные сида, они помечены значком «Демо» и не являются живыми предложениями.',
       'list.cta': 'Все объявления →',
-      'list.showA': 'Показано 8 из',
+      'list.showA': 'Показано {n} из',
       'list.showB': 'с фотографиями, сначала новые, читается вживую из',
       'list.emptyTitle': 'Объявлений пока нет',
       'list.emptyBody': 'Каталог вернул пустую страницу.',
@@ -1788,7 +1915,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': '的行属于种子数据，会带有「演示」标记——它们不是真实报价。',
       'list.cta': '浏览全部货源 →',
-      'list.showA': '显示 8 /',
+      'list.showA': '显示 {n} /',
       'list.showB': '条带图货源，最新优先，实时读取自',
       'list.emptyTitle': '暂无货源',
       'list.emptyBody': '产品目录返回了空页面。',
@@ -2005,7 +2132,7 @@ a.skip:focus{left:0}
       'list.subC': 'demo',
       'list.subD': 'son datos semilla y llevan la etiqueta Demo: no son ofertas en vivo.',
       'list.cta': 'Ver todas las publicaciones →',
-      'list.showA': 'Mostrando 8 de',
+      'list.showA': 'Mostrando {n} de',
       'list.showB': 'con fotografía, las más recientes primero, leídas en vivo desde',
       'list.emptyTitle': 'Todavía no hay publicaciones',
       'list.emptyBody': 'El catálogo devolvió una página vacía.',
@@ -2239,7 +2366,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': 'For suppliers',
       'foot.l.post': 'Post a listing',
       'foot.l.mylistings': 'My listings',
-      'foot.l.feed': 'Activity feed'
+      'foot.l.feed': 'Activity feed',
+      'sell.eyebrow': 'Sell on FactoryDepo',
+      'sell.h2': 'Sell your own products',
+      'sell.lead': 'Factories and distributors bring their surplus, overstock, liquidation stock, factory seconds and container lots here. Buyers reach them from the markets this platform covers: Türkiye, China, the USA and Europe.',
+      'sell.cta1': 'Start selling',
+      'sell.cta2': 'Post a listing',
+      'sell.stepsTitle': 'How selling works',
+      'sell.s1t': 'Open a supplier account',
+      'sell.s1b': 'Register and pick the supplier role in the sign-up form — the account opens the supplier dashboard.',
+      'sell.s2t': 'Submit documents and get verified',
+      'sell.s2b': 'File your business licence, tax certificate or factory audit report. A reviewer checks each document by hand, and the badge appears on your profile once it is approved.',
+      'sell.s3t': 'Publish your stock',
+      'sell.s3b': 'The stepped form takes the listing details, then price, currency, MOQ, available quantity, unit and stock type, then the description and photo. Listing does not wait for verification.',
+      'sell.s4t': 'Take orders and answer buyers',
+      'sell.s4b': 'Orders, quotation requests, offers and listing questions arrive in your supplier dashboard, and you answer them from there.',
+      'sell.figTitle': 'Marketplace activity, read live',
+      'sell.fig.lots': 'Listings in the catalogue',
+      'sell.fig.suppliers': 'Supplier accounts',
+      'sell.fig.rfqs': 'Requests posted by buyers',
+      'sell.fig.open': 'Requests still open',
+      'sell.figNote': 'Read from GET /api/products/countries, /api/suppliers and /api/rfqs when this page loads. A dash means the figure could not be read.',
+      'sell.listNote': 'Every listing carries one of the stock types the marketplace itself uses:',
+      'sell.type.stock': 'Ready stock',
+      'sell.type.surplus': 'Surplus',
+      'sell.type.overstock': 'Overstock',
+      'sell.type.liquidation': 'Liquidation',
+      'sell.type.seconds': 'Factory seconds',
+      'sell.type.container': 'Container-ready',
+      'browse.mkLabel': 'Listings by origin country:',
+      'browse.note': 'Chip counts are read live from GET /api/products/categories and GET /api/products/countries; a dash means a count could not be read.',
+      'markets.us': 'USA',
+      'markets.de': 'Germany',
+      'markets.nl': 'Netherlands',
+      'markets.it': 'Italy',
+      'markets.es': 'Spain',
+      'markets.pl': 'Poland',
+      'markets.fr': 'France',
+      'markets.gb': 'United Kingdom',
     },
     tr: {
       'hero.eyebrow2': 'B2B endüstriyel pazar yeri',
@@ -2327,7 +2491,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': 'Tedarikçiler için',
       'foot.l.post': 'İlan ver',
       'foot.l.mylistings': 'İlanlarım',
-      'foot.l.feed': 'Etkinlik akışı'
+      'foot.l.feed': 'Etkinlik akışı',
+      'sell.eyebrow': 'FactoryDepo’da satış',
+      'sell.h2': 'Ürünlerinizi satışa çıkarın',
+      'sell.lead': 'Fabrikalar ve distribütörler fazla üretimini, aşırı stoğunu, tasfiye ürünlerini, ikinci kalite mallarını ve konteyner partilerini buraya getiriyor. Alıcılar platformun kapsadığı pazarlardan ulaşıyor: Türkiye, Çin, ABD ve Avrupa.',
+      'sell.cta1': 'Satışa başlayın',
+      'sell.cta2': 'İlan verin',
+      'sell.stepsTitle': 'Satış nasıl işliyor',
+      'sell.s1t': 'Satıcı hesabı açın',
+      'sell.s1b': 'Kayıt formunda satıcı rolünü seçin — hesabınız satıcı paneline açılır.',
+      'sell.s2t': 'Belgelerinizi yükleyip doğrulanın',
+      'sell.s2b': 'Ticaret sicil belgenizi, vergi levhanızı veya fabrika denetim raporunuzu yükleyin. Her belge elle incelenir ve onaylandığında rozet profilinizde görünür.',
+      'sell.s3t': 'Stoğunuzu yayınlayın',
+      'sell.s3b': 'Adım adım ilan formu sırasıyla ilan bilgilerini; fiyat, para birimi, minimum sipariş, mevcut miktar, birim ve stok tipini; ardından açıklama ile fotoğrafı alır. İlan vermek doğrulamayı beklemez.',
+      'sell.s4t': 'Sipariş alın, alıcıları yanıtlayın',
+      'sell.s4b': 'Siparişler, teklif talepleri, teklifler ve ilan sayfasındaki sorular satıcı paneline düşer; yanıtları oradan verirsiniz.',
+      'sell.figTitle': 'Pazar yeri hareketi, canlı okunur',
+      'sell.fig.lots': 'Katalogdaki ilan',
+      'sell.fig.suppliers': 'Satıcı hesabı',
+      'sell.fig.rfqs': 'Alıcıların yayınladığı talep',
+      'sell.fig.open': 'Hâlâ açık talep',
+      'sell.figNote': 'Bu sayfa yüklenirken GET /api/products/countries, /api/suppliers ve /api/rfqs uç noktalarından okunur. Tire, verinin okunamadığını gösterir.',
+      'sell.listNote': 'Her ilan, pazar yerinin kendi kullandığı stok tiplerinden biriyle etiketlenir:',
+      'sell.type.stock': 'Hazır stok',
+      'sell.type.surplus': 'Fazla üretim',
+      'sell.type.overstock': 'Aşırı stok',
+      'sell.type.liquidation': 'Tasfiye',
+      'sell.type.seconds': 'İkinci kalite',
+      'sell.type.container': 'Konteyner dolusu',
+      'browse.mkLabel': 'Menşe ülkeye göre ilanlar:',
+      'browse.note': 'Çip sayımları GET /api/products/categories ve GET /api/products/countries uç noktalarından canlı okunur; okunamayan sayım tire olarak gösterilir.',
+      'markets.us': 'ABD',
+      'markets.de': 'Almanya',
+      'markets.nl': 'Hollanda',
+      'markets.it': 'İtalya',
+      'markets.es': 'İspanya',
+      'markets.pl': 'Polonya',
+      'markets.fr': 'Fransa',
+      'markets.gb': 'Birleşik Krallık',
     },
     ar: {
       'hero.eyebrow2': 'سوق صناعي بين الشركات',
@@ -2415,7 +2616,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': 'للموردين',
       'foot.l.post': 'انشر إعلانًا',
       'foot.l.mylistings': 'إعلاناتي',
-      'foot.l.feed': 'تدفّق النشاط'
+      'foot.l.feed': 'تدفّق النشاط',
+      'sell.eyebrow': 'البيع على FactoryDepo',
+      'sell.h2': 'اعرض منتجاتك للبيع',
+      'sell.lead': 'تجلب المصانع والموزّعون إلى هنا فائض الإنتاج والمخزون الراكد ومنتجات التصفية ومنتجات الدرجة الثانية ودفعات الحاويات. ويصل إليها المشترون من الأسواق التي تغطيها المنصة: تركيا والصين والولايات المتحدة وأوروبا.',
+      'sell.cta1': 'ابدأ البيع',
+      'sell.cta2': 'أضف إعلانًا',
+      'sell.stepsTitle': 'كيف تجري عملية البيع',
+      'sell.s1t': 'افتح حساب مورّد',
+      'sell.s1b': 'سجّل واختر دور المورّد في استمارة التسجيل — فالحساب يفتح لوحة المورّد.',
+      'sell.s2t': 'قدّم المستندات واحصل على التوثيق',
+      'sell.s2b': 'ارفع السجل التجاري أو الشهادة الضريبية أو تقرير تفتيش المصنع. يراجع أحد المراجعين كل مستند يدويًا، وتظهر الشارة على ملفك بعد الموافقة.',
+      'sell.s3t': 'انشر مخزونك',
+      'sell.s3b': 'تأخذ الاستمارة المتدرّجة بيانات الإعلان، ثم السعر والعملة والحد الأدنى للطلب والكمية المتاحة والوحدة ونوع المخزون، ثم الوصف والصورة. نشر الإعلان لا ينتظر التوثيق.',
+      'sell.s4t': 'استلم الطلبات وأجب المشترين',
+      'sell.s4b': 'تصل الطلبات وطلبات عروض الأسعار والعروض وأسئلة صفحة الإعلان إلى لوحة المورّد، وتجيب عليها من هناك.',
+      'sell.figTitle': 'حركة السوق، تُقرأ مباشرة',
+      'sell.fig.lots': 'إعلان في الفهرس',
+      'sell.fig.suppliers': 'حساب مورّد',
+      'sell.fig.rfqs': 'طلب نشره المشترون',
+      'sell.fig.open': 'طلب ما زال مفتوحًا',
+      'sell.figNote': 'تُقرأ عند تحميل الصفحة من GET /api/products/countries و/api/suppliers و/api/rfqs. الشرطة تعني أن الرقم لم يُقرأ.',
+      'sell.listNote': 'كل إعلان يحمل أحد أنواع المخزون التي يستخدمها السوق نفسه:',
+      'sell.type.stock': 'مخزون جاهز',
+      'sell.type.surplus': 'فائض الإنتاج',
+      'sell.type.overstock': 'مخزون راكد',
+      'sell.type.liquidation': 'تصفية',
+      'sell.type.seconds': 'منتج من الدرجة الثانية',
+      'sell.type.container': 'جاهز للحاوية',
+      'browse.mkLabel': 'الإعلانات حسب بلد المنشأ:',
+      'browse.note': 'تُقرأ أعداد الشرائح مباشرة من /api/products/categories و/api/products/countries؛ والشرطة تعني أن العدد لم يُقرأ.',
+      'markets.us': 'الولايات المتحدة',
+      'markets.de': 'ألمانيا',
+      'markets.nl': 'هولندا',
+      'markets.it': 'إيطاليا',
+      'markets.es': 'إسبانيا',
+      'markets.pl': 'بولندا',
+      'markets.fr': 'فرنسا',
+      'markets.gb': 'المملكة المتحدة',
     },
     ru: {
       'hero.eyebrow2': 'Промышленная B2B-площадка',
@@ -2503,7 +2741,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': 'Поставщикам',
       'foot.l.post': 'Разместить лот',
       'foot.l.mylistings': 'Мои лоты',
-      'foot.l.feed': 'Лента событий'
+      'foot.l.feed': 'Лента событий',
+      'sell.eyebrow': 'Продажа на FactoryDepo',
+      'sell.h2': 'Выставьте свою продукцию на продажу',
+      'sell.lead': 'Заводы и дистрибьюторы выкладывают здесь излишки, сверхзапасы, товары распродажи, второй сорт и контейнерные партии. Покупатели приходят с рынков, которые охватывает платформа: Турция, Китай, США и Европа.',
+      'sell.cta1': 'Начать продавать',
+      'sell.cta2': 'Разместить объявление',
+      'sell.stepsTitle': 'Как идёт продажа',
+      'sell.s1t': 'Откройте аккаунт поставщика',
+      'sell.s1b': 'Зарегистрируйтесь и выберите роль поставщика в форме регистрации — аккаунт открывает панель поставщика.',
+      'sell.s2t': 'Подайте документы и пройдите верификацию',
+      'sell.s2b': 'Загрузите свидетельство о регистрации бизнеса, налоговое свидетельство или отчёт об аудите завода. Каждый документ проверяется вручную, и после одобрения на профиле появляется знак.',
+      'sell.s3t': 'Опубликуйте склад',
+      'sell.s3b': 'Пошаговая форма принимает данные объявления, затем цену, валюту, минимальный заказ, доступное количество, единицу и тип запаса, а затем описание и фото. Публикация не ждёт верификации.',
+      'sell.s4t': 'Принимайте заказы и отвечайте покупателям',
+      'sell.s4b': 'Заказы, запросы предложений, предложения и вопросы со страницы объявления приходят в панель поставщика, и вы отвечаете там же.',
+      'sell.figTitle': 'Активность площадки, читается онлайн',
+      'sell.fig.lots': 'Объявлений в каталоге',
+      'sell.fig.suppliers': 'Аккаунтов поставщиков',
+      'sell.fig.rfqs': 'Запросов от покупателей',
+      'sell.fig.open': 'Запросов ещё открыто',
+      'sell.figNote': 'Читается при загрузке страницы из GET /api/products/countries, /api/suppliers и /api/rfqs. Тире означает, что значение прочитать не удалось.',
+      'sell.listNote': 'Каждое объявление помечено одним из типов запаса, которые использует сама площадка:',
+      'sell.type.stock': 'Готовый склад',
+      'sell.type.surplus': 'Излишки',
+      'sell.type.overstock': 'Сверхзапас',
+      'sell.type.liquidation': 'Ликвидация',
+      'sell.type.seconds': 'Второй сорт',
+      'sell.type.container': 'Готово в контейнер',
+      'browse.mkLabel': 'Объявления по стране происхождения:',
+      'browse.note': 'Счётчики на чипах читаются онлайн из /api/products/categories и /api/products/countries; тире означает, что счётчик прочитать не удалось.',
+      'markets.us': 'США',
+      'markets.de': 'Германия',
+      'markets.nl': 'Нидерланды',
+      'markets.it': 'Италия',
+      'markets.es': 'Испания',
+      'markets.pl': 'Польша',
+      'markets.fr': 'Франция',
+      'markets.gb': 'Великобритания',
     },
     zh: {
       'hero.eyebrow2': 'B2B 工业市场',
@@ -2591,7 +2866,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': '供应商专区',
       'foot.l.post': '发布商品',
       'foot.l.mylistings': '我的商品',
-      'foot.l.feed': '动态流'
+      'foot.l.feed': '动态流',
+      'sell.eyebrow': '在 FactoryDepo 上销售',
+      'sell.h2': '上架您自己的产品',
+      'sell.lead': '工厂和经销商在这里发布余料、超储、清仓货、次品和整柜货。买家来自本平台覆盖的市场：土耳其、中国、美国和欧洲。',
+      'sell.cta1': '开始销售',
+      'sell.cta2': '发布货源',
+      'sell.stepsTitle': '销售流程',
+      'sell.s1t': '开通供应商账户',
+      'sell.s1b': '注册时在表单中选择供应商角色，账户即进入供应商工作台。',
+      'sell.s2t': '提交文件并通过认证',
+      'sell.s2b': '上传营业执照、税务登记证或工厂审核报告。每份文件由审核人员逐份人工核验，通过后徐章会显示在您的资料上。',
+      'sell.s3t': '发布您的货源',
+      'sell.s3b': '分步表单依次填写货源信息，然后价格、币种、起订量、可供数量、单位和库存类型，最后是描述与照片。发布不必等待认证完成。',
+      'sell.s4t': '接收订单并回复买家',
+      'sell.s4b': '订单、询价请求、报价和货源页面的提问都会进入供应商工作台，您在那里作答。',
+      'sell.figTitle': '平台动态（实时读取）',
+      'sell.fig.lots': '目录中的货源',
+      'sell.fig.suppliers': '供应商账户',
+      'sell.fig.rfqs': '买家发布的询价',
+      'sell.fig.open': '仍在进行中的询价',
+      'sell.figNote': '页面加载时从 GET /api/products/countries、/api/suppliers 和 /api/rfqs 读取。显示破折号表示该数字无法读取。',
+      'sell.listNote': '每条货源都带有平台自用的库存类型之一：',
+      'sell.type.stock': '现货',
+      'sell.type.surplus': '剩余库存',
+      'sell.type.overstock': '积压库存',
+      'sell.type.liquidation': '清仓',
+      'sell.type.seconds': '次品',
+      'sell.type.container': '整柜现货',
+      'browse.mkLabel': '按原产国统计的货源：',
+      'browse.note': '标签上的数量实时读取自 /api/products/categories 和 /api/products/countries；破折号表示该数量无法读取。',
+      'markets.us': '美国',
+      'markets.de': '德国',
+      'markets.nl': '荷兰',
+      'markets.it': '意大利',
+      'markets.es': '西班牙',
+      'markets.pl': '波兰',
+      'markets.fr': '法国',
+      'markets.gb': '英国',
     },
     es: {
       'hero.eyebrow2': 'Mercado industrial B2B',
@@ -2679,7 +2991,44 @@ a.skip:focus{left:0}
       'foot.col.suppliers': 'Para proveedores',
       'foot.l.post': 'Publicar un anuncio',
       'foot.l.mylistings': 'Mis anuncios',
-      'foot.l.feed': 'Actividad reciente'
+      'foot.l.feed': 'Actividad reciente',
+      'sell.eyebrow': 'Vender en FactoryDepo',
+      'sell.h2': 'Ponga sus productos a la venta',
+      'sell.lead': 'Fabricantes y distribuidores traen aquí su excedente, sobrestock, stock en liquidación, segundas calidades y lotes de contenedor. Los compradores llegan desde los mercados que cubre esta plataforma: Türkiye, China, EE. UU. y Europa.',
+      'sell.cta1': 'Empezar a vender',
+      'sell.cta2': 'Publicar un anuncio',
+      'sell.stepsTitle': 'Cómo funciona la venta',
+      'sell.s1t': 'Abra una cuenta de proveedor',
+      'sell.s1b': 'Regístrese y elija el rol de proveedor en el formulario de alta: la cuenta abre el panel de proveedor.',
+      'sell.s2t': 'Entregue sus documentos y verifíquese',
+      'sell.s2b': 'Suba su licencia comercial, certificado fiscal o informe de auditoría de fábrica. Un revisor comprueba cada documento a mano y la insignia aparece en su perfil cuando se aprueba.',
+      'sell.s3t': 'Publique su stock',
+      'sell.s3b': 'El formulario por pasos toma los datos del anuncio, después precio, moneda, pedido mínimo, cantidad disponible, unidad y tipo de stock, y por último la descripción y la foto. Publicar no espera a la verificación.',
+      'sell.s4t': 'Reciba pedidos y responda a los compradores',
+      'sell.s4b': 'Los pedidos, las solicitudes de cotización, las ofertas y las preguntas del anuncio llegan a su panel de proveedor, y usted responde desde ahí.',
+      'sell.figTitle': 'Actividad del mercado, leída en vivo',
+      'sell.fig.lots': 'Anuncios en el catálogo',
+      'sell.fig.suppliers': 'Cuentas de proveedor',
+      'sell.fig.rfqs': 'Solicitudes publicadas por compradores',
+      'sell.fig.open': 'Solicitudes aún abiertas',
+      'sell.figNote': 'Se leen de GET /api/products/countries, /api/suppliers y /api/rfqs al cargar la página. Un guion significa que la cifra no se pudo leer.',
+      'sell.listNote': 'Cada anuncio lleva uno de los tipos de stock que usa el propio mercado:',
+      'sell.type.stock': 'Stock disponible',
+      'sell.type.surplus': 'Excedente',
+      'sell.type.overstock': 'Sobrestock',
+      'sell.type.liquidation': 'Liquidación',
+      'sell.type.seconds': 'Segunda calidad',
+      'sell.type.container': 'Listo para contenedor',
+      'browse.mkLabel': 'Anuncios por país de origen:',
+      'browse.note': 'Los recuentos de las etiquetas se leen en vivo de /api/products/categories y /api/products/countries; un guion significa que el recuento no se pudo leer.',
+      'markets.us': 'EE. UU.',
+      'markets.de': 'Alemania',
+      'markets.nl': 'Países Bajos',
+      'markets.it': 'Italia',
+      'markets.es': 'España',
+      'markets.pl': 'Polonia',
+      'markets.fr': 'Francia',
+      'markets.gb': 'Reino Unido',
     }
   };
   /* Merge: one entry per key per language, the newer copy wins. */
@@ -3002,6 +3351,9 @@ a.skip:focus{left:0}
   var supHead = document.getElementById('supHead');
   var rfqList = document.getElementById('rfqList');
   var catGrid = document.getElementById('catGrid');
+  var catRail = document.getElementById('catRail');
+  var mkStrip = document.getElementById('mkStrip');
+  var sellFigs = document.getElementById('sellFigs');
   if (featuredGrid) watchImages(featuredGrid);
   if (moreGrid) watchImages(moreGrid);
   /* attached once to the container: the hero card is re-rendered on every
@@ -3011,12 +3363,17 @@ a.skip:focus{left:0}
   /* ---------- render state ----------
      Everything the renderers need is kept here so a language switch can redraw
      the generated copy without refetching anything. */
-  var counters = { products: null, suppliers: null, verified: null, rfqs: null, categories: null, countries: null, anyLoaded: false };
+  var counters = { products: null, catalogue: null, suppliers: null, verified: null, rfqs: null, categories: null, countries: null, anyLoaded: false };
   var gridState = { mode: 'loading', head: [], tail: [] };
   var heroState = { mode: 'loading', item: null };
   var supState = { mode: 'loading', items: [] };
   var rfqState = { mode: 'loading', items: [], total: null };
   var catState = { mode: 'loading', items: [], counts: {} };
+  /* the catalogue's own country buckets (GET /api/products/countries) and the one
+     figure this page derives — requests still open. Both start null, so the em
+     dash in the markup is what shows until a response arrives. */
+  var mktState = { mode: 'loading', items: [], total: null };
+  var sellState = { open: null };
   var CAT_KEY = {}, CAT_IMG = {};
 
   /* ---------- renderers ---------- */
@@ -3067,7 +3424,7 @@ a.skip:focus{left:0}
     if (!listingsSub) return;
     if (gridState.mode === 'error') { listingsSub.textContent = T('list.failSub'); return; }
     if (gridState.mode !== 'ok' || counters.products == null) return; /* keep the authored English paragraph */
-    listingsSub.innerHTML = esc(T('list.showA')) + ' <b>' + num(counters.products) + '</b> ' +
+    listingsSub.innerHTML = esc(T('list.showA', { n: String(gridState.head.length) })) + ' <b>' + num(counters.products) + '</b> ' +
       esc(tn(counters.products, 'unit.lots')) + ' ' + esc(T('list.showB')) + ' ' +
       '<span class="mono">GET /api/products?hasImage=1</span> ' +
       esc(T('list.subA')) + ' <span class="mono">dataSource</span> ' + esc(T('list.subB')) + ' ' +
@@ -3238,6 +3595,78 @@ a.skip:focus{left:0}
     }).join('');
   }
 
+  /* ---------- marketplace browsing strip -------------------------------
+     Both rails are built from responses this page already holds: the category
+     index (GET /api/products/categories) and the catalogue's country buckets
+     (GET /api/products/countries). A count that could not be read stays an em
+     dash — a chip never carries a guessed figure. The label is the dictionary's
+     translation of the catalogue's category name when one exists, and the
+     catalogue's own spelling otherwise; the value sent to /explore is always the
+     catalogue's English name. */
+  var MKT_LABEL = {
+    TR: 'markets.tr', CN: 'markets.cn', US: 'markets.us', DE: 'markets.de',
+    NL: 'markets.nl', IT: 'markets.it', ES: 'markets.es', PL: 'markets.pl',
+    FR: 'markets.fr', GB: 'markets.gb', GLOBAL: 'markets.global'
+  };
+  function renderCatRail() {
+    if (!catRail) return;
+    if (catState.mode === 'loading') return; /* the skeleton chips stay */
+    var rows;
+    if (catState.items.length) {
+      rows = catState.items.slice(0, 14).map(function (c) {
+        return { name: c.category, count: typeof c.count === 'number' ? c.count : null };
+      });
+    } else {
+      /* index unavailable: the known names, with whatever counts were probed */
+      rows = FALLBACK_CATS.slice(0, 14).map(function (c) {
+        var n = catState.counts[c[0]];
+        return { name: c[0], count: typeof n === 'number' ? n : null };
+      });
+    }
+    catRail.innerHTML = '<a class="ctag on" href="/explore">' + esc(T('foot.allListings')) + '</a>' +
+      rows.map(function (r) {
+        var label = CAT_KEY[r.name] ? T(CAT_KEY[r.name]) : '';
+        return '<a class="ctag" href="/explore?category=' + encodeURIComponent(r.name) + '">' +
+          esc(label || r.name) +
+          '<span class="c">' + (r.count == null ? '\u2014' : esc(num(r.count))) + '</span></a>';
+      }).join('');
+  }
+  function renderMkStrip() {
+    if (!mkStrip) return;
+    if (mktState.mode === 'loading') return; /* the skeleton cells stay */
+    if (mktState.mode === 'error' || !mktState.items.length) {
+      mkStrip.innerHTML = '<span class="mkt"><span class="cd">\u2014</span></span>';
+      return;
+    }
+    mkStrip.innerHTML = mktState.items.map(function (m) {
+      var code = String(m.country == null ? '' : m.country);
+      var key = MKT_LABEL[code.toUpperCase()];
+      var name = key ? T(key) : '';
+      var label = name && name !== code ? name : '';
+      return '<a class="mkt" href="/explore?country=' + encodeURIComponent(code) + '">' +
+        '<span class="cd">' + esc(code) + '</span>' +
+        (label ? '<span class="cn">' + esc(label) + '</span>' : '') +
+        '<span class="cv">' + (typeof m.count === 'number' ? esc(num(m.count)) : '\u2014') + '</span></a>';
+    }).join('');
+  }
+  /* Seller-acquisition figures. Every cell is the API's own value or an em dash;
+     there is no third state. `catalogue` is the unfiltered catalogue total that
+     GET /api/products/countries reports, `suppliers` and `rfqs` are the totals of
+     their own endpoints, and `sellState.open` is counted from the request board
+     only when that response is the complete list. */
+  function renderSell() {
+    if (!sellFigs) return;
+    function cell(value, key) {
+      return '<div class="sfig"><span class="v">' + (value == null ? '\u2014' : esc(num(value))) + '</span>' +
+        '<span class="l">' + esc(T(key)) + '</span></div>';
+    }
+    sellFigs.innerHTML =
+      cell(counters.catalogue, 'sell.fig.lots') +
+      cell(counters.suppliers, 'sell.fig.suppliers') +
+      cell(counters.rfqs, 'sell.fig.rfqs') +
+      cell(sellState.open, 'sell.fig.open');
+  }
+
   function renderAll() {
     renderCounters();
     renderGrids();
@@ -3246,6 +3675,9 @@ a.skip:focus{left:0}
     renderSuppliers();
     renderRfqs();
     renderCats();
+    renderCatRail();
+    renderMkStrip();
+    renderSell();
   }
 
   /* ---------- switching ---------- */
@@ -3273,7 +3705,7 @@ a.skip:focus{left:0}
      a few pages of the newest lots that have an image key, then show the ones
      whose photo file actually exists on this server. Rows are never altered —
      only the order changes, and the copy says so. */
-  var CATALOGUE_PAGES = [1, 5, 20];
+  var CATALOGUE_PAGES = [1, 2, 3, 4, 5, 6];
 
   function loadCatalogue() {
     var seen = {};
@@ -3316,8 +3748,10 @@ a.skip:focus{left:0}
         return (localImg(a.imageKey) ? 0 : 1) - (localImg(b.imageKey) ? 0 : 1);
       });
       gridState.mode = 'ok';
-      gridState.head = withLocal.slice(0, 8);
-      gridState.tail = withLocal.slice(8, 16);
+      /* 20 cards in the main catalogue block and the next 12 in #more: the same
+         rows in API order, only grouped so the ones with a photo file come first. */
+      gridState.head = withLocal.slice(0, 20);
+      gridState.tail = withLocal.slice(20, 32);
       heroState.mode = gridState.head.length ? 'ok' : 'error';
       heroState.item = gridState.head[0] || null;
 
@@ -3360,12 +3794,14 @@ a.skip:focus{left:0}
       supState.items = items;
       renderCounters();
       renderSuppliers();
+      renderSell();
     })
     .catch(function () {
       counters.anyLoaded = true;
       supState.mode = 'error';
       renderCounters();
       renderSuppliers();
+      renderSell();
     });
 
   /* ---------- 3. request board ---------- */
@@ -3377,14 +3813,22 @@ a.skip:focus{left:0}
       rfqState.mode = 'ok';
       rfqState.items = items;
       rfqState.total = counters.rfqs;
+      /* "still open" is counted from this response, and only when it is the
+         COMPLETE list (items.length === total): a partial page would understate
+         it, so a partial response leaves the em dash in place. */
+      if (counters.rfqs != null && items.length === counters.rfqs) {
+        sellState.open = items.filter(function (r) { return r && r.status === 'open'; }).length;
+      }
       renderCounters();
       renderRfqs();
+      renderSell();
     })
     .catch(function () {
       counters.anyLoaded = true;
       rfqState.mode = 'error';
       renderCounters();
       renderRfqs();
+      renderSell();
     });
 
   /* ---------- 4. category index: the catalogue's own grouping + counts ----------
@@ -3399,6 +3843,7 @@ a.skip:focus{left:0}
       counters.categories = items.length;
       counters.anyLoaded = true;
       renderCats();
+      renderCatRail();
       renderCounters();
     })
     .catch(function () {
@@ -3407,6 +3852,7 @@ a.skip:focus{left:0}
       counters.categories = null;
       counters.anyLoaded = true;
       renderCats();
+      renderCatRail();
       renderCounters();
       FALLBACK_CATS.forEach(function (c) {
         apiJson('/api/products?limit=1&category=' + encodeURIComponent(c[0]))
@@ -3414,10 +3860,34 @@ a.skip:focus{left:0}
             if (d && typeof d.total === 'number') {
               catState.counts[c[0]] = d.total;
               renderCats();
+              renderCatRail();
             }
           })
           .catch(function () { /* leave the em dash — never guess a count */ });
       });
+    });
+
+  /* ---------- 4b. market strip + catalogue total ----------------
+     GET /api/products/countries is the catalogue's own country grouping; its
+     `total` is the unfiltered catalogue total, which is the figure the seller
+     panel states as "listings in the catalogue". One request, one honest total. */
+  apiJson('/api/products/countries')
+    .then(function (d) {
+      var items = (d && d.items) || [];
+      mktState.mode = 'ok';
+      mktState.items = items;
+      mktState.total = d && typeof d.total === 'number' ? d.total : null;
+      counters.catalogue = mktState.total;
+      renderMkStrip();
+      renderSell();
+    })
+    .catch(function () {
+      mktState.mode = 'error';
+      mktState.items = [];
+      mktState.total = null;
+      counters.catalogue = null;
+      renderMkStrip();
+      renderSell();
     });
 
   /* ---------- 5. search → the marketplace search route ---------- */
