@@ -57,13 +57,29 @@ landing page's inbound links.
 - A nav destination whose feature is not built must render an honest placeholder
   (`pages/ComingSoon.tsx`), never a fake working screen.
 
+## Marketplace scope (owner policy, hard rule)
+The marketplace covers **Türkiye, China, USA and Europe — nothing else**. India and
+Vietnam are excluded from buyers AND sellers (they were purged from the catalogue
+once and came back through seed data, so treat this as a standing rule, not a
+one-off cleanup). Concretely:
+- `COUNTRIES` in `lib/api-spec` is the only source for the country pickers used by
+  listings, RFQs and filters; never re-add an excluded market to it.
+- The header market strip (`MARKET_COUNTRIES` in `artifacts/web/src/components.tsx`)
+  lists only allowed markets with real counts from `GET /api/products/countries`.
+- The seeders (`lib/db/scripts/seed.ts`, `artifacts/api-server/src/bootstrap-seed.ts`)
+  and every served landing file must produce zero India/Vietnam rows: grep the
+  landing candidates and check a fresh-DB seed run.
+
 ## Gates
 1. `pnpm run typecheck` — clean
 2. `pnpm run build` — clean
-3. `pnpm test` — 26 tests. Unit tests (email rendering, HTML escaping) run anywhere;
+3. `pnpm test` — 30 tests. Unit tests (email rendering, HTML escaping) run anywhere;
    the integration suite boots against a server and **skips unless `TEST_BASE_URL`
    is set**:
    `TEST_BASE_URL=http://localhost:9090 pnpm --filter @workspace/api-server run test`
+   Do not run it back-to-back: each run spends the 10/15min per-IP login budget and
+   the 30/min per-IP write budget, so an immediate second run returns 429s that look
+   like regressions — wait ~60s between gate runs.
    It covers anonymous 401s, forged tokens, authz (a buyer must get 403 from
    `/api/admin/*`), supplier-ownership enforcement (supplier B must not edit A's
    listing), the `?supplierId=` public scope, the product Q&A rules (only the owning
