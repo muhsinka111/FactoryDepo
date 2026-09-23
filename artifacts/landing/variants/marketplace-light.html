@@ -460,7 +460,7 @@ a.skip:focus{left:0}
 <body>
 <!-- The catalogue is 100% bootstrap demo data right now. Stated up front so a
      US/EU buyer is never led to believe these are live offers. -->
-<div class="demo-band"><b data-t="notice.demoTitle">Demo catalogue</b><span data-t="notice.demoBody"> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.</span></div>
+<div class="demo-band" id="demoBand" hidden><b data-t="notice.demoTitle">Demo catalogue</b><span data-t="notice.demoBody" id="demoBody"> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.</span></div>
 <a class="skip" href="#listings" data-t="skip">Skip to listings</a>
 
 <!-- ============================ top bar ============================ -->
@@ -969,6 +969,7 @@ a.skip:focus{left:0}
     /* ---------------- English (source of truth) ---------------- */
     en: {
       'notice.demo': '<b>Demo catalogue</b> — every listing shown is bootstrap demo data, not a real offer. Real supplier listings replace it as they are onboarded.',
+      'notice.demoPartial': ' — {n} of the {m} listings shown are demo data, not real offers.',
       'hero.surplusEyebrow': 'Surplus, overstock and container-ready factory stock',
       'hero.surplusLead': 'Sell your surplus stock,',
       'hero.surplusAccent': 'buy the lot in one place',
@@ -1186,6 +1187,7 @@ a.skip:focus{left:0}
     /* ---------------- Türkçe ---------------- */
     tr: {
       'notice.demo': '<b>Demo katalog</b> — gösterilen her ilan demo verisidir, gerçek bir teklif değildir. Gerçek tedarikçi ilanları eklendikçe yerini alacaktır.',
+      'notice.demoPartial': ' — gösterilen {m} ilanın {n} tanesi demo verisidir, gerçek teklif değildir.',
       'hero.surplusEyebrow': 'Fazla üretim, aşırı stok ve konteyner dolusu fabrika stoğu',
       'hero.surplusLead': 'Fazla stoğunuzu satın,',
       'hero.surplusAccent': 'tek yerden lot alın',
@@ -1403,6 +1405,7 @@ a.skip:focus{left:0}
     /* ---------------- العربية (RTL) ---------------- */
     ar: {
       'notice.demo': '<b>كتالوج تجريبي</b> — كل إعلان معروض بيانات تجريبية وليس عرضًا حقيقيًا. سيتم استبداله بإعلانات موردين حقيقيين عند إضافتهم.',
+      'notice.demoPartial': ' — {n} من {m} إعلانًا معروضًا بيانات تجريبية وليست عروضًا حقيقية.',
       'hero.surplusEyebrow': 'فائض الإنتاج والمخزون الراكد والجاهز للحاوية',
       'hero.surplusLead': 'بِع مخزونك الفائض،',
       'hero.surplusAccent': 'واشترِ الشحنة من مكان واحد',
@@ -1620,6 +1623,7 @@ a.skip:focus{left:0}
     /* ---------------- Русский ---------------- */
     ru: {
       'notice.demo': '<b>Демо-каталог</b> — все показанные объявления являются демонстрационными данными, а не реальным предложением. По мере подключения поставщиков их заменят настоящие.',
+      'notice.demoPartial': ' — {n} из {m} показанных объявлений — демонстрационные данные, а не реальные предложения.',
       'hero.surplusEyebrow': 'Излишки, сверхзапас и готовые к отгрузке складские запасы',
       'hero.surplusLead': 'Продайте излишки,',
       'hero.surplusAccent': 'покупайте партию в одном месте',
@@ -1837,6 +1841,7 @@ a.skip:focus{left:0}
     /* ---------------- 中文 (简体) ---------------- */
     zh: {
       'notice.demo': '<b>演示目录</b> — 展示的所有商品均为演示数据，并非真实报价。随着真实供应商入驻将逐步替换。',
+      'notice.demoPartial': ' — 展示的 {m} 条货源中有 {n} 条为演示数据，并非真实报价。',
       'hero.surplusEyebrow': '余料、积压库存与整柜现货',
       'hero.surplusLead': '出售您的余料库存，',
       'hero.surplusAccent': '一站式采购整批货物',
@@ -2054,6 +2059,7 @@ a.skip:focus{left:0}
     /* ---------------- Español ---------------- */
     es: {
       'notice.demo': '<b>Catálogo de demostración</b> — todos los anuncios mostrados son datos de demostración, no ofertas reales. Se sustituirán por anuncios de proveedores reales.',
+      'notice.demoPartial': ' — {n} de las {m} publicaciones mostradas son datos de demostración, no ofertas reales.',
       'hero.surplusEyebrow': 'Excedentes, sobrestock y stock listo para contenedor',
       'hero.surplusLead': 'Venda su excedente,',
       'hero.surplusAccent': 'compre el lote en un solo lugar',
@@ -3913,6 +3919,30 @@ a.skip:focus{left:0}
   /* The only fixed numbers left on this page are the step labels 01–04 and the
      list of services — lengths of markup we control, never a metric about the
      business, the market or the catalogue. */
+  /* ---------- the demo band tells the truth about THIS catalogue ----------
+     The band used to be static copy: it claimed every listing was demo data on
+     every page load. That stopped being true the day the catalogue became real
+     — and it was never true when the catalogue was empty. It is hidden in the
+     markup and appears only when the API reports demo rows, saying exactly how
+     many of how many. No data, no claim. */
+  (function () {
+    var band = document.getElementById('demoBand');
+    var body = document.getElementById('demoBody');
+    if (!band || !body) return;
+    apiJson('/api/products/catalogue-state')
+      .then(function (state) {
+        var demo = Number((state && state.demoListings) || 0);
+        var real = Number((state && state.realListings) || 0);
+        var total = demo + real;
+        if (!(demo > 0)) return;
+        if (demo < total) {
+          body.removeAttribute('data-t');
+          body.textContent = T('notice.demoPartial', { n: demo, m: total });
+        }
+        band.hidden = false;
+      })
+      .catch(function () { /* unreachable API → the band claims nothing */ });
+  })();
 })();
 </script>
 </body>
