@@ -9,7 +9,9 @@
  *   - `ai`       : an OpenAI-compatible chat completion (DeepSeek by default;
  *                  key/base/model are env-configurable, 10s timeout).
  *   - `fallback` : a deterministic composer that only re-arranges the caller's
- *                  own facts (head noun + category + specs + origin).
+ *                  own facts (head noun + category + specs + origin). `variant`
+ *                  re-arranges those facts differently each time, so "Regenerate"
+ *                  is never a no-op when no key is configured.
  *
  * The rules are ENFORCED on the model's answer — a model is asked politely, not
  * trusted: brands, superlatives, unverifiable certificates, prices, invented
@@ -358,15 +360,23 @@ function factWords(sourceTitle: string): string[] {
 }
 
 /**
+ * The source title's significant words, cut at its first purpose clause: the
+ * purpose and attribute clauses are carried by `spec`, not by the type. A word
+ * that carries a digit is not a type word — a model number belongs to `spec`,
+ * and trimming the letters off a mangled source tag ("zx9" → "zx") would invent
+ * a word the source title never had.
+ */
+function sourceWords(sourceTitle: string): string[] {
+  const head = toAscii(sourceTitle).split(/\b(?:for|with|used for|suitable for|applicable to|which|that)\b/i)[0];
+  return factWords(head.split(/\s+/).filter((w) => !/\d/.test(w)).join(' '));
+}
+
+/**
  * The product type: the head of the source title's own wording (last up to three
  * significant words, e.g. "Industrial Ice Machine"), never a marketing phrase.
  */
 export function headNoun(sourceTitle: string): string {
-  let t = toAscii(sourceTitle);
-  // Purpose/attribute clauses are carried by `spec`, not by the type.
-  t = t.split(/\b(?:for|with|used for|suitable for|applicable to|which|that)\b/i)[0];
-  const words = factWords(t);
-  const tail = words.slice(-3);
+  const tail = sourceWords(sourceTitle).slice(-3);
   if (tail.length === 0) return '';
   const head = titleCasePhrase(tail.join(' '));
   return clamp(head, 60);
@@ -395,8 +405,7 @@ function isCovered(text: string, candidate: string): boolean {
  * a number or a material/standard reads as more concrete than a bare word), then
  * the operator's own keywords, then the couple of weaker facts at the end.
  */
-export function composerAttrs(input: TitleInput): string[] {
-  const head = composeHead(input);
+export function composerAttrs(input: TitleInput, head = composeHead(input)): string[] {
   const specs = (input.spec ?? []).map(cleanFact).filter((s) => s.length >= 2);
   const scored = specs
     .map((value, index) => ({ value, index, score: (/\d/.test(value) ? 2 : 0) + (/\b(steel|stainless|aluminium|aluminum|copper|brass|pvc|hdpe|pp|abs|grade|finish|mm|kw|kg|ton|hp)\b/i.test(value) ? 1 : 0) }))
@@ -447,11 +456,53 @@ function composeHead(input: TitleInput): string {
   return head || 'Industrial supply';
 }
 
+/**
+ * The heads a title may lead with: the composer's own head first, then the
+ * source title's opening words when the head noun did not already use them
+ * ("Aluminium Profile 6060 T6 Mill Finish Extrusion" opens with "Aluminium
+ * Profile" as readily as it ends with "Mill Finish Extrusion"). Both runs are
+ * the source title's own wording — nothing is invented, and a regenerate has
+ * something different to lead with. The category is never promoted to a head
+ * here: it is the type of last resort, not an alternative phrasing.
+ */
+export function headCandidates(input: TitleInput): string[] {
+  const primary = composeHead(input);
+  const heads = [primary];
+  const words = sourceWords(input.sourceTitle);
+  const used = new Set(words.slice(-3).map((word) => word.toLowerCase()));
+  const opening = words.filter((word) => !used.has(word.toLowerCase())).slice(0, 3);
+  if (opening.length >= 2) {
+    const alt = clamp(titleCasePhrase(opening.join(' ')), 60);
+    if (alt && !GENERIC_HEADS.has(alt.toLowerCase()) && normalizeForCompare(alt) !== normalizeForCompare(primary)) {
+      heads.push(alt);
+    }
+  }
+  return heads;
+}
+
+/**
+ * `variant` re-arranges the record's own facts, so "Regenerate" is not a no-op on
+ * the fallback path. The levers, in order: the attribute clause rotated by one
+ * fact, then the clause with one fact fewer (a shorter phrasing). Orthogonally the
+ * title may lead with a different head (see headCandidates). Everything cycles —
+ * a finite set of facts has a finite set of arrangements — and nothing is
+ * invented: every variant still obeys the title rules and only uses the record.
+ */
+function variantAttrs(pool: string[], variant: number, headCount: number): string[] {
+  const v = Math.max(0, Math.trunc(variant));
+  // A record with a single attribute can only offer it or leave it out.
+  if (pool.length <= 1) return Math.floor(v / Math.max(1, headCount)) % 2 === 0 ? pool : [];
+  const rot = v % pool.length;
+  const rotated = [...pool.slice(rot), ...pool.slice(0, rot)];
+  return rotated.slice(0, pool.length - (Math.floor(v / pool.length) % 2));
+}
+
 /** The deterministic title: head — attrs — origin supply, trimmed to fit. */
-export function compose(input: TitleInput): ComposedTitle {
+export function compose(input: TitleInput, variant = input.variant ?? 0): ComposedTitle {
   const origin = input.originCountry ? cleanFact(input.originCountry) : '';
-  const head = composeHead(input);
-  const all = composerAttrs(input);
+  const heads = headCandidates(input);
+  const head = heads[Math.abs(Math.trunc(variant)) % heads.length] ?? heads[0];
+  const all = variantAttrs(composerAttrs(input, head), variant, heads.length);
   const render = (attrs: string[]): string => {
     const parts = [head];
     if (attrs.length > 0) parts.push(attrs.join(', '));
@@ -476,19 +527,67 @@ export function composeTitle(input: TitleInput): string {
   return compose(input).title;
 }
 
+/** Words that name nothing on their own: a probe built only from these is worthless. */
+function isFillerToken(token: string): boolean {
+  return NOISE_WORDS.has(token) || GENERIC_HEADS.has(token);
+}
+
+/** A probe is worth asking only when it is specific enough to find the term that collides. */
+function usableProbe(probe: string): boolean {
+  if (probe.length < 3 || !/[A-Za-z]/.test(probe)) return false;
+  const tokens = normalizeForCompare(probe).split(' ').filter((t) => t.length >= 2);
+  if (/\d/.test(probe)) {
+    // A model number / grade is specific on its own ("6060 T6"), a bare quantity is not ("6 m").
+    return tokens.some((t) => t.length >= 3 && /\d/.test(t));
+  }
+  // Without a number the probe must be a phrase, and not one made of filler words.
+  return tokens.length >= 2 && tokens.some((t) => !isFillerToken(t));
+}
+
 /**
- * What we probe the catalogue with: the head noun plus the first attribute
- * token. Long enough to be specific, short enough to match a row whose name has
- * been reworded — the same ILIKE '%term%' shape GET /api/products uses.
+ * What we probe the catalogue with. One term is not enough: the source title's
+ * own opening words are the term that collides in practice ("Aluminium Profile"),
+ * the composer's head is what we are about to publish, and a spec VALUE carrying
+ * a number ("6060 T6") is the strongest evidence of the same product. Labels are
+ * never probed ("Alloy:" is our own field name, not a catalogue term), nor filler
+ * ("unit", "supply", the category on its own). Each probe is a small ILIKE
+ * '%term%' — the same shape GET /api/products uses — and the caller unions what
+ * they return before deciding anything.
+ */
+export function catalogueProbes(input: TitleInput): string[] {
+  const out: string[] = [];
+  const add = (raw: string) => {
+    const probe = clamp(cleanFact(raw), 60);
+    if (!usableProbe(probe)) return;
+    if (out.some((p) => normalizeForCompare(p) === normalizeForCompare(probe))) return;
+    out.push(probe);
+  };
+
+  // 1. The source title's own opening words — first two, then three significant ones.
+  const words = sourceWords(input.sourceTitle);
+  add(titleCasePhrase(words.slice(0, 2).join(' ')));
+  add(titleCasePhrase(words.slice(0, 3).join(' ')));
+  // 2. The head(s) the composer leads with.
+  for (const head of headCandidates(input)) add(head);
+  // 3. Every spec VALUE that carries a number — the label before the ':' is ours,
+  //    not the catalogue's ("Alloy: 6060 T6" must probe as "6060 T6"). A value
+  //    without a number is no more specific than the head already probed.
+  for (const spec of input.spec ?? []) {
+    const colon = spec.lastIndexOf(':');
+    const value = colon >= 0 ? spec.slice(colon + 1) : spec;
+    if (/\d/.test(value)) add(value);
+  }
+  // The category is a label the listing already carries: on its own it is not a term.
+  const category = input.category ? normalizeForCompare(cleanFact(input.category)) : '';
+  return out.filter((probe) => normalizeForCompare(probe) !== category);
+}
+
+/**
+ * The first probe — the source title's own opening words — for callers that want
+ * a single term; the check itself always asks every probe catalogueProbes builds.
  */
 export function catalogueProbe(input: TitleInput): string {
-  // The head the composer actually used, so the probe always has something to
-  // compare even when the source title is unusable on its own.
-  const head = compose(input).head;
-  const firstAttr = composerAttrs(input)[0] ?? '';
-  const firstToken = firstAttr.split(/\s+/)[0] ?? '';
-  const probe = [head, firstToken].filter(Boolean).join(' ').trim();
-  return probe.length >= 3 ? clamp(probe, 60) : '';
+  return catalogueProbes(input)[0] ?? '';
 }
 
 /* ==========================================================================
@@ -538,25 +637,48 @@ export const dbCatalogue: CatalogueLookup = {
 
 /** Share of our own significant words that the candidate name also carries. */
 function tokenOverlap(a: string, b: string): number {
-  const tokens = (text: string) =>
-    new Set(normalizeForCompare(text).split(' ').filter((t) => t.length >= 2));
-  const mine = tokens(a);
-  const theirs = tokens(b);
+  const mine = tokensOf(a);
+  const theirs = tokensOf(b);
   if (mine.size === 0) return 0;
   let hit = 0;
   for (const t of mine) if (theirs.has(t)) hit += 1;
   return hit / mine.size;
 }
 
-/** Pick the row that is genuinely near-identical, or null. */
-function bestMatch(rows: CatalogueCandidate[], title: string, probe: string): CatalogueCandidate | null {
+/** Every comparable word of a name (length ≥ 2, digit-normalised case). */
+function tokensOf(text: string): Set<string> {
+  return new Set(normalizeForCompare(text).split(' ').filter((t) => t.length >= 2));
+}
+
+/**
+ * Pick the row that is genuinely close to our title, or null. A near-verbatim
+ * name is not the only collision that matters: a row that shares our own
+ * distinctive terms — a model number or a spec phrase — is a duplicate too, in
+ * either direction (our title may be the wordier one), while a row that merely
+ * repeats generic words is not.
+ */
+function bestMatch(rows: CatalogueCandidate[], title: string, probes: string[]): CatalogueCandidate | null {
+  // A probe carrying a number is evidence on its own: a row whose name literally
+  // holds "6060 T6" is the same product, whatever the wording around it.
+  const numericProbes = probes.map((p) => normalizeForCompare(p)).filter((p) => /\d/.test(p));
+  const mine = tokensOf(title);
   const scored = rows
     .map((row) => {
-      const overlap = tokenOverlap(title, row.name);
-      const probeHit = normalizeForCompare(row.name).includes(normalizeForCompare(probe));
-      return { row, overlap, probeHit };
+      const theirs = tokensOf(row.name);
+      const rowText = normalizeForCompare(row.name);
+      const shared = [...mine].filter((t) => theirs.has(t));
+      const forward = tokenOverlap(title, row.name);
+      const reverse = theirs.size > 0 ? shared.length / theirs.size : 0;
+      const sameNumber = shared.some((t) => /\d/.test(t));
+      const probeHit = numericProbes.some((p) => rowText.includes(p));
+      const duplicate =
+        probeHit ||
+        forward >= 0.5 ||
+        (reverse >= 0.75 && shared.length >= 3) ||
+        (sameNumber && shared.length >= 2);
+      return { row, overlap: Math.max(forward, reverse), duplicate };
     })
-    .filter((s) => s.probeHit || s.overlap >= 0.5)
+    .filter((s) => s.duplicate)
     .sort((a, b) => b.overlap - a.overlap || a.row.name.length - b.row.name.length);
   return scored[0]?.row ?? null;
 }
@@ -591,6 +713,17 @@ interface UniqueResult {
   note: string;
 }
 
+/** The union of what several probes return, de-duplicated by listing id. */
+async function lookupProbes(lookup: CatalogueLookup, probes: string[]): Promise<CatalogueCandidate[]> {
+  const found = new Map<number, CatalogueCandidate>();
+  for (const probe of probes) {
+    for (const row of await lookup.byNameProbe(probe)) {
+      if (!found.has(row.id)) found.set(row.id, row);
+    }
+  }
+  return [...found.values()];
+}
+
 /**
  * Compare our title against the catalogue before answering. A collision is
  * reported either way; the title is only called `unique` once it really is.
@@ -600,10 +733,10 @@ export async function ensureUnique(
   input: TitleInput,
   lookup: CatalogueLookup = dbCatalogue,
 ): Promise<UniqueResult> {
-  const probe = catalogueProbe(input);
+  const probes = catalogueProbes(input);
   let candidates: CatalogueCandidate[];
   try {
-    candidates = probe ? await lookup.byNameProbe(probe) : [];
+    candidates = await lookupProbes(lookup, probes);
   } catch (err) {
     console.warn('[title] catalogue probe failed:', err instanceof Error ? err.message : String(err));
     return {
@@ -614,7 +747,7 @@ export async function ensureUnique(
     };
   }
 
-  const match = bestMatch(candidates, title, probe);
+  const match = bestMatch(candidates, title, probes);
   if (!match) return { title, unique: true, duplicateOf: null, note: '' };
 
   const tokens = distinguishingTokens(input, title);
@@ -747,14 +880,18 @@ export interface GenerateOptions {
 export async function generateTitle(input: TitleInput, opts: GenerateOptions = {}): Promise<GeneratedTitle> {
   const variant = input.variant ?? 0;
   const key = aiKey();
-  const composed = compose(input);
+  const composed = compose(input, variant);
 
   let title = composed.title;
   let engine: GeneratedTitle['engine'] = 'fallback';
   const clauses: string[] = [];
 
   if (!key) {
-    clauses.push("No AI key is configured — the title was composed from the record's own fields.");
+    clauses.push(
+      variant > 0
+        ? `No AI key is configured — variation #${variant + 1} of the composed title, from the record's own fields.`
+        : "No AI key is configured — the title was composed from the record's own fields.",
+    );
   } else {
     const cfg = { key, baseUrl: aiBaseUrl(), model: aiModel(), timeoutMs: aiTimeoutMs() };
     const answer = await callProvider(input, cfg, variant, opts.fetchImpl ?? fetch);

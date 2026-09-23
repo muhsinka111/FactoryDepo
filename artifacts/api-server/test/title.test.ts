@@ -27,6 +27,11 @@
  *      or rejected, never trusted (checked against the engine with an injected
  *      provider, so the assertion is deterministic instead of depending on what
  *      a real model feels like saying).
+ *   8. a catalogue row that shares only a model number and a spec phrase with our
+ *      title is still a duplicate (partial overlap), and the title comes back
+ *      distinct from it — while a genuinely unrelated product stays `unique:true`.
+ *   9. `variant` changes the composed title, so "Regenerate" is not a no-op when
+ *      no AI key is configured.
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -39,6 +44,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
   catalogueProbe,
+  catalogueProbes,
   composeTitle,
   generateTitle,
   repairTitle,
@@ -339,6 +345,79 @@ test('title: a name already in the catalogue is reported and the answer is made 
   assert.equal((settled.body as { duplicateOf: number | null }).duplicateOf, null, 'the collision was removed');
 });
 
+/**
+ * The defect a driver's end-to-end run found: a row that shares only the model
+ * number and the finish ("Aluminium Profile 6060 T6 — mill finish, 6 m bars")
+ * was never probed for, because the probe was built from an attribute LABEL
+ * ("Alloy:") and the composer head ("Mill Finish Extrusion") — so the endpoint
+ * answered unique:true and the row was invisible. The source title's own head run
+ * and the spec VALUE are what collide; both are probed now.
+ */
+test('title: a partial-overlap row is reported, and a variant changes the answer', { skip }, async (t) => {
+  await liveBase(t);
+  const s = await sup();
+  const tag = `al${uniq()}`;
+  const body: TitleInput = {
+    sourceTitle: 'Aluminium Profile 6060 T6 Mill Finish 6m Extrusion for structural framing',
+    category: 'Metals & Minerals',
+    originCountry: 'CN',
+    unit: 'ton',
+    spec: ['Alloy: 6060 T6', 'Length: 6 m', 'Finish: mill'],
+    variant: 0,
+  };
+
+  // A variant is the operator's "Regenerate": it must not return the same string.
+  const v0 = await call('POST', '/api/imports/title', { ...body, variant: 0 }, s.token);
+  const v1 = await call('POST', '/api/imports/title', { ...body, variant: 1 }, s.token);
+  assert.equal(v0.status, 200, `expected 200 (got ${v0.status} ${v0.text})`);
+  assert.equal(v1.status, 200, `expected 200 (got ${v1.status} ${v1.text})`);
+  const first = v0.body as { title: string; engine: string };
+  const second = v1.body as { title: string; engine: string; note: string };
+  assert.equal(first.engine, 'fallback');
+  assert.equal(second.engine, 'fallback');
+  assert.notEqual(second.title, first.title, 'Regenerate must produce a genuinely different title');
+  assertCleanTitle(first.title, (body.spec as string[]).join(' '));
+  assertCleanTitle(second.title, (body.spec as string[]).join(' '));
+
+  // The same product, worded differently: no label, no composer head, only the
+  // model number and the finish in common with our title.
+  const created = await call('POST', '/api/products', {
+    name: `Aluminium Profile 6060 T6 - mill finish, 6 m bars ${tag}`,
+    category: 'Metals & Minerals',
+    description: 'title.test.ts partial-overlap probe — deleted again by this test',
+    price: 2400,
+    currency: 'USD',
+    unit: 'ton',
+    moq: 1,
+    originCountry: 'CN',
+    quantityAvailable: 5,
+  }, s.token);
+  assert.equal(created.status, 201, `probe listing failed: ${created.status} ${created.text}`);
+  const rowId = (created.body as { id: number }).id;
+  const rowName = `Aluminium Profile 6060 T6 - mill finish, 6 m bars ${tag}`;
+
+  try {
+    const after_ = await call('POST', '/api/imports/title', body, s.token);
+    assert.equal(after_.status, 200, `expected 200 (got ${after_.status} ${after_.text})`);
+    const out = after_.body as { title: string; unique: boolean; duplicateOf: number | null; note: string };
+    assert.equal(typeof out.duplicateOf, 'number', `the partial-overlap row must be reported: ${JSON.stringify(out)}`);
+    assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the returned title must differ from the existing name');
+    // The baseline call is only a baseline when the catalogue held nothing for this
+    // product: this suite runs against the DEV database, which may already carry such
+    // a row (a real push, or another run's leftovers), and then the baseline already
+    // carries the distinguishing fact and the second answer legitimately repeats it.
+    if (first.unique) {
+      assert.notEqual(out.title, first.title, 'a collision must change the answer');
+    } else {
+      assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the answer must never be the colliding name');
+    }
+    assertCleanTitle(out.title, (body.spec as string[]).join(' '));
+  } finally {
+    const removed = await call('DELETE', `/api/products/${rowId}`, undefined, s.token);
+    assert.ok(removed.status < 300, `cleanup failed (${removed.status} ${removed.text}) — delete listing ${rowId} by hand`);
+  }
+});
+
 /* ==========================================================================
  * the engine itself (no server, deterministic)
  * ========================================================================== */
@@ -583,6 +662,162 @@ test('uniqueness: a collision that cannot be escaped is reported as unique:false
 
     // A collision that no available fact can distinguish does not invent one.
     assert.equal(catalogueProbe(input).length > 0, true);
+  } finally {
+    if (saved === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = saved;
+  }
+});
+
+/**
+ * The collision that matters is not always a near-verbatim name. A catalogue row
+ * that shares only a model number and a spec phrase — "Aluminium Profile 6060 T6
+ * — mill finish, 6 m bars" against our "Mill Finish Extrusion - Alloy: 6060 T6,
+ * Length: 6 m - CN supply" — competes in the same search results, and the probe
+ * has to find it: the source title's head noun run ("Aluminium Profile") and the
+ * spec VALUE ("6060 T6"), never the label ("Alloy:") and never the composer head
+ * alone ("Mill Finish Extrusion", which matches nothing in that catalogue).
+ */
+test('uniqueness: a row sharing a model number and a spec phrase is a duplicate too', async () => {
+  const saved = process.env.AI_API_KEY;
+  delete process.env.AI_API_KEY;
+  const input: TitleInput = {
+    sourceTitle: 'Aluminium Profile 6060 T6 Mill Finish 6m Extrusion for structural framing',
+    category: 'Metals & Minerals',
+    originCountry: 'CN',
+    unit: 'ton',
+    spec: ['Alloy: 6060 T6', 'Length: 6 m', 'Finish: mill'],
+    variant: 0,
+  };
+  const row = { id: 6810, name: 'Aluminium Profile 6060 T6 — mill finish, 6 m bars' };
+  const asked: string[] = [];
+  const lookup: CatalogueLookup = {
+    async byNameProbe(probe) { asked.push(probe); return [row]; },
+    async byExactName() { return null; },
+  };
+
+  try {
+    // The probe the endpoint leads with is the term that actually collides — the
+    // source title's own words — not an attribute label.
+    const probes = catalogueProbes(input);
+    assert.ok(probes.length >= 2, `more than one term must be probed: ${JSON.stringify(probes)}`);
+    for (const probe of probes) {
+      assert.ok(!probe.trim().endsWith(':'), `a bare label is not a probe: ${JSON.stringify(probe)}`);
+      assert.ok(!/^(unit|supply|product|high|quality|metals)$/i.test(probe), `filler is not a probe: ${JSON.stringify(probe)}`);
+      assert.ok(probe.length >= 3, `a probe shorter than 3 chars is useless: ${JSON.stringify(probe)}`);
+    }
+    const all = probes.join(' | ');
+    assert.match(all, /Aluminium Profile/i, `the source title's head run must be probed: ${all}`);
+    assert.match(all, /6060 T6/i, `the numbered spec VALUE must be probed: ${all}`);
+    assert.ok(!/\bAlloy:\s*$/.test(all), `the label must not be the probe: ${all}`);
+    assert.equal(catalogueProbe(input), probes[0], 'catalogueProbe() is the first of the probes');
+    assert.match(catalogueProbe(input), /Aluminium Profile/i, `the leading probe must be the colliding term: ${catalogueProbe(input)}`);
+
+    const out = await generateTitle(input, { lookup });
+    assert.equal(out.engine, 'fallback');
+    assert.equal(out.duplicateOf, row.id, `the partial-overlap row must be reported: ${JSON.stringify(out)}`);
+    assert.equal(out.unique, true, `a distinguishing fact exists, so the title can be unique: ${JSON.stringify(out)}`);
+    assert.notEqual(out.title.toLowerCase(), row.name.toLowerCase(), 'the returned title must differ from the existing name');
+    assert.notEqual(out.title, composeTitle(input), 'a collision must change the answer');
+    assertCleanTitle(out.title, (input.spec as string[]).join(' '));
+
+    // Several probes are asked, not one: the term that collides is not always the
+    // head the composer leads with.
+    assert.ok(asked.length >= 2, `every probe must be asked: ${JSON.stringify(asked)}`);
+  } finally {
+    if (saved === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = saved;
+  }
+});
+
+/**
+ * The other half of the same rule: widening the probes and the matching must not
+ * turn a different product into a duplicate. A catalogue that answers every probe
+ * with rows of another product (an excavator bucket against aluminium profiles,
+ * an ice machine and a steel sheet) leaves `unique:true`, `duplicateOf:null` and
+ * the composer's own title untouched.
+ */
+test('uniqueness: an unrelated product is not turned into a duplicate', async () => {
+  const saved = process.env.AI_API_KEY;
+  delete process.env.AI_API_KEY;
+  const input: TitleInput = {
+    sourceTitle: 'Hydraulic Excavator Bucket 20t for demolition work',
+    category: 'Construction Machinery',
+    originCountry: 'TR',
+    unit: 'unit',
+    spec: ['Capacity: 1.2 m3', 'Hardox 450 steel'],
+    variant: 0,
+  };
+  const rows = [
+    { id: 6810, name: 'Aluminium Profile 6060 T6 — mill finish, 6 m bars' },
+    { id: 5401, name: 'Snowkey 1-70t Tube Ice Machine Industrial Ice Machine Ice Maker Machine' },
+    { id: 9, name: 'Stainless Steel Sheet 304' },
+  ];
+  const lookup: CatalogueLookup = {
+    async byNameProbe() { return rows; },
+    async byExactName() { return null; },
+  };
+
+  try {
+    const out = await generateTitle(input, { lookup });
+    assert.equal(out.unique, true, `shared generic words are not a collision: ${JSON.stringify(out)}`);
+    assert.equal(out.duplicateOf, null, `an unrelated product must stay unreported: ${JSON.stringify(out)}`);
+    assert.equal(out.title, composeTitle(input), 'the composer\'s own title must come back unchanged');
+    assertCleanTitle(out.title);
+  } finally {
+    if (saved === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = saved;
+  }
+});
+
+/**
+ * "Regenerate" is the operator asking for a different title. On the fallback path
+ * that used to be a no-op: variant 0..3 all returned one identical string.
+ */
+test('composer: a variant re-arranges the record, so Regenerate is not a no-op', async () => {
+  const saved = process.env.AI_API_KEY;
+  delete process.env.AI_API_KEY;
+  const input: TitleInput = {
+    sourceTitle: 'Aluminium Profile 6060 T6 Mill Finish 6m Extrusion for structural framing',
+    category: 'Metals & Minerals',
+    originCountry: 'CN',
+    unit: 'ton',
+    spec: ['Alloy: 6060 T6', 'Length: 6 m', 'Finish: mill'],
+    variant: 0,
+  };
+  const emptyCatalogue: CatalogueLookup = {
+    async byNameProbe() { return []; },
+    async byExactName() { return null; },
+  };
+  // Every word a variant publishes has to come from the record (as in the
+  // composer test above) — a regenerate re-arranges facts, it does not invent.
+  const facts = new Set(
+    `${input.sourceTitle} ${input.category} ${input.originCountry} ${input.unit} ${(input.spec ?? []).join(' ')}`
+      .toLowerCase()
+      .replace(/[^a-z0-9/]+/g, ' ')
+      .split(' ')
+      .filter(Boolean),
+  );
+
+  try {
+    const titles: string[] = [];
+    for (const variant of [0, 1, 2, 3]) {
+      const out = await generateTitle({ ...input, variant }, { lookup: emptyCatalogue });
+      assert.equal(out.engine, 'fallback', `no key, so the composer answers: ${JSON.stringify(out)}`);
+      assert.equal(out.unique, true);
+      assertCleanTitle(out.title, (input.spec as string[]).join(' '));
+      for (const token of out.title.toLowerCase().replace(/[^a-z0-9/]+/g, ' ').split(' ').filter(Boolean)) {
+        if (token === 'supply') continue; // the composer's own connector
+        assert.ok(facts.has(token), `variant ${variant} invented "${token}" in ${JSON.stringify(out.title)}`);
+      }
+      titles.push(out.title);
+    }
+    assert.equal(new Set(titles).size, 4, `variant 0..3 must all differ: ${JSON.stringify(titles)}`);
+    assert.notEqual(titles[0], titles[1], 'variant 1 must differ from variant 0');
+    // The same variant stays deterministic — a re-render is not a new title.
+    const again = await generateTitle({ ...input, variant: 1 }, { lookup: emptyCatalogue });
+    assert.equal(again.title, titles[1], 'the same variant must be stable');
+    // And the operator is told which arrangement they are looking at.
+    assert.match(again.note, /variation #2/i, `the note must name the variation: ${again.note}`);
+    const zero = await generateTitle({ ...input, variant: 0 }, { lookup: emptyCatalogue });
+    assert.match(zero.note, /no ai key/i, `variant 0 keeps the original note: ${zero.note}`);
+    assert.ok(!/variation/i.test(zero.note), `variant 0 is not a variation: ${zero.note}`);
   } finally {
     if (saved === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = saved;
   }
