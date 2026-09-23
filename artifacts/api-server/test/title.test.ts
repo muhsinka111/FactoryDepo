@@ -402,15 +402,17 @@ test('title: a partial-overlap row is reported, and a variant changes the answer
     const out = after_.body as { title: string; unique: boolean; duplicateOf: number | null; note: string };
     assert.equal(typeof out.duplicateOf, 'number', `the partial-overlap row must be reported: ${JSON.stringify(out)}`);
     assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the returned title must differ from the existing name');
-    // The baseline call is only a baseline when the catalogue held nothing for this
-    // product: this suite runs against the DEV database, which may already carry such
-    // a row (a real push, or another run's leftovers), and then the baseline already
-    // carries the distinguishing fact and the second answer legitimately repeats it.
-    if (first.unique) {
-      assert.notEqual(out.title, first.title, 'a collision must change the answer');
-    } else {
-      assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the answer must never be the colliding name');
-    }
+    // A collision must change the ANSWER — and there are exactly two honest answers:
+    // the title adapts when an unused fact can distinguish it, or the reply says it
+    // could not (`unique: false`). Demanding a different string unconditionally would
+    // force an invented marker (or an internal SKU) into a buyer-facing title, which
+    // is the defect this suite exists to catch. Either way the title must never BE
+    // the colliding name.
+    assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the answer must never be the colliding name');
+    assert.ok(
+      out.title !== first.title || out.unique === false,
+      `a collision must change the answer or say it cannot be distinguished: ${JSON.stringify(out)}`,
+    );
     assertCleanTitle(out.title, (body.spec as string[]).join(' '));
   } finally {
     const removed = await call('DELETE', `/api/products/${rowId}`, undefined, s.token);
