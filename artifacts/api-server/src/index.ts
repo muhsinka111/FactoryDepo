@@ -18,6 +18,7 @@ import { HttpError } from './http.js';
 import { extractToken, verifyToken } from './auth.js';
 import { bootstrapSeedIfEmpty, ensureOwnerAdmin } from './bootstrap-seed.js';
 import { demoSeedEnabled, seedDecisionLine } from '@workspace/db';
+import { purgeDemoIfRequested } from './maintenance.js';
 import { startOutboxWorker } from './email.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, meRouter } from './routes/auth.js';
@@ -440,6 +441,14 @@ async function main(): Promise<void> {
     await bootstrapSeedIfEmpty();
   } catch (err) {
     console.warn('[seed] bootstrap failed (continuing boot):', err instanceof Error ? err.message : String(err));
+  }
+  // After the seeder, never before it: whatever a mis-set SEED_DEMO managed to
+  // write, the purge is the last word on what this database serves.
+  try {
+    const purged = await purgeDemoIfRequested();
+    if (purged.ran) console.log(purged.line);
+  } catch (err) {
+    console.warn('[purge] failed (continuing boot):', err instanceof Error ? err.message : String(err));
   }
   try {
     await ensureOwnerAdmin();
