@@ -26,23 +26,30 @@
  *      deleted (that last one needs a referenced row and is exercised by hand
  *      against the same server — see the task evidence).
  *
- * Accounts: the three SEEDED ones (demo@ / buyer@ / supplier@factorydepo.com,
- * password 'factorydepo'), so this file creates no user rows. Everything it
- * creates — probe listings owned by the seeded supplier — it deletes again. The
- * only rows it leaves behind are the `admin_audit` entries its own actions
- * legitimately produce.
+ * Accounts: the file creates its OWN — the demo catalogue is not a fixture of
+ * this suite. No API can mint an admin (`zSelfServiceRole` refuses it at
+ * registration), so a fresh registration is promoted through the database
+ * (`UPDATE users SET role='admin'`) — exactly the kind of real admin the console
+ * has. Registration already returns a bearer token, so the file spends NO
+ * logins: the shared 10/15min login bucket is left to the files that need it.
  *
- * Rate limits are per server instance: the file spends 3 logins (10/15min) and
- * ~18 admin + 3 supplier + 12 anonymous/buyer writes (30/min each), so give it
- * its own server and do not run it in a tight loop.
+ * Cleanup: the file leaves the database as it found it. Every probe listing is
+ * deleted (each cleanup is asserted, so a silent failure cannot leave test stock
+ * behind), and `after()` removes the admin_auth entries this run wrote and the
+ * three accounts it created, in foreign-key order. The audit rows go with it on
+ * purpose: a test action must not sit in a real admin's trail as if it were one,
+ * and a leftover test admin would break scripts/cleanup-test-rows.sql (its user
+ * delete would hit the admin_audit foreign key).
  */
-import { test, before } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { Client } from 'pg';
 
 const BASE = process.env.TEST_BASE_URL;
 const skip = BASE ? false : 'TEST_BASE_URL not set — skipping integration tests';
+const DB_URL =
+  process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/factorydepo';
 
-const PASSWORD = 'factorydepo';
 /** An id that cannot exist: every "unknown id" assertion uses the same one. */
 const UNKNOWN_ID = 2147483000;
 
@@ -73,23 +80,90 @@ async function call(method: string, path: string, body?: unknown, token?: string
   return { status: res.status, body: parsed, text };
 }
 
-async function login(email: string): Promise<string> {
-  const r = await call('POST', '/api/auth/login', { email, password: PASSWORD });
-  assert.equal(r.status, 200, `login ${email} failed: ${r.status} ${r.text}`);
-  return (r.body as { token: string }).token;
+interface Auth {
+  token: string;
+  id: number;
+  email: string;
 }
 
-/** One login per actor for the whole file (login limiter: 10/15min per IP). */
+/**
+ * Run `fn` against the local DB; null when the DB is not reachable. This file
+ * needs it for the two things the API does not expose: promoting a registered
+ * user to admin, and deleting the fixtures it created (there is no delete-account
+ * route, deliberately).
+ */
+async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T | null> {
+  const client = new Client({ connectionString: DB_URL });
+  try {
+    await client.connect();
+  } catch {
+    return null;
+  }
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+}
+
+/* the accounts this file created; removed in `after()`. */
+const createdUserIds: number[] = [];
+let adminUserId = 0;
+let ourSupplierId = 0;
+
+/** Register a throwaway account — the response token is the credential. */
+async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> {
+  const email = `admin-ctl-${role}-${tag}@factorydepo.test`;
+  const r = await call('POST', '/api/auth/register', {
+    name: `AdminCtl ${role} ${tag}`,
+    email,
+    password: 'integration-test-password',
+    role,
+    company: `AdminCtl ${tag} Ltd`,
+    country: 'Türkiye',
+  });
+  assert.equal(r.status, 201, `register ${role} failed: ${r.status} ${r.text}`);
+  const b = r.body as { token: string; user: { id: number } };
+  createdUserIds.push(b.user.id);
+  return { token: b.token, id: b.user.id, email };
+}
+
+/**
+ * A real admin: register (any role that is not admin), then promote the row
+ * through the DB. The token issued at registration keeps working — `requireRole`
+ * reads `users.role` per request, so the promotion is what makes it admin.
+ */
+async function registerAdmin(tag: string): Promise<Auth> {
+  const account = await register('buyer', `adm${tag}`);
+  const promoted = await withDb((c) =>
+    c.query<{ id: number }>('UPDATE users SET role = $2 WHERE id = $1 RETURNING id', [account.id, 'admin']),
+  );
+  assert.ok(promoted, 'the local DB must be reachable to promote the test admin — the API itself needs that database');
+  assert.equal(promoted.rowCount, 1, `promoting user ${account.id} to admin affected ${promoted.rowCount} rows`);
+  return account;
+}
+
+/** One account per actor for the whole file (no login — the token comes back). */
 const tokens = { admin: '', buyer: '', supplier: '', adminName: '' };
 
 before(async () => {
   if (!BASE) return;
-  tokens.admin = await login('demo@factorydepo.com');
-  tokens.buyer = await login('buyer@factorydepo.com');
-  tokens.supplier = await login('supplier@factorydepo.com');
+  const tag = uniq();
+  const admin = await registerAdmin(tag);
+  tokens.admin = admin.token;
   const me = await call('GET', '/api/me', undefined, tokens.admin);
   assert.equal(me.status, 200, `the admin token must authenticate: ${me.status} ${me.text}`);
+  assert.equal((me.body as { role: string }).role, 'admin', 'the promoted account must be a real admin');
   tokens.adminName = (me.body as { name: string }).name;
+  adminUserId = (me.body as { id: number }).id;
+
+  tokens.buyer = (await register('buyer', `b${tag}`)).token;
+  const supplier = await register('supplier', `s${tag}`);
+  tokens.supplier = supplier.token;
+  const shop = await call('GET', '/api/suppliers/me', undefined, supplier.token);
+  assert.equal(shop.status, 200, `the supplier token must resolve to its own row: ${shop.status} ${shop.text}`);
+  ourSupplierId = (shop.body as { id: number }).id;
+  assert.ok(ourSupplierId > 0, 'the supplier account must own a supplier row');
 });
 
 /* ---------- shapes the assertions read ---------- */
@@ -129,7 +203,7 @@ const itemsOf = <T,>(r: Res): T[] => ((r.body as { items?: T[] }).items ?? []) a
 const auditRows = (r: Res): AuditRow[] => itemsOf<AuditRow>(r);
 const hasId = (r: Res, id: number): boolean => itemsOf<{ id: number }>(r).some((row) => row.id === id);
 
-/** A throwaway listing owned by the seeded supplier, for the probes below. */
+/** A throwaway listing owned by this file's own supplier, for the probes below. */
 async function createProbeListing(): Promise<{ id: number; name: string; price: number; supplierId: number; tag: string }> {
   const tag = uniq();
   const name = `AdminControl probe ${tag}`;
@@ -159,55 +233,59 @@ async function createProbeListing(): Promise<{ id: number; name: string; price: 
 /* ---------- 1. the gate ---------- */
 
 test('the whole control plane is admin-only: anonymous 401, buyer and supplier 403', { skip }, async () => {
-  // Real ids, so a refused call cannot be a 404 or a 400 dressed up as a gate.
-  const listingPage = await call('GET', '/api/products?limit=1');
-  assert.equal(listingPage.status, 200, listingPage.text);
-  const listingId = itemsOf<{ id: number }>(listingPage)[0]?.id;
-  assert.ok(listingId, 'the catalogue is empty — no listing to probe with');
+  // Real ids from this file's OWN fixtures — the listing exists (this file's
+  // supplier owns it) and the supplier row exists — so a refused call cannot be a
+  // 404 or a 400 dressed up as a gate.
+  const probe = await createProbeListing();
+  const supplierId = ourSupplierId;
+  assert.ok(supplierId > 0, 'the file must own a supplier row to probe the supplier route with');
 
-  const supplierPage = await call('GET', '/api/suppliers');
-  assert.equal(supplierPage.status, 200, supplierPage.text);
-  const supplierId = itemsOf<{ id: number }>(supplierPage)[0]?.id;
-  assert.ok(supplierId, 'the supplier directory is empty — no supplier to probe with');
+  try {
+    const probes: { label: string; method: string; path: string; body?: unknown }[] = [
+      { label: 'PATCH listing', method: 'PATCH', path: `/api/admin/listings/${probe.id}`, body: { price: 1 } },
+      {
+        label: 'pull listing',
+        method: 'POST',
+        path: `/api/admin/listings/${probe.id}/pull`,
+        body: { reason: 'gate probe — this call must never be reached' },
+      },
+      { label: 'restore listing', method: 'POST', path: `/api/admin/listings/${probe.id}/restore` },
+      { label: 'delete listing', method: 'DELETE', path: `/api/admin/listings/${probe.id}` },
+      { label: 'PATCH supplier', method: 'PATCH', path: `/api/admin/suppliers/${supplierId}`, body: { city: 'gate probe' } },
+      { label: 'GET audit', method: 'GET', path: '/api/admin/audit' },
+    ];
 
-  const probes: { label: string; method: string; path: string; body?: unknown }[] = [
-    { label: 'PATCH listing', method: 'PATCH', path: `/api/admin/listings/${listingId}`, body: { price: 1 } },
-    {
-      label: 'pull listing',
-      method: 'POST',
-      path: `/api/admin/listings/${listingId}/pull`,
-      body: { reason: 'gate probe — this call must never be reached' },
-    },
-    { label: 'restore listing', method: 'POST', path: `/api/admin/listings/${listingId}/restore` },
-    { label: 'delete listing', method: 'DELETE', path: `/api/admin/listings/${listingId}` },
-    { label: 'PATCH supplier', method: 'PATCH', path: `/api/admin/suppliers/${supplierId}`, body: { city: 'gate probe' } },
-    { label: 'GET audit', method: 'GET', path: '/api/admin/audit' },
-  ];
+    for (const probeCall of probes) {
+      const anon = await call(probeCall.method, probeCall.path, probeCall.body);
+      assert.equal(anon.status, 401, `${probeCall.label}: anonymous must be 401 (got ${anon.status} ${anon.text})`);
+      const byBuyer = await call(probeCall.method, probeCall.path, probeCall.body, tokens.buyer);
+      assert.equal(byBuyer.status, 403, `${probeCall.label}: a buyer must be 403 (got ${byBuyer.status} ${byBuyer.text})`);
+    }
 
-  for (const probe of probes) {
-    const anon = await call(probe.method, probe.path, probe.body);
-    assert.equal(anon.status, 401, `${probe.label}: anonymous must be 401 (got ${anon.status} ${anon.text})`);
-    const byBuyer = await call(probe.method, probe.path, probe.body, tokens.buyer);
-    assert.equal(byBuyer.status, 403, `${probe.label}: a buyer must be 403 (got ${byBuyer.status} ${byBuyer.text})`);
-  }
-
-  // A supplier may edit their OWN listing through /api/products — that is not a
-  // licence to touch the admin plane.
-  for (const probe of [probes[0], probes[4]]) {
-    const bySupplier = await call(probe.method, probe.path, probe.body, tokens.supplier);
-    assert.equal(bySupplier.status, 403, `${probe.label}: a supplier must be 403 (got ${bySupplier.status} ${bySupplier.text})`);
+    // A supplier may edit their OWN listing through /api/products — that is not a
+    // licence to touch the admin plane. The probes below are run by the supplier
+    // that actually OWNS this listing, so even ownership is not a way in.
+    for (const probeCall of [probes[0], probes[4]]) {
+      const bySupplier = await call(probeCall.method, probeCall.path, probeCall.body, tokens.supplier);
+      assert.equal(
+        bySupplier.status,
+        403,
+        `${probeCall.label}: a supplier must be 403 (got ${bySupplier.status} ${bySupplier.text})`,
+      );
+    }
+  } finally {
+    const cleanup = await call('DELETE', `/api/admin/listings/${probe.id}`, undefined, tokens.admin);
+    assert.equal(cleanup.status, 204, `gate probe cleanup failed: ${cleanup.status} ${cleanup.text}`);
   }
 });
 
 /* ---------- 2. edit any listing, price included ---------- */
 
-test('an admin edits a seeded listing price, the catalogue serves it, and the original comes back', { skip }, async () => {
-  // A SEEDED row (dataSource 'demo'), so this exercises the owner's real case:
-  // an admin re-pricing stock that is already in the catalogue.
-  const listingPage = await call('GET', '/api/products?limit=20');
-  assert.equal(listingPage.status, 200, listingPage.text);
-  const item = itemsOf<ProductRow>(listingPage).find((p) => p.dataSource === 'demo');
-  assert.ok(item, 'no seeded (demo) listing on the first catalogue page — nothing to re-price');
+test('an admin edits a listing price, the catalogue serves it, and the original comes back', { skip }, async () => {
+  // A listing already in the catalogue (this file just published it), so this
+  // exercises the owner's real case: an admin re-pricing stock that is listed —
+  // without reading a demo row that a real-only database does not have.
+  const item = await createProbeListing();
 
   const original = item.price;
   const raised = Number((original + 12.34).toFixed(2));
@@ -250,13 +328,17 @@ test('an admin edits a seeded listing price, the catalogue serves it, and the or
 
   const afterRestore = await call('GET', `/api/products/${item.id}`);
   assert.equal(afterRestore.status, 200, afterRestore.text);
-  assert.equal((afterRestore.body as ProductRow).price, original, 'the seeded price must be back');
+  assert.equal((afterRestore.body as ProductRow).price, original, 'the original price must be back');
 
   const afterAudit = await call('GET', `/api/admin/audit?entity=product&entityId=${item.id}&limit=10`, undefined, tokens.admin);
   const newest = auditRows(afterAudit)[0];
   assert.equal(newest.action, 'listing.update');
   assert.equal(Number((newest.before as { price: number }).price), raised, 'the restore entry records what it replaced');
   assert.equal(Number((newest.after as { price: number }).price), original);
+
+  // ---- cleanup: the probe leaves the catalogue exactly as it was ----
+  const cleanup = await call('DELETE', `/api/admin/listings/${item.id}`, undefined, tokens.admin);
+  assert.equal(cleanup.status, 204, `probe cleanup failed: ${cleanup.status} ${cleanup.text}`);
 });
 
 /* ---------- 3. pull / restore ---------- */
@@ -479,33 +561,47 @@ test('an admin can edit any supplier record, and the trail shows the before/afte
 /* ---------- 6. the admin listing list: state + filters, pagination intact ---------- */
 
 test('the admin listing list carries moderation state and keeps its server-side pagination', { skip }, async () => {
-  const first = await call('GET', '/api/admin/listings?page=1&limit=5', undefined, tokens.admin);
-  assert.equal(first.status, 200, first.text);
-  const page1 = first.body as { items: ProductRow[]; total: number; page: number; pages: number };
-  assert.equal(page1.page, 1, 'the 1-based page must be echoed');
-  assert.ok(page1.total > 5, `the catalogue must have more than one page (total ${page1.total})`);
-  assert.equal(page1.items.length, 5, 'limit must be honoured server-side');
-  assert.equal(page1.pages, Math.ceil(page1.total / 5), 'pages must be derived from the real total');
-  for (const row of page1.items) {
+  // A page 2 only exists when there is more than one page of stock: this file
+  // publishes 7 listings of its own, so the assertions below hold on a catalogue
+  // that is otherwise empty (a real-only database) instead of assuming a seeded
+  // one. The fixtures are deleted again before the test returns.
+  const table: { id: number }[] = [];
+  for (let i = 0; i < 7; i += 1) table.push(await createProbeListing());
+
+  try {
+    const first = await call('GET', '/api/admin/listings?page=1&limit=5', undefined, tokens.admin);
+    assert.equal(first.status, 200, first.text);
+    const page1 = first.body as { items: ProductRow[]; total: number; page: number; pages: number };
+    assert.equal(page1.page, 1, 'the 1-based page must be echoed');
+    assert.ok(page1.total > 5, `the catalogue must have more than one page (total ${page1.total})`);
+    assert.equal(page1.items.length, 5, 'limit must be honoured server-side');
+    assert.equal(page1.pages, Math.ceil(page1.total / 5), 'pages must be derived from the real total');
+    for (const row of page1.items) {
+      assert.ok(
+        row.moderationStatus === 'visible' || row.moderationStatus === 'pulled',
+        `every row must carry its moderation state (got ${row.moderationStatus})`,
+      );
+    }
+
+    const second = await call('GET', '/api/admin/listings?page=2&limit=5', undefined, tokens.admin);
+    const page2 = second.body as typeof page1;
+    assert.equal(page2.page, 2);
+    assert.ok(page2.items.length > 0, 'page 2 must have rows');
     assert.ok(
-      row.moderationStatus === 'visible' || row.moderationStatus === 'pulled',
-      `every row must carry its moderation state (got ${row.moderationStatus})`,
+      (page2.items[0]?.id ?? 0) < (page1.items[0]?.id ?? 0),
+      'the list is newest first, so page 2 must start below page 1',
     );
-  }
 
-  const second = await call('GET', '/api/admin/listings?page=2&limit=5', undefined, tokens.admin);
-  const page2 = second.body as typeof page1;
-  assert.equal(page2.page, 2);
-  assert.ok(page2.items.length > 0, 'page 2 must have rows');
-  assert.ok(
-    (page2.items[0]?.id ?? 0) < (page1.items[0]?.id ?? 0),
-    'the list is newest first, so page 2 must start below page 1',
-  );
-
-  const onlyPulled = await call('GET', '/api/admin/listings?moderation=pulled&limit=5', undefined, tokens.admin);
-  assert.equal(onlyPulled.status, 200, onlyPulled.text);
-  for (const row of itemsOf<ProductRow>(onlyPulled)) {
-    assert.equal(row.moderationStatus, 'pulled', 'the moderation filter must actually filter');
+    const onlyPulled = await call('GET', '/api/admin/listings?moderation=pulled&limit=5', undefined, tokens.admin);
+    assert.equal(onlyPulled.status, 200, onlyPulled.text);
+    for (const row of itemsOf<ProductRow>(onlyPulled)) {
+      assert.equal(row.moderationStatus, 'pulled', 'the moderation filter must actually filter');
+    }
+  } finally {
+    for (const probe of table) {
+      const cleanup = await call('DELETE', `/api/admin/listings/${probe.id}`, undefined, tokens.admin);
+      assert.equal(cleanup.status, 204, `probe cleanup failed for ${probe.id}: ${cleanup.status} ${cleanup.text}`);
+    }
   }
 });
 
@@ -529,9 +625,20 @@ test('the audit trail is admin-only, newest first, capped and filterable', { ski
     assert.ok(newer >= older, 'the trail must be newest first');
   }
   for (const row of recent.items) {
-    assert.equal(row.adminName, tokens.adminName, 'every entry names the admin who acted');
     assert.ok(row.action.length > 0 && row.entity.length > 0, 'action and entity are never empty');
     assert.ok(!Number.isNaN(Date.parse(row.createdAt)), `createdAt must be an ISO date (got ${row.createdAt})`);
+  }
+
+  // Attribution: an entry names the admin who acted. The check is scoped to THIS
+  // file's admin on purpose. It used to read "every entry names the demo admin",
+  // which was true only while the suite ran against a curated database: a real
+  // one may hold entries by other admins, and a test that fails because somebody
+  // else used the console would be measuring the database, not the code. What the
+  // trail must do for this file's actions is still asserted exactly.
+  const mine = recent.items.filter((row) => row.adminUserId === adminUserId);
+  assert.ok(mine.length > 0, 'the trail must carry the entries this file just wrote');
+  for (const row of mine) {
+    assert.equal(row.adminName, tokens.adminName, 'every entry must name the admin who acted');
   }
 
   const supplierOnly = await call('GET', '/api/admin/audit?entity=supplier&limit=200', undefined, tokens.admin);
@@ -543,4 +650,60 @@ test('the audit trail is admin-only, newest first, capped and filterable', { ski
   assert.equal(badLimit.status, 400, `a garbage limit must be a 400 (got ${badLimit.status})`);
   const badEntityId = await call('GET', '/api/admin/audit?entityId=abc', undefined, tokens.admin);
   assert.equal(badEntityId.status, 400, `a garbage entityId must be a 400 (got ${badEntityId.status})`);
+});
+
+/* ---------- 8. the file's own cleanup ---------- */
+
+/**
+ * Fixture cleanup — the run leaves the database as it found it.
+ *
+ * Deletion order follows the foreign keys: `admin_audit."adminUserId"` has no
+ * ON DELETE action, `suppliers."userId"` references the account, and the probe
+ * listings were deleted by the tests that created them (the statement below is a
+ * safety net for a run that failed halfway).
+ *
+ * The audit entries go with the accounts on purpose. They are a record of what
+ * THIS RUN did, not of the marketplace; leaving them would put a test's actions
+ * in a real admin's trail, and would also break scripts/cleanup-test-rows.sql
+ * (deleting a @factorydepo.test user with admin_audit rows fails the FK and rolls
+ * that script back). Every step is asserted, so a half-done cleanup is loud.
+ */
+after(async () => {
+  if (!BASE) return;
+  const state = await withDb(async (c) => {
+    if (adminUserId > 0) await c.query('DELETE FROM admin_audit WHERE "adminUserId" = $1', [adminUserId]);
+    if (ourSupplierId > 0) {
+      await c.query('DELETE FROM product_views WHERE "productId" IN (SELECT id FROM products WHERE "supplierId" = $1)', [ourSupplierId]);
+      await c.query('DELETE FROM products WHERE "supplierId" = $1', [ourSupplierId]);
+      await c.query('DELETE FROM suppliers WHERE id = $1', [ourSupplierId]);
+    }
+    await c.query('DELETE FROM saved_lots WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM product_views WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM notifications WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    const removed = await c.query<{ id: number }>('DELETE FROM users WHERE id = ANY($1::int[]) RETURNING id', [
+      createdUserIds,
+    ]);
+    const left = await c.query<{ n: number }>('SELECT count(*)::int AS n FROM users WHERE id = ANY($1::int[])', [
+      createdUserIds,
+    ]);
+    const trail = await c.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM admin_audit WHERE "adminUserId" = $1',
+      [adminUserId],
+    );
+    const stock = ourSupplierId > 0
+      ? await c.query<{ n: number }>('SELECT count(*)::int AS n FROM products WHERE "supplierId" = $1', [ourSupplierId])
+      : { rows: [{ n: 0 }] };
+    return {
+      removedUsers: removed.rows.length,
+      usersLeft: Number(left.rows[0]?.n ?? -1),
+      trailLeft: Number(trail.rows[0]?.n ?? -1),
+      stockLeft: Number(stock.rows[0]?.n ?? -1),
+    };
+  });
+
+  assert.ok(state, 'the local DB must be reachable to clean up this file\'s fixtures');
+  assert.equal(state.removedUsers, createdUserIds.length, 'every account this file created must be deleted');
+  assert.equal(state.usersLeft, 0, 'no test account may survive the run');
+  assert.equal(state.trailLeft, 0, 'no audit entry written by this file may survive the run');
+  assert.equal(state.stockLeft, 0, 'no probe listing may survive the run');
 });

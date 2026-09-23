@@ -10,14 +10,39 @@
  * The suite covers the failures this project has actually shipped: forgeable
  * tokens, an unscoped catalogue, a supplier editing someone else's listing, and
  * two buyers overselling the same stock.
+ *
+ * What it reads from the catalogue it first publishes itself (`before()` below
+ * lists two CN lots and one Türkiye lot as this file's own supplier): a
+ * real-only database has no seeded rows, and a test that asserted them would
+ * pass in CI and fail on the marketplace. Every listing this file creates is
+ * deleted again in `after()` — including the oversell probe — so a run leaves
+ * the catalogue exactly as it found it.
  */
-import { test } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { Client } from 'pg';
 
 const BASE = process.env.TEST_BASE_URL;
 const skip = BASE ? false : 'TEST_BASE_URL not set — skipping integration tests';
+const DB_URL =
+  process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/factorydepo';
 
 const uniq = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
+/** Run `fn` against the local DB; null when it is not reachable. */
+async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T | null> {
+  const client = new Client({ connectionString: DB_URL });
+  try {
+    await client.connect();
+  } catch {
+    return null;
+  }
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+}
 
 interface Res {
   status: number;
@@ -49,6 +74,9 @@ interface Auth {
   id: number;
 }
 
+/** Accounts this file registered; removed in `after()`. */
+const createdUserIds: number[] = [];
+
 async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> {
   const email = `it-${role}-${tag}@factorydepo.test`;
   const r = await call('POST', '/api/auth/register', {
@@ -61,8 +89,87 @@ async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> 
   });
   assert.equal(r.status, 201, `register ${role} failed: ${r.status} ${r.text}`);
   const b = r.body as { token: string; user: { id: number } };
+  createdUserIds.push(b.user.id);
   return { token: b.token, id: b.user.id };
 }
+
+/* ---------- the file's own stock: market fixtures ---------- */
+
+/**
+ * Every catalogue assertion in this file (a non-empty catalogue, a market strip
+ * with CN in it, a TR market to compare spellings against) needs stock that
+ * EXISTS. On a real-only database that is the file's own listings — the demo
+ * catalogue is not a fixture of this suite. Two CN lots and one Türkiye lot are
+ * published here and deleted in `after()`.
+ */
+const fixtureListings: { id: number; token: string }[] = [];
+
+async function publishFixture(auth: Auth, originCountry: string, tag: string): Promise<number> {
+  const created = await call(
+    'POST',
+    '/api/products',
+    {
+      name: `IT market fixture ${tag}`,
+      category: 'Metals & Minerals',
+      description: 'created by the market-strip integration test',
+      price: 100,
+      currency: 'USD',
+      unit: 'MT',
+      moq: 1,
+      quantityAvailable: 10,
+      originCountry,
+    },
+    auth.token,
+  );
+  assert.equal(created.status, 201, `fixture listing failed: ${created.status} ${created.text}`);
+  const id = (created.body as { id: number }).id;
+  fixtureListings.push({ id, token: auth.token });
+  return id;
+}
+
+before(async () => {
+  if (!BASE) return;
+  const supplier = await register('supplier', `mkt${uniq()}`);
+  await publishFixture(supplier, 'CN', `cn1-${uniq()}`);
+  await publishFixture(supplier, 'CN', `cn2-${uniq()}`);
+  await publishFixture(supplier, 'Türkiye', `tr1-${uniq()}`);
+});
+
+after(async () => {
+  if (!BASE) return;
+  // The stock this file published comes off the catalogue again, and a cleanup
+  // that silently failed would leave test rows behind — so it is asserted.
+  for (const fixture of fixtureListings) {
+    const removed = await call('DELETE', `/api/products/${fixture.id}`, undefined, fixture.token);
+    assert.ok(
+      removed.status === 204 || removed.status === 200 || removed.status === 404,
+      `fixture cleanup failed for ${fixture.id}: ${removed.status} ${removed.text}`,
+    );
+  }
+  fixtureListings.length = 0;
+
+  // …and so do the throwaway accounts: `users` is where the suite would
+  // otherwise accumulate noise for scripts/cleanup-test-rows.sql to sift out.
+  // Dependent rows first (orders and shipments are already gone with the
+  // oversell probe), then the supplier rows, then the accounts.
+  const state = await withDb(async (c) => {
+    await c.query('DELETE FROM notifications WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM saved_lots WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM product_views WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM orders WHERE "buyerId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM suppliers WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    const removed = await c.query<{ id: number }>('DELETE FROM users WHERE id = ANY($1::int[]) RETURNING id', [
+      createdUserIds,
+    ]);
+    const left = await c.query<{ n: number }>('SELECT count(*)::int AS n FROM users WHERE id = ANY($1::int[])', [
+      createdUserIds,
+    ]);
+    return { removedUsers: removed.rows.length, usersLeft: Number(left.rows[0]?.n ?? -1) };
+  });
+  assert.ok(state, "the local DB must be reachable to clean up this file's accounts");
+  assert.equal(state.removedUsers, createdUserIds.length, 'every account this file created must be deleted');
+  assert.equal(state.usersLeft, 0, 'no test account may survive the run');
+});
 
 test('healthz reports the database is up', { skip }, async () => {
   const r = await call('GET', '/api/healthz');
@@ -104,6 +211,7 @@ test('register -> login -> me round-trips the account', { skip }, async () => {
     name: 'Round Trip', email, password: 'integration-test-password', role: 'buyer',
   });
   assert.equal(reg.status, 201, reg.text);
+  createdUserIds.push((reg.body as { user: { id: number } }).user.id);
 
   const login = await call('POST', '/api/auth/login', { email, password: 'integration-test-password' });
   assert.equal(login.status, 200, login.text);
@@ -118,7 +226,9 @@ test('a duplicate email is refused with 409', { skip }, async () => {
   const tag = uniq();
   const email = `it-dupe-${tag}@factorydepo.test`;
   const payload = { name: 'Dupe', email, password: 'integration-test-password', role: 'buyer' };
-  assert.equal((await call('POST', '/api/auth/register', payload)).status, 201);
+  const created = await call('POST', '/api/auth/register', payload);
+  assert.equal(created.status, 201);
+  createdUserIds.push((created.body as { user: { id: number } }).user.id);
   assert.equal((await call('POST', '/api/auth/register', payload)).status, 409);
 });
 
@@ -258,17 +368,36 @@ test('concurrent orders can never oversell the stock (the oversell test)', { ski
   assert.equal(conflict, ATTEMPTS - ok, `expected ${ATTEMPTS - ok} conflicts, got ${conflict}`);
 
   // The shelf must be empty and the listing marked sold out — never negative.
-  const after = await call('GET', `/api/products/${productId}`);
-  assert.equal(after.status, 200);
-  const p = after.body as { quantityAvailable: number; status: string };
+  const after_ = await call('GET', `/api/products/${productId}`);
+  assert.equal(after_.status, 200);
+  const p = after_.body as { quantityAvailable: number; status: string };
   assert.equal(p.quantityAvailable, 0, `stock should be exactly 0, got ${p.quantityAvailable}`);
   assert.ok(p.quantityAvailable >= 0, 'stock must never go negative');
   assert.equal(p.status, 'sold_out', `expected sold_out, got ${p.status}`);
+
+  // ---- cleanup: the probe must not stay on the catalogue ----
+  // A listing that an order references cannot be deleted through the API (409
+  // listing_in_use, deliberately: those orders are records of a transaction).
+  // These orders are the test's own fixture, so they go first — the same order
+  // scripts/cleanup-test-rows.sql uses — and then the listing with them.
+  const left = await withDb(async (c) => {
+    await c.query('DELETE FROM payments WHERE "orderId" IN (SELECT id FROM orders WHERE "productId" = $1)', [productId]);
+    await c.query('DELETE FROM shipments WHERE "orderId" IN (SELECT id FROM orders WHERE "productId" = $1)', [productId]);
+    await c.query('DELETE FROM orders WHERE "productId" = $1', [productId]);
+    await c.query('DELETE FROM product_views WHERE "productId" = $1', [productId]);
+    await c.query('DELETE FROM products WHERE id = $1', [productId]);
+    const remaining = await c.query<{ n: number }>('SELECT count(*)::int AS n FROM products WHERE id = $1', [productId]);
+    return Number(remaining.rows[0]?.n ?? -1);
+  });
+  assert.ok(left !== null, 'the local DB must be reachable to remove the oversell probe');
+  assert.equal(left, 0, `the oversell probe (listing ${productId}) must be gone`);
 });
 
 test('the printable proforma is party-only', { skip }, async () => {
   const outsider = await register('buyer', `o${uniq()}`);
-  // Order 1 exists in the seeded dataset; a stranger must not be able to open it.
+  // Order 1 belongs to whoever placed it; a stranger must never open it. On a
+  // real-only database order 1 may not exist at all, which is the same refusal
+  // from the outsider's side (404) — either answer is a refusal, never a document.
   const r = await call('GET', '/api/orders/1/proforma', undefined, outsider.token);
   assert.ok(r.status === 403 || r.status === 404, `expected 403/404 for a non-party, got ${r.status}`);
 });
@@ -304,7 +433,7 @@ test('a buyer can become a supplier, once, and can then list stock', { skip }, a
   // The supplier profile that listings hang off must now exist, or the upgrade
   // would be cosmetic.
   const created = await call('POST', '/api/products', {
-    name: 'IT surplus coil lot',
+    name: `IT surplus coil lot ${uniq()}`,
     category: 'Steel',
     price: 120,
     unit: 't',
@@ -315,6 +444,7 @@ test('a buyer can become a supplier, once, and can then list stock', { skip }, a
   }, buyer.token);
   assert.equal(created.status, 201, `expected 201 creating a listing, got ${created.status}: ${created.text}`);
   assert.equal((created.body as { listingType: string }).listingType, 'surplus');
+  const listingId = (created.body as { id: number }).id;
 
   // Idempotent: a second call must not 500 or duplicate the profile.
   const again = await call('POST', '/api/me/become-supplier', undefined, buyer.token);
@@ -324,6 +454,10 @@ test('a buyer can become a supplier, once, and can then list stock', { skip }, a
   // And the escalation stays one-way: role must not be self-settable via PATCH.
   const escalate = await call('PATCH', '/api/me', { role: 'admin' }, buyer.token);
   assert.equal(escalate.status, 400, 'PATCH /api/me must reject a role field outright');
+
+  // Cleanup: the listing this test published comes off the catalogue again.
+  const cleanup = await call('DELETE', `/api/products/${listingId}`, undefined, buyer.token);
+  assert.ok(cleanup.status === 204 || cleanup.status === 200, `cleanup failed: ${cleanup.status} ${cleanup.text}`);
 });
 
 /* ---------------------------------------------------------------------------
@@ -376,7 +510,7 @@ async function countMismatches(): Promise<string[]> {
 test('the market strip is ordered, positive, summed and every item finds its own rows', { skip }, async () => {
   const strip = await countries();
 
-  assert.ok(strip.items.length > 0, 'the seeded catalogue must expose at least one origin market');
+  assert.ok(strip.items.length > 0, 'the file publishes its own stock, so the catalogue must expose its origin markets');
   for (let i = 1; i < strip.items.length; i += 1) {
     const prev = strip.items[i - 1];
     const cur = strip.items[i];
@@ -396,10 +530,10 @@ test('the market strip is ordered, positive, summed and every item finds its own
     'total must be the sum of the market counts',
   );
 
-  // The seeded catalogue's biggest market is CN, so it must be listed…
+  // This file publishes CN stock in `before()`, so the CN market must be listed…
   assert.ok(
     strip.items.some((i) => i.country === 'CN'),
-    'the seeded catalogue must list the CN market',
+    'the CN market must be listed — this file published CN stock',
   );
   // …and no strip entry may be a dead link: whatever it advertises has to exist.
   for (const item of strip.items) {
@@ -421,7 +555,7 @@ test('the country filter is alias-aware: TR and Türkiye are one market', { skip
   const turkiye = await totalFor('Türkiye');
   const turkey = await totalFor('Turkey');
 
-  assert.ok(tr > 0, 'the TR market must not be empty in the seeded catalogue');
+  assert.ok(tr > 0, 'the TR market must not be empty — this file published Türkiye stock');
   assert.equal(turkiye, tr, 'the long spelling must resolve to exactly the same market as the code');
   assert.equal(turkey, tr, 'the English spelling must resolve to the same market as the code');
 

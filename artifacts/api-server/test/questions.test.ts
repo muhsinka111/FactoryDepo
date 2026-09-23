@@ -18,14 +18,24 @@
  *      (409) — 'answered' is what makes a question public.
  *
  * Every row it creates hangs off a throwaway listing that the owning supplier
- * deletes at the end (product_questions cascades on product delete), so a local
- * run leaves the catalogue as it found it.
+ * deletes at the end (product_questions cascades on product delete), and the
+ * accounts the file registered are deleted in `after()` — a local run leaves the
+ * database as it found it.
+ *
+ * The moderation test needs a real admin. No API mints one (registration refuses
+ * `role:'admin'`), and the seeded demo admin is not a fixture of this suite, so a
+ * fresh registration is promoted through the database (`UPDATE users SET
+ * role='admin'`) — a real admin, exactly like the console's. Registration returns
+ * the token, so no login is spent (the login bucket stays where it belongs).
  */
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { Client } from 'pg';
 
 const BASE = process.env.TEST_BASE_URL;
 const skip = BASE ? false : 'TEST_BASE_URL not set — skipping integration tests';
+const DB_URL =
+  process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/factorydepo';
 
 const uniq = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
@@ -61,6 +71,24 @@ interface Auth {
   name: string;
 }
 
+/** Accounts this file created; removed in `after()`. */
+const createdUserIds: number[] = [];
+
+/** Run `fn` against the local DB; null when it is not reachable. */
+async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T | null> {
+  const client = new Client({ connectionString: DB_URL });
+  try {
+    await client.connect();
+  } catch {
+    return null;
+  }
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+}
+
 async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> {
   const email = `qa-${role}-${tag}@factorydepo.test`;
   const name = `QA ${role} ${tag}`;
@@ -74,6 +102,7 @@ async function register(role: 'buyer' | 'supplier', tag: string): Promise<Auth> 
   });
   assert.equal(r.status, 201, `register ${role} failed: ${r.status} ${r.text}`);
   const b = r.body as { token: string; user: { id: number } };
+  createdUserIds.push(b.user.id);
   return { token: b.token, id: b.user.id, email, name };
 }
 
@@ -274,18 +303,20 @@ test('the Q&A moderation queue is admin-only', { skip }, async () => {
 });
 
 /**
- * The seeded demo admin (`bootstrapSeedIfEmpty` creates it whenever NODE_ENV is
- * not production, which covers the local dev DB and CI). No API path can mint
- * an admin — `zSelfServiceRole` refuses `role:'admin'` at registration — so this
- * is the only account moderation can be exercised with.
- *
- * Costs one login against the 10/15min per-IP login bucket; the whole file
- * spends two, so do not add more logins casually.
+ * A real admin for the moderation calls: register a throwaway account, then
+ * promote the row through the DB. `requireRole` reads `users.role` per request,
+ * so the token issued at registration becomes an admin credential the moment the
+ * row is promoted — no login, and no seeded account to depend on. The account is
+ * deleted again in `after()`.
  */
-async function adminLogin(): Promise<string> {
-  const r = await call('POST', '/api/auth/login', { email: 'demo@factorydepo.com', password: 'factorydepo' });
-  assert.equal(r.status, 200, `admin login failed: ${r.status} ${r.text}`);
-  return (r.body as { token: string }).token;
+async function makeAdmin(tag: string): Promise<string> {
+  const account = await register('buyer', `admin${tag}`);
+  const promoted = await withDb((c) =>
+    c.query<{ id: number }>('UPDATE users SET role = $2 WHERE id = $1 RETURNING id', [account.id, 'admin']),
+  );
+  assert.ok(promoted, 'the local DB must be reachable to promote the test admin — the API itself needs that database');
+  assert.equal(promoted.rowCount, 1, `promoting user ${account.id} to admin affected ${promoted.rowCount} rows`);
+  return account.token;
 }
 
 test('an admin can hide and republish an answered question, but cannot publish an unanswered one', { skip }, async () => {
@@ -293,7 +324,7 @@ test('an admin can hide and republish an answered question, but cannot publish a
   const owner = await register('supplier', `mod${tag}`);
   const asker = await register('buyer', `modask${tag}`);
   const productId = await createListing(owner, tag);
-  const admin = await adminLogin();
+  const admin = await makeAdmin(tag);
 
   try {
     const question = `Moderation probe, tag ${tag}: does this lot ship in 20ft containers?`;
@@ -374,4 +405,45 @@ test('an admin can hide and republish an answered question, but cannot publish a
     // product_questions cascades on product delete — the file leaves no rows.
     await call('DELETE', `/api/products/${productId}`, undefined, owner.token);
   }
+});
+
+/* ---------- the file's own cleanup ---------- */
+
+/**
+ * Fixture cleanup: the throwaway accounts this file registered are deleted, in
+ * foreign-key order (no delete-account route exists, deliberately). The listings
+ * the tests created are already gone — the products and suppliers deletes below
+ * are the safety net for a run that failed halfway, and product_questions
+ * cascades with its listing. Everything is asserted, so a half-done cleanup
+ * fails loudly instead of leaving test accounts behind.
+ */
+after(async () => {
+  if (!BASE) return;
+  const state = await withDb(async (c) => {
+    await c.query(
+      `DELETE FROM product_views WHERE "productId" IN (
+         SELECT id FROM products WHERE "supplierId" IN (SELECT id FROM suppliers WHERE "userId" = ANY($1::int[]))
+       )`,
+      [createdUserIds],
+    );
+    await c.query(
+      `DELETE FROM products WHERE "supplierId" IN (SELECT id FROM suppliers WHERE "userId" = ANY($1::int[]))`,
+      [createdUserIds],
+    );
+    await c.query('DELETE FROM saved_lots WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM product_views WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM notifications WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    await c.query('DELETE FROM suppliers WHERE "userId" = ANY($1::int[])', [createdUserIds]);
+    const removed = await c.query<{ id: number }>('DELETE FROM users WHERE id = ANY($1::int[]) RETURNING id', [
+      createdUserIds,
+    ]);
+    const left = await c.query<{ n: number }>('SELECT count(*)::int AS n FROM users WHERE id = ANY($1::int[])', [
+      createdUserIds,
+    ]);
+    return { removedUsers: removed.rows.length, usersLeft: Number(left.rows[0]?.n ?? -1) };
+  });
+
+  assert.ok(state, "the local DB must be reachable to clean up this file's fixtures");
+  assert.equal(state.removedUsers, createdUserIds.length, 'every account this file created must be deleted');
+  assert.equal(state.usersLeft, 0, 'no test account may survive the run');
 });

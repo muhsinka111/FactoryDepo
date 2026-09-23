@@ -39,8 +39,18 @@ import { Client } from 'pg';
 
 const BASE = process.env.TEST_BASE_URL;
 const skip = BASE ? false : 'TEST_BASE_URL not set — skipping integration tests';
+/**
+ * The DB the probes below run against must be the one the SERVER under test uses:
+ * `TEST_DATABASE_URL` when the runner names one explicitly, else the job/shell
+ * `DATABASE_URL` (what CI and a seeded local run export), else the local dev
+ * default. Falling straight to the dev default — as this file used to — made a
+ * seeded run probe a DIFFERENT database than the API answered from, and the
+ * `withDb` assertions below silently skipped instead of testing anything.
+ */
 const DB_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/factorydepo';
+  process.env.TEST_DATABASE_URL ??
+  process.env.DATABASE_URL ??
+  'postgres://postgres:postgres@localhost:5432/factorydepo';
 
 const uniq = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
@@ -508,19 +518,18 @@ test('a pulled listing leaves the public catalogue but stays visible to its owne
     );
     const adminToken = adminRow ? mintToken(adminRow.id, adminRow.tokenVersion ?? 0) : null;
     // A silent skip here would hide the admin view from the gate entirely, so the
-    // token has to be obtainable: mint it from the server's APP_SECRET (above), or
-    // fall back to a real login when the shell and the server disagree on the secret.
+    // token has to be obtainable — minted from the server's APP_SECRET (above). A
+    // refused mint means the shell and the server disagree on the secret, and there
+    // is no seeded admin to log in as (the catalogue is real), so that is a hard
+    // failure carrying the diagnosis rather than a fallback to a demo account.
     assert.ok(adminToken, 'the admin credential must be mintable — APP_SECRET must match the running server');
     if (adminToken) {
-      let me = await call('GET', '/api/me', undefined, adminToken);
-      if (me.status !== 200) {
-        const login = await call('POST', '/api/auth/login', { email: 'demo@factorydepo.com', password: 'factorydepo' });
-        const fallback = login.status === 200 ? (login.body as { token?: string }).token : undefined;
-        assert.ok(fallback, `could not obtain an admin credential (mint 401, login ${login.status})`);
-        adminToken = fallback as string;
-        me = await call('GET', '/api/me', undefined, adminToken);
-      }
-      assert.equal(me.status, 200, 'the admin credential must be valid before it is used');
+      const me = await call('GET', '/api/me', undefined, adminToken);
+      assert.equal(
+        me.status,
+        200,
+        `the minted admin credential must be accepted (got ${me.status} ${me.text}) — APP_SECRET must match the running server`,
+      );
       const adminView = await call('GET', `/api/products/${listing.id}`, undefined, adminToken);
       assert.equal(adminView.status, 200, 'an admin must still read a pulled listing');
       assert.equal((adminView.body as Listing).moderationStatus, 'pulled');

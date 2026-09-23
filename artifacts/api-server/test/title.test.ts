@@ -277,7 +277,14 @@ test('title: a smuggled brand, superlative and price cannot reach the answer', {
 test('title: a name already in the catalogue is reported and the answer is made distinct', { skip }, async (t) => {
   await liveBase(t);
   const s = await sup();
-  const tag = `uq${uniq()}`;
+  // The tag carries a digit on purpose: a digit-bearing token is treated as a model
+  // number and left OUT of the composer's head noun ("Industrial Ice Machine"), while
+  // a letters-only tag is kept in the head ("Ice Machine Uqxyz...") and pushes the
+  // source title's opening words out of it — which drops the composed title's token
+  // overlap with the rival name below what the matcher reports as a collision (a
+  // fixture coin-flip, ~1% of the random tags, not a product rule). With the digit
+  // the fixture is deterministic: the rival created below is reported on every run.
+  const tag = `uq${uniq()}7`;
   const body: TitleInput = {
     sourceTitle: `Industrial Ice Machine ${tag} for cold storage`,
     category: 'Machinery',
@@ -411,16 +418,40 @@ test('title: a partial-overlap row is reported, and a variant changes the answer
     assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the answer must never be the colliding name');
     // `note === ''` marks a baseline that genuinely saw no collision — only then is
     // "the answer must change" a fair demand. This suite runs against the DEV
-    // database, which may already carry a row for this product (a real push, or
-    // leftovers from another run): the baseline then legitimately comes back already
-    // distinguished, and repeating that same title is the correct answer.
+    // database, which may already carry a partial-overlap row of its own (a real
+    // listing — e.g. the owner's own aluminium profile — or leftovers from another
+    // run): the baseline then legitimately comes back already distinguished, and
+    // repeating that same title is the correct answer for the enlarged collision set.
+    // What must hold either way is checked, not assumed: the answer is never the
+    // colliding name, the collision is reported with a row, and an unchanged title is
+    // either verified distinct from every reported row (`unique: true`) or the reply
+    // says, with a reason, that it could not be distinguished.
     if (first.unique && first.note === '') {
       assert.notEqual(out.title, first.title, 'a collision must change the answer');
-    } else {
-      assert.ok(
-        out.title !== first.title || out.unique === false,
-        `a collision must change the answer or say it cannot be distinguished: ${JSON.stringify(out)}`,
+    } else if (out.title === first.title) {
+      const reported = [...new Set([first.duplicateOf, out.duplicateOf])].filter(
+        (id): id is number => typeof id === 'number',
       );
+      assert.ok(reported.length > 0, `the collision must be reported with a row id: ${JSON.stringify(out)}`);
+      if (out.unique) {
+        for (const id of reported) {
+          const row = await call('GET', `/api/products/${id}`);
+          assert.equal(row.status, 200, `the reported colliding row ${id} must be readable: ${row.status} ${row.text}`);
+          const name = String((row.body as { name?: string }).name ?? '');
+          assert.ok(name.length > 0, `the reported colliding row ${id} must have a name`);
+          assert.notEqual(
+            out.title.toLowerCase(),
+            name.toLowerCase(),
+            `an unchanged title must still be distinct from every row it collided with (row ${id}): ${JSON.stringify({ out, name })}`,
+          );
+        }
+      } else {
+        assert.match(
+          out.note,
+          /near-identical|distinguish/i,
+          `saying a title cannot be distinguished needs the reason: ${JSON.stringify(out)}`,
+        );
+      }
     }
     assertCleanTitle(out.title, (body.spec as string[]).join(' '));
   } finally {
