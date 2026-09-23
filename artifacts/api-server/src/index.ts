@@ -17,6 +17,7 @@ import { db } from './db.js';
 import { HttpError } from './http.js';
 import { extractToken, verifyToken } from './auth.js';
 import { bootstrapSeedIfEmpty, ensureOwnerAdmin } from './bootstrap-seed.js';
+import { demoSeedEnabled, seedDecisionLine } from '@workspace/db';
 import { startOutboxWorker } from './email.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter, meRouter } from './routes/auth.js';
@@ -434,6 +435,7 @@ async function main(): Promise<void> {
       err instanceof Error ? err.message : String(err),
     );
   }
+  console.log(seedDecisionLine(demoSeedEnabled()));
   try {
     await bootstrapSeedIfEmpty();
   } catch (err) {

@@ -7,11 +7,18 @@
 import { hashSync } from 'bcryptjs';
 import { eq, sql } from 'drizzle-orm';
 import { db, users, suppliers, products, rfqs, quotes } from './db.js';
+import { demoSeedEnabled, seedDecisionLine } from '@workspace/db';
 
 const PW = 'factorydepo';
 const PH = hashSync(PW, 10);
 
 export async function bootstrapSeedIfEmpty(): Promise<boolean> {
+  // A real marketplace, or an honestly early one — never a demo site wearing a
+  // production URL. See seed-policy.ts for the switch and its reasoning.
+  if (!demoSeedEnabled()) {
+    console.log(seedDecisionLine(false));
+    return false;
+  }
   try {
     const res = await db.execute(sql`SELECT count(*) AS c FROM products`);
     const count = Number((res.rows[0] as { c?: string } | undefined)?.c ?? 0);

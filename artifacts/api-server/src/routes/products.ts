@@ -380,6 +380,38 @@ productsRouter.get('/countries', async (_req, res) => {
 });
 
 /**
+ * GET /api/products/catalogue-state — how much of the catalogue is real.
+ *
+ * Every catalogue-wide claim in the interface ("everything here is demo data")
+ * is computed from this, never hardcoded: the moment the owner publishes one
+ * real listing, the notice must disappear on its own. Counts follow the same
+ * visibility rule as /categories and /countries (a pulled listing is not in the
+ * catalogue the claim describes).
+ */
+productsRouter.get('/catalogue-state', async (_req, res) => {
+  const rows = await db
+    .select({ dataSource: products.dataSource, supplierId: products.supplierId, n: sql<number>`count(*)` })
+    .from(products)
+    .where(sql`coalesce(${products.moderationStatus}, 'visible') <> 'pulled'`)
+    .groupBy(products.dataSource, products.supplierId);
+  let real = 0;
+  let demo = 0;
+  const sellers = new Set<number>();
+  for (const r of rows) {
+    const n = toNum(r.n);
+    if (String(r.dataSource) === 'demo') demo += n;
+    else real += n;
+    if (r.supplierId != null) sellers.add(Number(r.supplierId));
+  }
+  respond(res, c.zCatalogueState, {
+    listings: real + demo,
+    realListings: real,
+    demoListings: demo,
+    sellers: sellers.size,
+  });
+});
+
+/**
  * POST /api/products — supplier creates a listing under their own supplier row.
  * The body can never name a supplier: `supplierId` comes from the caller.
  */

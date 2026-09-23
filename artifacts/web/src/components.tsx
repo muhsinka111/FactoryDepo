@@ -6,7 +6,7 @@
  */
 import { Link, useLocation, useSearch } from 'wouter';
 import { useEffect, useState, type ReactNode } from 'react';
-import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts, useProductCountryCounts } from '@workspace/api-client-react';
+import { useMe, useLogout, useUpdateMe, getToken, useCategoryCounts, useProductCountryCounts, useCatalogueState } from '@workspace/api-client-react';
 import { CATEGORIES } from '@workspace/api-spec';
 import { coverFor } from './categoryImages';
 import type { Product, Supplier, Rfq, Role } from '@workspace/api-zod';
@@ -459,12 +459,20 @@ export function DemoTag() {
 }
 
 /**
- * The catalogue is entirely bootstrap seed data right now. Saying so once, at
- * the top of the browse views, is the honest complement to the per-card Demo
- * tag — a buyer must not have to infer it from badges.
+ * Says, once, at the top of the browse views, that the catalogue is bootstrap
+ * seed data — the honest complement to the per-card Demo tag.
+ *
+ * It is DERIVED, never asserted: the sentence "every listing on this site is
+ * demo data" is only true while the catalogue really is entirely demo, and the
+ * first real listing (ours or a seller's) must retire it automatically. An
+ * unavailable count renders nothing at all: a missing claim is honest, a stale
+ * one is not. Per-card tags still cover a mixed catalogue.
  */
 export function DemoNotice() {
   const { t } = useI18n();
+  const state = useCatalogueState();
+  if (!state.data) return null;
+  if (state.data.realListings > 0 || state.data.demoListings === 0) return null;
   return (
     <div className="demoNotice" role="note">
       <b>{t('demo.title')}</b>

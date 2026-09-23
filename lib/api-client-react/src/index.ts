@@ -151,6 +151,14 @@ export function useProductCountryCounts(options?: { enabled?: boolean }) {
  * Live listing counts per category. Used by the category rail and the browse
  * filters so only categories that actually contain stock are offered.
  */
+export function useCatalogueState(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['catalogue-state'],
+    queryFn: () => apiFetch<c.CatalogueState>('/products/catalogue-state'),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useCategoryCounts(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['product-categories'],

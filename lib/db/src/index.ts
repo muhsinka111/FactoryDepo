@@ -1,4 +1,5 @@
 export * from './schema/index.js';
+export * from './seed-policy.js';
 
 import { type NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';

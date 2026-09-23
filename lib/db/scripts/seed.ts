@@ -19,6 +19,17 @@ import { hashSync } from 'bcryptjs';
 import { sql } from 'drizzle-orm';
 
 import { createDb, inspections, products, quotes, rfqs, suppliers, users } from '../src/index.js';
+import { demoSeedEnabled } from '../src/seed-policy.js';
+
+// This script TRUNCATEs and rewrites the whole demo dataset, so it must refuse
+// outright rather than half-run: production is not a place for demo rows.
+if (!demoSeedEnabled()) {
+  console.error(
+    '[seed] refused: this database is production (NODE_ENV=production without SEED_DEMO=1).\n' +
+      '        Nothing was truncated or inserted. Set SEED_DEMO=1 if this really is a dev database.',
+  );
+  process.exit(1);
+}
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/factorydepo';

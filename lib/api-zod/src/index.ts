@@ -166,6 +166,23 @@ export const zCountryCountList = z.object({
 });
 export type CountryCountList = z.infer<typeof zCountryCountList>;
 
+/* ---------- catalogue state (how much of the catalogue is real) ---------- */
+
+/**
+ * The counts behind any catalogue-wide claim the interface makes ("everything
+ * here is demo data"). A hardcoded sentence about the whole catalogue is a lie
+ * the moment one real listing exists, so the claim is derived from these four
+ * numbers instead. `realListings` counts rows that are NOT `dataSource='demo'`
+ * — a listing created by a real seller, our own sourced rows included.
+ */
+export const zCatalogueState = z.object({
+  listings: z.number(),
+  realListings: z.number(),
+  demoListings: z.number(),
+  sellers: z.number(),
+});
+export type CatalogueState = z.infer<typeof zCatalogueState>;
+
 /* ---------- product Q&A (ask the seller a question) ---------- */
 
 /**
