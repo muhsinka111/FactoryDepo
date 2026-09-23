@@ -33,6 +33,7 @@ import { verificationRouter } from './routes/verification.js';
 import { adminPaymentsRouter, paymentsRouter, proformaRouter } from './routes/payments.js';
 import { adminRouter } from './routes/admin.js';
 import { mediaRouter } from './routes/media.js';
+import { importsRouter } from './routes/imports.js';
 
 /* ---------- path resolution ---------- */
 
@@ -358,6 +359,7 @@ app.use('/api/orders', proformaRouter);
 app.use('/api/orders', paymentsRouter);
 app.use('/api/payments', adminPaymentsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/imports', importsRouter);
 
 // unknown /api/* → JSON 404
 app.use('/api', (_req, res) => {
