@@ -409,10 +409,19 @@ test('title: a partial-overlap row is reported, and a variant changes the answer
     // is the defect this suite exists to catch. Either way the title must never BE
     // the colliding name.
     assert.notEqual(out.title.toLowerCase(), rowName.toLowerCase(), 'the answer must never be the colliding name');
-    assert.ok(
-      out.title !== first.title || out.unique === false,
-      `a collision must change the answer or say it cannot be distinguished: ${JSON.stringify(out)}`,
-    );
+    // `note === ''` marks a baseline that genuinely saw no collision — only then is
+    // "the answer must change" a fair demand. This suite runs against the DEV
+    // database, which may already carry a row for this product (a real push, or
+    // leftovers from another run): the baseline then legitimately comes back already
+    // distinguished, and repeating that same title is the correct answer.
+    if (first.unique && first.note === '') {
+      assert.notEqual(out.title, first.title, 'a collision must change the answer');
+    } else {
+      assert.ok(
+        out.title !== first.title || out.unique === false,
+        `a collision must change the answer or say it cannot be distinguished: ${JSON.stringify(out)}`,
+      );
+    }
     assertCleanTitle(out.title, (body.spec as string[]).join(' '));
   } finally {
     const removed = await call('DELETE', `/api/products/${rowId}`, undefined, s.token);
