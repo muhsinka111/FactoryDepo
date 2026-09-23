@@ -93,16 +93,41 @@ one-off cleanup). Concretely:
   and every served landing file must produce zero India/Vietnam rows: grep the
   landing candidates and check a fresh-DB seed run.
 
+## Catalogue reality (owner policy, hard rule — 2026-09-23)
+The live catalogue contains **only what a real seller published** — our own
+sourced rows included, because FactoryDepo is itself the seller of record for
+those. Demo rows are a local-development convenience and must never reach a
+served site. Concretely:
+- `lib/db/src/seed-policy.ts` is the single switch: `SEED_DEMO=1` seeds,
+  `NODE_ENV=production` never seeds whatever else is set. Both seeders (the boot
+  bootstrap and `lib/db/scripts/seed.ts`) ask it, and the boot log prints
+  `[seed] demo seeding ENABLED|DISABLED` so a deploy log proves the gate fired.
+- `scripts/purge-demo.sql` removes demo rows and the demo ACCOUNTS (their
+  passwords are published in this repo) in FK-safe order. It is idempotent and
+  never touches `dataSource='platform'`. Run it against production over
+  `railway ssh` after any deploy that could have re-seeded.
+- Any sentence about the WHOLE catalogue ("every listing here is demo data") is
+  derived from `GET /api/products/catalogue-state`, never hardcoded —
+  `<DemoNotice />` is the pattern. A missing count renders nothing.
+- Tests must not depend on seeded rows: the integration suite creates the
+  fixtures it needs (its own suppliers, admin, listings) so it is green against a
+  real-only database AND a seeded one.
+
 ## Gates
 1. `pnpm run typecheck` — clean
 2. `pnpm run build` — clean
-3. `pnpm test` — 30 tests. Unit tests (email rendering, HTML escaping) run anywhere;
-   the integration suite boots against a server and **skips unless `TEST_BASE_URL`
-   is set**:
-   `TEST_BASE_URL=http://localhost:9090 pnpm --filter @workspace/api-server run test`
-   Do not run it back-to-back: each run spends the 10/15min per-IP login budget and
-   the 30/min per-IP write budget, so an immediate second run returns 429s that look
-   like regressions — wait ~60s between gate runs.
+3. `pnpm test` — 58 tests, executed SERIALLY (`--test-concurrency=1` in the package
+   script) because every file shares one server and one database: run in parallel,
+   the files publish listings into the very country counts another file asserts.
+   Unit tests (email rendering, HTML escaping) run anywhere; the integration suite
+   boots against a server and **skips unless `TEST_BASE_URL` is set**:
+   `TEST_BASE_URL=http://localhost:9095 pnpm --filter @workspace/api-server run test`
+   Boot that server with `RATE_LIMIT_DISABLED=1` (test runs only — never in
+   production): 58 tests sharing one machine's per-IP buckets otherwise drown the
+   tail in 429s that read exactly like regressions. With limits ON, one run spends
+   the 10/15min login budget — wait ~60s between runs. A worktree also needs its own
+   `.env` (`APP_SECRET`/`DATABASE_URL`/`SITE_URL`, gitignored) or the tests that mint
+   a Bearer token cannot sign one for the running server.
    It covers anonymous 401s, forged tokens, authz (a buyer must get 403 from
    `/api/admin/*`), supplier-ownership enforcement (supplier B must not edit A's
    listing), the `?supplierId=` public scope, the product Q&A rules (only the owning
