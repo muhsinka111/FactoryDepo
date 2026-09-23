@@ -18,6 +18,7 @@ import {
   Spinner,
   requireAuthGate,
   StockTypeFilter,
+  canSell,
 } from '../components';
 import {
   PageHeader,
@@ -300,7 +301,7 @@ export default function SupplierListings() {
   const { t, locale } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
-  const isSupplier = user?.role === 'supplier';
+  const isSupplier = canSell(user);
   const ready = loggedIn && isSupplier;
 
   const [page, setPage] = useState(1);

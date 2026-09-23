@@ -4,18 +4,21 @@
  * Access rules
  *  - GET    /api/products       : public (anonymous allowed) — unchanged.
  *  - GET    /api/products/:id   : public; best-effort `product_views` insert.
- *  - POST   /api/products       : supplier only. The seller is ALWAYS the
- *                                 caller's own supplier row — `supplierId` is
- *                                 not accepted from the body. New listings are
- *                                 real supply, so `dataSource` is 'platform'
- *                                 (only seed/import code writes 'demo').
- *  - PATCH  /api/products/:id   : supplier only AND the row's supplierId must be
+ *  - POST   /api/products       : seller surface (a supplier, or an admin that
+ *                                 owns a supplier row — `requireSellerSurface`).
+ *                                 The seller is ALWAYS the caller's own supplier
+ *                                 row — `supplierId` is not accepted from the
+ *                                 body. New listings are real supply, so
+ *                                 `dataSource` is 'platform' (only seed/import
+ *                                 code writes 'demo').
+ *  - PATCH  /api/products/:id   : seller surface AND the row's supplierId must be
  *                                 the caller's own supplierId → 403 otherwise.
  *                                 A supplier can never edit another supplier's
  *                                 listing. An admin may edit any listing; a
  *                                 PULLED listing (022) is refused with 409
  *                                 `listing_pulled` for everyone except an admin.
- *  - DELETE /api/products/:id   : same ownership rule as PATCH.
+ *  - DELETE /api/products/:id   : same ownership rule as PATCH; the seller gate
+ *                                 (`requireSellerSurface`) decides who may try.
  *  - GET    /api/products/:id/questions           : public; visibility depends
  *                                 on who is asking (see the route).
  *  - POST   /api/products/:id/questions           : any signed-in caller.
@@ -42,7 +45,7 @@ import * as c from '@workspace/api-zod';
 // src/db.ts is not one of this task's files, so they are imported here.
 import { media, productMedia } from '@workspace/db';
 import { db, products, productQuestions, productViews, suppliers, users } from '../db.js';
-import { requireAuth, requireRole, verifyToken } from '../auth.js';
+import { requireAuth, requireSellerSurface, verifyToken } from '../auth.js';
 import { HttpError, mapProduct, mapProductQuestion, parseId, parseParamId, respond, toNum } from '../http.js';
 import { callerContext, productColumns, type CallerContext } from '../helpers.js';
 import { mediaColumnsNoBytes, mediaRef } from './media.js';
@@ -412,10 +415,12 @@ productsRouter.get('/catalogue-state', async (_req, res) => {
 });
 
 /**
- * POST /api/products — supplier creates a listing under their own supplier row.
- * The body can never name a supplier: `supplierId` comes from the caller.
+ * POST /api/products — the caller creates a listing under their own supplier row.
+ * The body can never name a supplier: `supplierId` comes from the caller. The
+ * gate is `requireSellerSurface`, so the admin account that owns a shop can
+ * publish here too — as itself, never under the row named in the body.
  */
-productsRouter.post('/', requireAuth, requireRole('supplier'), async (req, res) => {
+productsRouter.post('/', requireAuth, requireSellerSurface, async (req, res) => {
   const input = c.zCreateProductInput.safeParse(req.body ?? {});
   if (!input.success) {
     throw new HttpError(400, { error: 'validation_error', details: input.error.message });
@@ -959,17 +964,19 @@ productsRouter.patch('/:id', requireAuth, async (req, res) => {
 });
 
 /**
- * DELETE /api/products/:id — supplier deletes their OWN listing.
+ * DELETE /api/products/:id — the caller deletes their OWN listing.
  * The DELETE is scoped by supplierId too, so even a race that slipped past the
- * pre-check cannot delete another supplier's row.
+ * pre-check cannot delete another supplier's row. The id comes from
+ * `requireSellerSurface` (the caller's own row, resolved from the token) with a
+ * direct lookup as the fallback for a supplier the gate admitted without one.
  */
-productsRouter.delete('/:id', requireAuth, requireRole('supplier'), async (req, res) => {
+productsRouter.delete('/:id', requireAuth, requireSellerSurface, async (req, res) => {
   const id = parseId(req);
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
 
-  const mine = await ownSupplier(uid);
-  if (!mine) throw new HttpError(403, { error: 'forbidden', details: 'No supplier profile for this account.' });
+  const mineId = req.supplierId ?? (await ownSupplier(uid))?.id ?? null;
+  if (mineId == null) throw new HttpError(403, { error: 'forbidden', details: 'No supplier profile for this account.' });
 
   const [existing] = await db
     .select({ id: products.id, supplierId: products.supplierId })
@@ -977,7 +984,7 @@ productsRouter.delete('/:id', requireAuth, requireRole('supplier'), async (req, 
     .where(eq(products.id, id))
     .limit(1);
   if (!existing) throw new HttpError(404, { error: 'not_found' });
-  if (toNum(existing.supplierId) !== mine.id) {
+  if (toNum(existing.supplierId) !== mineId) {
     throw new HttpError(403, { error: 'forbidden', details: 'This listing belongs to another supplier.' });
   }
 
@@ -987,7 +994,7 @@ productsRouter.delete('/:id', requireAuth, requireRole('supplier'), async (req, 
     // no ON DELETE CASCADE, so without this a listing that was ever opened could
     // never be deleted by its owner.
     await db.delete(productViews).where(eq(productViews.productId, id));
-    await db.delete(products).where(and(eq(products.id, id), eq(products.supplierId, mine.id)));
+    await db.delete(products).where(and(eq(products.id, id), eq(products.supplierId, mineId)));
   } catch (err) {
     // Referenced by an order/offer/thread/saved-lot — deleting would break a
     // record that belongs to another party. Drizzle wraps the driver error

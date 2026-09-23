@@ -37,6 +37,16 @@ export const zUser = z.object({
   lang: z.string(),
   trustScore: z.number(),
   emailVerified: z.boolean(),
+  /**
+   * The caller's OWN supplier row id, or null when this account sells nothing.
+   *
+   * Nullable on purpose: an account without a supplier profile is `null`, never
+   * 0 and never somebody else's id. The client reads it to decide whether this
+   * session has a SELLER surface — an `admin` that owns a supplier row does (the
+   * official FactoryDepo account runs both jobs from one login), an admin that
+   * owns none cannot publish anything.
+   */
+  supplierId: z.number().nullable(),
   createdAt: z.string(),
 });
 export type User = z.infer<typeof zUser>;

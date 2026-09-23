@@ -10,8 +10,11 @@
  * `/me` is registered BEFORE `/:id` on purpose: Express matches in registration
  * order, so a later `/me` would be parsed as an id and 400 on every request.
  *
- * The shop routes are `requireAuth + requireRole('supplier')`: a buyer gets 403
- * (there is no shop to edit) and an anonymous caller gets 401. A supplier with no
+ * The shop routes are `requireAuth + requireSellerSurface`: a supplier gets in,
+ * and so does an ADMIN that owns a supplier row (the official FactoryDepo seller
+ * account controls both surfaces from one login — that row is what it edits,
+ * never somebody else's). A buyer, or an admin with no supplier row, gets 403
+ * (there is no shop to edit); an anonymous caller gets 401. A supplier with no
  * supplier row yet gets 404 `no_supplier` — this route does not auto-create one
  * (creating a public company record is `POST /api/me/become-supplier`'s job).
  *
@@ -27,7 +30,7 @@ import * as c from '@workspace/api-zod';
 // this task's files, so the table is imported from there.
 import { media } from '@workspace/db';
 import { db, products, suppliers, users } from '../db.js';
-import { requireAuth, requireRole } from '../auth.js';
+import { requireAuth, requireSellerSurface } from '../auth.js';
 import { HttpError, mapSupplier, parseId, respond, toNum } from '../http.js';
 
 export const suppliersRouter = Router();
@@ -146,8 +149,8 @@ suppliersRouter.get('/', async (_req, res) => {
   });
 });
 
-/** GET /api/suppliers/me — the signed-in supplier's own shop (identity from the token). */
-suppliersRouter.get('/me', requireAuth, requireRole('supplier'), async (req, res) => {
+/** GET /api/suppliers/me — the signed-in seller's own shop (identity from the token). */
+suppliersRouter.get('/me', requireAuth, requireSellerSurface, async (req, res) => {
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
 
@@ -167,7 +170,7 @@ suppliersRouter.get('/me', requireAuth, requireRole('supplier'), async (req, res
  * fields present in `zUpdateShopProfileInput` are written; anything else
  * (verifiedLevel, dataSource, attestedAt/By, userId) is not accepted.
  */
-suppliersRouter.patch('/me', requireAuth, requireRole('supplier'), async (req, res) => {
+suppliersRouter.patch('/me', requireAuth, requireSellerSurface, async (req, res) => {
   const input = c.zUpdateShopProfileInput.safeParse(req.body ?? {});
   if (!input.success) {
     throw new HttpError(400, { error: 'validation_error', details: input.error.message });

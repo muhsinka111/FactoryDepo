@@ -8,7 +8,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test --test-concurrency=1 test/email.test.ts test/api.test.ts test/questions.test.ts test/shop.test.ts test/admin-control.test.ts test/title.test.ts test/seed-policy.test.ts"
+    "test": "node --import tsx --test --test-concurrency=1 test/email.test.ts test/api.test.ts test/questions.test.ts test/shop.test.ts test/seller-surface.test.ts test/admin-control.test.ts test/title.test.ts test/seed-policy.test.ts"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

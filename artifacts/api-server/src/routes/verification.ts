@@ -2,10 +2,11 @@
  * routes/verification.ts — the supplier's own verification-desk documents.
  *
  * Access rules
- *  - GET  /api/supplier/docs : supplier only, and only the docs belonging to the
- *                              caller's OWN supplier row (`supplierId` is taken
- *                              from the token, never from the request).
- *  - POST /api/supplier/docs : supplier only; upserts one (docType) row for the
+ *  - GET  /api/supplier/docs : the seller surface (supplier, or an admin that
+ *                              owns a supplier row), and only the docs belonging
+ *                              to the caller's OWN supplier row (`supplierId` is
+ *                              taken from the token, never from the request).
+ *  - POST /api/supplier/docs : same gate; upserts one (docType) row for the
  *                              caller's own supplier row to status 'submitted'.
  *                              Review (approve/reject) is admin-only and lives in
  *                              routes/admin.ts — a supplier can never approve
@@ -15,14 +16,14 @@ import { Router } from 'express';
 import { and, asc, eq } from 'drizzle-orm';
 import * as c from '@workspace/api-zod';
 import { db, supplierDocs } from '../db.js';
-import { requireAuth, requireRole } from '../auth.js';
+import { requireAuth, requireSellerSurface } from '../auth.js';
 import { HttpError, mapSupplierDoc, respond } from '../http.js';
 import { callerContext } from '../helpers.js';
 
 export const verificationRouter = Router();
 
 /** GET /api/supplier/docs — own checklist only. */
-verificationRouter.get('/docs', requireAuth, requireRole('supplier'), async (req, res) => {
+verificationRouter.get('/docs', requireAuth, requireSellerSurface, async (req, res) => {
   const ctx = await callerContext(req.userId);
   if (!ctx) throw new HttpError(401, { error: 'auth_required' });
   if (ctx.supplierId == null) throw new HttpError(403, { error: 'forbidden', details: 'No supplier profile.' });
@@ -42,7 +43,7 @@ verificationRouter.get('/docs', requireAuth, requireRole('supplier'), async (req
  * clears the previous review (reviewedBy/reviewedAt/note reset) so a resubmitted
  * document cannot keep an earlier "approved" decision.
  */
-verificationRouter.post('/docs', requireAuth, requireRole('supplier'), async (req, res) => {
+verificationRouter.post('/docs', requireAuth, requireSellerSurface, async (req, res) => {
   const input = c.zSubmitDocInput.safeParse(req.body ?? {});
   if (!input.success) {
     throw new HttpError(400, { error: 'validation_error', details: input.error.message });

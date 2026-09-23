@@ -81,6 +81,36 @@ export const NAV_ADMIN: NavItem[] = [
 ];
 
 /**
+ * The admin shell's nav for a session that owns a supplier row.
+ *
+ * The official FactoryDepo seller account sources stock through the extension
+ * AND runs the console from one login, so that session needs the seller doors
+ * as well. They are the seller routes that already exist, labelled with the
+ * keys `NAV_SUPPLIER` already uses (`nav.listings` / `nav.post` / `nav.shop`) —
+ * no new dictionary entries.
+ *
+ * Two rules this encodes:
+ *   - the doors are rendered only when the session HAS a supplier row, because
+ *     the seller routes are gated on the row: for an admin without one, every
+ *     one of them answers 403 — a link to a refusal is not a door;
+ *   - the console itself is untouched (the admin items stay, in order, and the
+ *     seller block is appended after them), so the admin dashboard remains the
+ *     admin dashboard.
+ */
+export function adminNav(supplierId: number | null | undefined): NavItem[] {
+  if (supplierId == null) return NAV_ADMIN;
+  const seller: NavItem[] = [
+    { key: 'listings', icon: '📦', label: 'nav.listings', path: '/supplier/listings' },
+    { key: 'post', icon: '➕', label: 'nav.post', path: '/supplier/post' },
+    { key: 'shop', icon: '🏪', label: 'nav.shop', path: '/supplier/shop' },
+  ];
+  // After the console block (and before the shared shipments/features/help
+  // tail), so the admin's own links keep their positions.
+  const at = NAV_ADMIN.findIndex((i) => i.key === 'growth') + 1;
+  return [...NAV_ADMIN.slice(0, at), ...seller, ...NAV_ADMIN.slice(at)];
+}
+
+/**
  * Logged-out visitors get the public slice of the marketplace — including the
  * sell path, because "anyone with stock can list it" is the pitch and a
  * signed-out seller must be able to find the door. /supplier/post gates on auth.
@@ -111,11 +141,31 @@ export function dashboardRole(role: Role | undefined, loggedIn: boolean): Dashbo
   return 'buyer';
 }
 
-export function navFor(dash: DashboardRole | null): NavItem[] {
-  if (dash === 'admin') return NAV_ADMIN;
+export function navFor(dash: DashboardRole | null, supplierId?: number | null): NavItem[] {
+  if (dash === 'admin') return adminNav(supplierId);
   if (dash === 'supplier') return NAV_SUPPLIER;
   if (dash === 'buyer') return NAV_BUYER;
   return NAV_GUEST;
+}
+
+/**
+ * Whether this session owns a SELLER surface — i.e. whether it has a supplier
+ * row. The role name alone is not the answer, on either side of the account:
+ *
+ *   - a `supplier` sells (that is what the role means);
+ *   - an `admin` sells only when it owns a supplier row — the official
+ *     FactoryDepo seller account does, and `GET /api/me` reports that row as
+ *     `supplierId`. An admin WITHOUT one gets 403 from the seller routes, so the
+ *     seller pages must refuse it exactly as they refuse a buyer.
+ *
+ * `supplierId` is nullable in the session payload precisely so this test can be
+ * honest: `null` means "no shop", and a session that has not loaded yet is
+ * treated as not sellable rather than guessed at.
+ */
+export function canSell(user: { role?: Role; supplierId?: number | null } | undefined | null): boolean {
+  if (!user) return false;
+  if (user.role === 'supplier') return true;
+  return user.role === 'admin' && user.supplierId != null;
 }
 
 /** Where each role lands after signing in. */

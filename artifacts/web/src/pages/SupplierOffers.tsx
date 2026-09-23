@@ -16,6 +16,7 @@ import {
   DemoTag,
   Spinner,
   requireAuthGate,
+  canSell,
 } from '../components';
 import {
   PageHeader,
@@ -339,7 +340,7 @@ export default function SupplierOffers() {
   const { t, locale } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
-  const isSupplier = user?.role === 'supplier';
+  const isSupplier = canSell(user);
   const ready = loggedIn && isSupplier;
 
   const res = useMyOffers({ enabled: ready });

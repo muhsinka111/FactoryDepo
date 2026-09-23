@@ -3,7 +3,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import * as c from '@workspace/api-zod';
 import { db, quotes, rfqs, suppliers, users } from '../db.js';
-import { requireAuth, requireRole } from '../auth.js';
+import { requireAuth, requireRole, requireSellerSurface } from '../auth.js';
 import { HttpError, mapQuote, mapRfq, parseId, respond, toNum } from '../http.js';
 import { authenticate } from '../helpers.js';
 
@@ -140,8 +140,8 @@ rfqsRouter.get('/:id', async (req, res) => {
   respond(res, c.zRfqDetail, { rfq: mapRfq(rfqRow), quotes: quoteRows.map(mapQuote) });
 });
 
-/** POST /api/rfqs/:id/quotes — supplier only. 409 {error:'rfq_closed'} when closed. */
-rfqsRouter.post('/:id/quotes', requireAuth, requireRole('supplier'), async (req, res) => {
+/** POST /api/rfqs/:id/quotes — seller surface; 409 {error:'rfq_closed'} when closed. */
+rfqsRouter.post('/:id/quotes', requireAuth, requireSellerSurface, async (req, res) => {
   const id = parseId(req);
   const input = c.zCreateQuoteInput.safeParse(req.body ?? {});
   if (!input.success) {

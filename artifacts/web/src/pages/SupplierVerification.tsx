@@ -15,6 +15,7 @@ import {
   Spinner,
   Verified,
   requireAuthGate,
+  canSell,
 } from '../components';
 import { useI18n, type DictKey } from '../i18n';
 
@@ -85,7 +86,7 @@ export default function SupplierVerification() {
   const { t, locale } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
-  const isSupplier = user?.role === 'supplier';
+  const isSupplier = canSell(user);
 
   const docs = useSupplierDocs({ enabled: loggedIn && isSupplier });
   const submit = useSubmitSupplierDoc();

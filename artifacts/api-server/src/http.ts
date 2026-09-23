@@ -90,6 +90,10 @@ export function mapUser(u: Record<string, unknown>): c.User {
     lang: String(u.lang ?? 'en'),
     trustScore: toNum(u.trustScore),
     emailVerified: Boolean(u.emailVerified),
+    // The caller's own supplier row, when the statement that loaded the user
+    // carried it. A users row has no such column, so an account with no shop
+    // answers `null` — the honest value, never 0 and never a neighbouring id.
+    supplierId: u.supplierId == null ? null : toNum(u.supplierId),
     createdAt: toIso(u.createdAt),
   };
 }

@@ -76,7 +76,9 @@ function Shell() {
   const { data: user } = useMe();
   const loggedIn = !!getToken();
   const dash = dashboardRole(user?.role, loggedIn);
-  const nav = navFor(dash);
+  // The seller doors are a property of the session's supplier ROW, not of the
+  // role name — `GET /api/me` reports it as `supplierId` (nullable).
+  const nav = navFor(dash, user?.supplierId);
   const activeKey = activeKeyFor(nav, location);
   const showRail = RAIL_VIEWS.some((p) => location === p || location.startsWith(p + '/'));
 

@@ -14,6 +14,24 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+/**
+ * The caller's OWN supplier row id, or null.
+ *
+ * The session payload reports this so the client knows whether the signed-in
+ * account has a SELLER surface at all: the seller routes are gated on the row
+ * (an admin that owns one sells, an admin that owns none is refused), so the
+ * answer has to travel with the session. Null means "no shop" — never 0, never
+ * someone else's row.
+ */
+async function supplierIdOf(userId: number): Promise<number | null> {
+  const [row] = await db
+    .select({ id: suppliers.id })
+    .from(suppliers)
+    .where(eq(suppliers.userId, userId))
+    .limit(1);
+  return row ? toNum(row.id) : null;
+}
+
 /** POST /api/auth/register — 409 {error:'email_taken'} on duplicate email. */
 authRouter.post('/register', async (req, res) => {
   const input = c.zRegisterInput.safeParse(req.body ?? {});
@@ -62,7 +80,7 @@ authRouter.post('/register', async (req, res) => {
     });
   }
 
-  const user = mapUser(inserted);
+  const user = mapUser({ ...inserted, supplierId: await supplierIdOf(toNum(inserted.id)) });
   res.status(201);
   respond(res, c.zAuthResponse, { token: signToken(user.id, inserted.tokenVersion ?? 0), user });
 });
@@ -84,16 +102,27 @@ authRouter.post('/login', async (req, res) => {
     throw new HttpError(401, { error: 'invalid_credentials' });
   }
 
-  respond(res, c.zAuthResponse, { token: signToken(toNum(row.id), toNum(row.tokenVersion)), user: mapUser(row) });
+  respond(
+    res,
+    c.zAuthResponse,
+    {
+      token: signToken(toNum(row.id), toNum(row.tokenVersion)),
+      user: mapUser({ ...row, supplierId: await supplierIdOf(toNum(row.id)) }),
+    },
+  );
 });
 
-/** GET /api/me — auth required, returns the current user. */
+/** GET /api/me — auth required, returns the current user (with its own supplierId). */
 meRouter.get('/', requireAuth, async (req, res) => {
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
   const [row] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
   if (!row) throw new HttpError(401, { error: 'auth_required' });
-  respond(res, c.zUser, mapUser(row));
+  // The session payload is where the client learns whether it can SELL: the
+  // seller surface is gated on the caller's own supplier row, not on the role
+  // name, so an admin that owns a shop must see that row id here — and an admin
+  // that owns none reads `null` instead of a value we would have had to invent.
+  respond(res, c.zUser, mapUser({ ...row, supplierId: await supplierIdOf(uid) }));
 });
 
 /**
@@ -133,7 +162,7 @@ meRouter.patch('/', requireAuth, async (req, res) => {
 
   const [row] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
   if (!row) throw new HttpError(401, { error: 'auth_required' });
-  respond(res, c.zUser, mapUser(row));
+  respond(res, c.zUser, mapUser({ ...row, supplierId: await supplierIdOf(uid) }));
 });
 
 /**
@@ -184,5 +213,5 @@ meRouter.post('/become-supplier', requireAuth, async (req, res) => {
 
   const [fresh] = await db.select().from(users).where(eq(users.id, uid)).limit(1);
   if (!fresh) throw new HttpError(401, { error: 'auth_required' });
-  respond(res, c.zUser, mapUser(fresh));
+  respond(res, c.zUser, mapUser({ ...fresh, supplierId: await supplierIdOf(uid) }));
 });

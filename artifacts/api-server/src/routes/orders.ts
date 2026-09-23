@@ -190,7 +190,14 @@ ordersRouter.get('/', requireAuth, async (req, res) => {
   respond(res, c.zOrderList, { items, total: items.length });
 });
 
-/** GET /api/orders/stats — dashboard metrics (listings, offers, views, orders). */
+/**
+ * GET /api/orders/stats — dashboard metrics (listings, offers, views, orders).
+ *
+ * The seller side of these figures is chosen by the caller's OWN supplier ROW,
+ * not by the role name: the account that controls the console AND sells stock
+ * (role 'admin' with a supplier row) must read its own shop's numbers here, and
+ * a caller with no row is a buyer — the same rule GET /api/orders already uses.
+ */
 ordersRouter.get('/stats', requireAuth, async (req, res) => {
   const uid = req.userId;
   if (uid == null) throw new HttpError(401, { error: 'auth_required' });
@@ -203,7 +210,7 @@ ordersRouter.get('/stats', requireAuth, async (req, res) => {
     .limit(1);
   if (!me) throw new HttpError(401, { error: 'auth_required' });
 
-  const isSupplier = me.role === 'supplier' && me.supplierId != null;
+  const isSupplier = me.supplierId != null;
 
   // totalListings: products for suppliers, RFQs for buyers.
   const [listingsRow] = isSupplier

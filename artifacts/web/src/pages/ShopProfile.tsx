@@ -10,7 +10,7 @@ import {
 import type { ApiError } from '@workspace/api-client-react';
 import type { MyShop, UpdateShopProfileInput } from '@workspace/api-zod';
 import { COUNTRIES } from '@workspace/api-spec';
-import { DemoTag, Empty, Spinner, countryCode, countryName, requireAuthGate } from '../components';
+import { DemoTag, Empty, Spinner, countryCode, countryName, requireAuthGate, canSell } from '../components';
 import { PageHeader, KpiRow, Kpi, SectionCard, EmptyState, metric } from '../dash';
 import { useI18n, type I18nValue } from '../i18n';
 
@@ -166,7 +166,7 @@ export default function ShopProfile() {
   const { t } = useI18n();
   const { data: user, isLoading: meLoading } = useMe();
   const loggedIn = !!getToken();
-  const isSupplier = user?.role === 'supplier';
+  const isSupplier = canSell(user);
   const ready = loggedIn && isSupplier;
 
   const shop = useMyShop({ enabled: ready });

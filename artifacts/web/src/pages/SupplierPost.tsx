@@ -49,6 +49,7 @@ import {
   countryCode,
   countryName,
   requireAuthGate,
+  canSell,
 } from '../components';
 import { PageHeader, SectionCard } from '../dash';
 import { useI18n, type DictKey, type I18nValue } from '../i18n';
@@ -1056,7 +1057,7 @@ export default function SupplierPost() {
   // `?id=` is read once on mount; the supplier stays on the same lot while editing.
   const [editId] = useState<number | undefined>(() => readId());
   const existing = useProduct(editId);
-  const isSupplier = user?.role === 'supplier';
+  const isSupplier = canSell(user);
 
   if (meLoading) {
     return (
