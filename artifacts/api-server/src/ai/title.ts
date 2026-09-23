@@ -405,8 +405,28 @@ function isCovered(text: string, candidate: string): boolean {
  * a number or a material/standard reads as more concrete than a bare word), then
  * the operator's own keywords, then the couple of weaker facts at the end.
  */
+/**
+ * Labels that NAME a record rather than describe the product. An import carries
+ * them (`sku`, `productID`, `countryOfOrigin`, `category`), and because a SKU
+ * usually holds a digit the old scorer ranked it as the MOST concrete fact — so
+ * our own buyer-facing title led with an internal identifier and read like a
+ * warehouse label. A buyer must never see our bookkeeping, so these are dropped
+ * from the attribute pool entirely (they still reach the operator, who has the
+ * record in front of them).
+ */
+const NON_PRODUCT_LABELS =
+  /^(sku|product\s*id|productid|id|item\s*(no|number)|barcode|ean|upc|mpn|gtin|ref|reference|category|country\s*of\s*origin|countryoforigin|source|image|imageurl|url|link|currency)$/i;
+
+/** The `Label:` prefix of a "Label: Value" spec entry, lower-cased, or ''. */
+function specLabel(spec: string): string {
+  const at = spec.indexOf(':');
+  return at > 0 ? spec.slice(0, at).trim() : '';
+}
+
 export function composerAttrs(input: TitleInput, head = composeHead(input)): string[] {
-  const specs = (input.spec ?? []).map(cleanFact).filter((s) => s.length >= 2);
+  const specs = (input.spec ?? [])
+    .map(cleanFact)
+    .filter((s) => s.length >= 2 && !NON_PRODUCT_LABELS.test(specLabel(s)));
   const scored = specs
     .map((value, index) => ({ value, index, score: (/\d/.test(value) ? 2 : 0) + (/\b(steel|stainless|aluminium|aluminum|copper|brass|pvc|hdpe|pp|abs|grade|finish|mm|kw|kg|ton|hp)\b/i.test(value) ? 1 : 0) }))
     .sort((a, b) => b.score - a.score || a.index - b.index)
@@ -690,10 +710,16 @@ function distinguishingTokens(input: TitleInput, title: string): { label: string
     const clean = cleanFact(token);
     if (clean.length >= 2 && !isCovered(title, clean)) out.push({ label, token: clean });
   };
-  for (const spec of (input.spec ?? []).slice().sort((a, b) => (/\d/.test(b) ? 1 : 0) - (/\d/.test(a) ? 1 : 0))) push('spec', spec);
+  const specs = (input.spec ?? [])
+    .filter((s) => !NON_PRODUCT_LABELS.test(specLabel(s)))
+    .slice()
+    .sort((a, b) => (/\d/.test(b) ? 1 : 0) - (/\d/.test(a) ? 1 : 0));
+  for (const spec of specs) push('spec', spec);
   for (const keyword of input.keywords ?? []) push('keyword', keyword);
   if (input.originCountry) push('origin', input.originCountry);
-  if (input.unit) push('unit', input.unit);
+  // A packaging word adds nothing a buyer can use; only a real unit distinguishes.
+  const unit = String(input.unit ?? '').trim();
+  if (unit && !/^(unit|units|item|items|each|pcs|pc|piece|pieces)$/i.test(unit)) push('unit', unit);
   return out;
 }
 
